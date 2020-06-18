@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, BigInteger, String, ForeignKey, DateTime
 from sqlalchemy import create_engine, Table
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
+
 from vars import DB_URL, TIMEZONE_CET, TIMEZONE_UTC
 
 # DB stuff
@@ -91,16 +92,10 @@ class Game(Base):
         return len(self.players)
 
     @property
-    def timeslot_utc(self):
-        return TIMEZONE_UTC.localize(self.timeslot)
-
-    @property
-    def timeslot_cet(self):
-        return self.timeslot_utc.astimezone(TIMEZONE_CET)
-
-    @property
     def game_time_cet(self):
-        return self.timeslot_cet.time().strftime("%H:%M")
+        timeslot_utc = TIMEZONE_UTC.localize(self.timeslot)
+        timeslot_cet = timeslot_utc.astimezone(TIMEZONE_CET)
+        return timeslot_cet.time().strftime("%H:%M")
 
     def create(self):
         session.add(self)

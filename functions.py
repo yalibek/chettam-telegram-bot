@@ -106,8 +106,9 @@ def slot_status(game):
 
 # Checks if today is cs:go dayoff
 def is_dayoff():
-    is_not_night = dt.now(pytz.utc).hour >= 6
-    is_wed_sun = dt.now(pytz.utc).strftime("%w") in ["3", "7"]
+    now = dt.now(pytz.utc)
+    is_not_night = now.hour >= 6
+    is_wed_sun = now.strftime("%w") in ["3", "7"]
     return is_not_night and is_wed_sun
 
 
