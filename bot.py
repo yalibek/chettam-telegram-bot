@@ -6,6 +6,8 @@ Chettamm telegram bot for csgo guys
 TODO: добавь еще slot_next_in, чтобы бот создал 2й пати и добавлял туда уже
 TODO: Предлагаю когда набирается команда предлагать poll на время игры. 5 из очереди согласные на это время формируют команду
 TODO: sort players by joined_at
+TODO: 2 parties
+TODO: game reminder
 """
 
 import random
@@ -31,10 +33,8 @@ from vars import (
     INVITE,
     HOUR_PATTERN,
     HOUR_MINUTE_PATTERN,
+    FIRST_STAGE,
 )
-
-# Stages
-FIRST_STAGE, SECOND_STAGE = range(2)
 
 
 def error(update, context):
@@ -43,16 +43,6 @@ def error(update, context):
 
 
 # Command actions
-def start(update, context):
-    update.message.reply_text(
-        "Hello, this is chettam bot for csgo slots.\n"
-        "/chettam - invite everyone to play at specified time\n"
-        "/slot_in - reserve a slot for yourself\n"
-        "/slot_out - abandon your slot\n"
-        "/status - get current status\n"
-    )
-
-
 def dayoff(update, context):
     update.message.reply_text("It's day off, fool!")
 
@@ -308,7 +298,6 @@ def main():
     if is_dayoff():
         dp.add_handler(MessageHandler(Filters.command, dayoff))
     else:
-        dp.add_handler(CommandHandler("start", start))
         dp.add_handler(CommandHandler("slot_in", slot_in))
         dp.add_handler(CommandHandler("slot_out", slot_out))
         dp.add_handler(CommandHandler("status", status))

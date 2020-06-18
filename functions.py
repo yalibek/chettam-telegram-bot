@@ -80,7 +80,7 @@ def slot_status(game):
         reply = f"10 slots. 2 parties! gogo! {pistol}{pistol}"
     else:
         reply = f"{slots} slot(s) taken."
-    return f"{timeslot}: {reply}\n{players}"
+    return f"*{timeslot}*: {reply}\n{players}"
 
 
 # Checks if today is cs:go dayoff
