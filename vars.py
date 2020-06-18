@@ -26,6 +26,7 @@ EMOJI = {
     "chart": emojize(":bar_chart:", use_aliases=True),
     "cry": emojize(":cry:", use_aliases=True),
     "zzz": emojize(":zzz:", use_aliases=True),
+    "coffee": emojize(":coffee:", use_aliases=True),
 }
 
 # Chettam mating calls
@@ -61,6 +62,11 @@ INVITE = [
     "Кто катает.",
     "Мышку надо опробовать.",
 ]
+
+# Stickers
+PARROT_COFFEE = (
+    "CAACAgIAAxkBAAL0iF7r4SfAEYdYrTVkMXYiHXqYEA1cAAL5AgAChmBXDp2WPdbev1lCGgQ"
+)
 
 # Timezones
 TIMEZONE_CET = pytz.timezone("CET")

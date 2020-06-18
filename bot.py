@@ -35,6 +35,7 @@ from vars import (
     HOUR_PATTERN,
     HOUR_MINUTE_PATTERN,
     FIRST_STAGE,
+    PARROT_COFFEE,
 )
 
 
@@ -161,6 +162,13 @@ def get_chettam_data(update):
 
 
 def chettam(update, context):
+    random_int = random.randint(0, 200)
+    if random_int == 1:
+        reply = f"Enjoing the bot? *Buy me a coffee.*"
+        update.message.reply_markdown(reply, reply_to_message_id=None)
+        update.message.reply_sticker(
+            PARROT_COFFEE, reply_to_message_id=None,
+        )
     reply, keyboard = get_chettam_data(update)
     update.message.reply_markdown(
         reply, reply_markup=InlineKeyboardMarkup(keyboard),

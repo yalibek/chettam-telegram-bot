@@ -9,12 +9,10 @@ from vars import EMOJI, TIMEZONE_CET, TIMEZONE_UTC
 
 # Updates player's data if it has changed
 def sync_player_data(player, user):
-    p = [player.username, player.first_name, player.last_name]
-    u = [user.username, user.first_name, user.last_name]
-    if p != u:
-        player.username = user.username
-        player.first_name = user.first_name
-        player.last_name = user.last_name
+    p_data = [player.username, player.first_name, player.last_name]
+    u_data = [user.username, user.first_name, user.last_name]
+    if p_data != u_data:
+        player.username, player.first_name, player.last_name = u_data
         player.save()
 
 
@@ -108,7 +106,7 @@ def slot_status(game):
 def is_dayoff():
     now = dt.now(pytz.utc)
     is_not_night = now.hour >= 6
-    is_wed_sun = now.strftime("%w") in ["3", "7"]
+    is_wed_sun = now.weekday() in ["2", "6"]
     return is_not_night and is_wed_sun
 
 
