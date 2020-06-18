@@ -65,7 +65,7 @@ def get_game(update, timeslot=None):
 
     if timeslot:
         # Convert time into datetime object in UTC timezone
-        date_today = dt.today().date()
+        date_today = dt.now(pytz.utc).date()
         date_time = f"{date_today} {timeslot}"
         timeslot_obj = dt.strptime(date_time, "%Y-%m-%d %H:%M")
         timeslot_cet = to_cet(timeslot_obj)
@@ -106,8 +106,8 @@ def slot_status(game):
 
 # Checks if today is cs:go dayoff
 def is_dayoff():
-    is_not_night = dt.today().hour >= 6
-    is_wed_sun = dt.today().strftime("%w") in ["3", "7"]
+    is_not_night = dt.now(pytz.utc).hour >= 6
+    is_wed_sun = dt.now(pytz.utc).strftime("%w") in ["3", "7"]
     return is_not_night and is_wed_sun
 
 
