@@ -2,8 +2,7 @@ from sqlalchemy import Column, Integer, BigInteger, String, ForeignKey, DateTime
 from sqlalchemy import create_engine, Table
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
-
-from vars import DB_URL
+from vars import DB_URL, TIMEZONE_CET, TIMEZONE_UTC
 
 # DB stuff
 Base = declarative_base()
@@ -78,7 +77,7 @@ class Game(Base):
     updated_at = Column(DateTime)
     chat_id = Column(BigInteger, unique=True)
     chat_type = Column(String)
-    timeslot = Column(String)
+    timeslot = Column(DateTime)
     players = relationship(
         "Player", secondary=association_table, back_populates="games"
     )
@@ -90,6 +89,18 @@ class Game(Base):
     @property
     def slots(self):
         return len(self.players)
+
+    @property
+    def timeslot_utc(self):
+        return TIMEZONE_UTC.localize(self.timeslot)
+
+    @property
+    def timeslot_cet(self):
+        return self.timeslot_utc.astimezone(TIMEZONE_CET)
+
+    @property
+    def game_time_cet(self):
+        return self.timeslot_cet.time().strftime("%H:%M")
 
     def create(self):
         session.add(self)

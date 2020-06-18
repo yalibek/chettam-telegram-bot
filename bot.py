@@ -11,8 +11,9 @@ TODO: game reminder
 """
 
 import random
-from datetime import datetime
+from datetime import datetime as dt
 
+import pytz
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 from telegram.ext import (
     Updater,
@@ -65,7 +66,7 @@ def slot_in(update, context):
                 return
             else:
                 game.players.append(player)
-                game.updated_at = datetime.now()
+                game.updated_at = dt.now(pytz.utc)
                 game.save()
                 fire = EMOJI["fire"]
                 reply = f"{fire} *{player}* joined! {fire}\n\n{slot_status(game)}"
@@ -82,7 +83,7 @@ def slot_out(update, context):
     if game:
         if player in game.players:
             game.players.remove(player)
-            game.updated_at = datetime.now()
+            game.updated_at = dt.now(pytz.utc)
             game.save()
             cry = EMOJI["cry"]
             reply = f"{cry} *{player}* left {cry}\n\n{slot_status(game)}"
@@ -98,7 +99,7 @@ def join_game(update, context):
     query = update.callback_query
     player = get_player(update)
     game = get_game(update)
-    game.updated_at = datetime.now()
+    game.updated_at = dt.now(pytz.utc)
     game.players.append(player)
     game.save()
     fire = EMOJI["fire"]
@@ -113,7 +114,7 @@ def leave_game(update, context):
     player = get_player(update)
     game = get_game(update)
     game.players.remove(player)
-    game.updated_at = datetime.now()
+    game.updated_at = dt.now(pytz.utc)
     game.save()
     cry = EMOJI["cry"]
     reply = f"{cry} *{player}* left {cry}\n\n{slot_status(game)}"
@@ -260,7 +261,7 @@ def new_game(update, context):
     game = get_game(update, timeslot=query.data)
     player = get_player(update)
     game.players.append(player)
-    game.updated_at = datetime.now()
+    game.updated_at = dt.now(pytz.utc)
     game.save()
     query.answer()
     query.edit_message_text(

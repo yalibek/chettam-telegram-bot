@@ -1,6 +1,7 @@
 import argparse
 import os
 
+import pytz
 from emoji import emojize
 
 
@@ -60,6 +61,10 @@ INVITE = [
     "Кто катает.",
     "Мышку надо опробовать.",
 ]
+
+# Timezones
+TIMEZONE_CET = pytz.timezone("CET")
+TIMEZONE_UTC = pytz.timezone("UTC")
 
 # Stages
 FIRST_STAGE, SECOND_STAGE = range(2)

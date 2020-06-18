@@ -1,8 +1,10 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime as dt, timedelta
+
+import pytz
 
 from models import Game, Player, session
-from vars import EMOJI
+from vars import EMOJI, TIMEZONE_CET, TIMEZONE_UTC
 
 
 # Updates player's data if it has changed
@@ -34,10 +36,10 @@ def get_player(update):
     return player
 
 
-# Create new game
+# Creates new game
 def create_game(chat, timeslot):
     game = Game(
-        updated_at=datetime.now(),
+        updated_at=dt.now(pytz.utc),
         timeslot=timeslot,
         chat_id=chat.id,
         chat_type=chat.type,
@@ -47,22 +49,41 @@ def create_game(chat, timeslot):
     return game
 
 
+# Checks if game wasn't updated for 8+ hours
+def game_is_old(game):
+    now = dt.now(pytz.utc)
+    updated_at = to_utc(game.updated_at)
+    played_at = to_utc(game.timeslot)
+    delta = timedelta(hours=8)
+    return (now - updated_at > delta) or (now - played_at > delta)
+
+
 # Returns Game model for current chat
 def get_game(update, timeslot=None):
     chat = update.effective_chat
     game = session.query(Game).filter_by(chat_id=chat.id).first()
+
+    if timeslot:
+        # Convert time into datetime object in UTC timezone
+        date_today = dt.today().date()
+        date_time = f"{date_today} {timeslot}"
+        timeslot_obj = dt.strptime(date_time, "%Y-%m-%d %H:%M")
+        timeslot_cet = to_cet(timeslot_obj)
+        timeslot = timeslot_cet.astimezone(TIMEZONE_UTC)
+
     if game and timeslot:
         # Update timeslot if given
         game.timeslot = timeslot
-        game.updated_at = datetime.now()
+        game.updated_at = dt.now(pytz.utc)
         game.save()
-    elif game and datetime.now() - game.updated_at > timedelta(hours=8):
+    elif game and game_is_old(game):
         # Delete existing game if it wasn't updated for 8 hours
         game.delete()
         game = None
     elif not game and timeslot:
         # Create new game only if new timeslot is given
         game = create_game(chat, timeslot)
+
     return game
 
 
@@ -70,7 +91,7 @@ def get_game(update, timeslot=None):
 def slot_status(game):
     players = "\n".join(f"- {player}" for player in game.players_list)
     slots = game.slots
-    timeslot = game.timeslot
+    timeslot = game.game_time_cet
     pistol = EMOJI["pistol"]
     if slots == 0:
         reply = f"All slots are available!"
@@ -85,8 +106,8 @@ def slot_status(game):
 
 # Checks if today is cs:go dayoff
 def is_dayoff():
-    is_not_night = datetime.today().hour >= 6
-    is_wed_sun = datetime.today().strftime("%w") in ["3", "7"]
+    is_not_night = dt.today().hour >= 6
+    is_wed_sun = dt.today().strftime("%w") in ["3", "7"]
     return is_not_night and is_wed_sun
 
 
@@ -97,3 +118,13 @@ def logger():
         level=logging.INFO,
     )
     return logging.getLogger(__name__)
+
+
+# Localize to UTC
+def to_utc(date_time):
+    return TIMEZONE_UTC.localize(date_time)
+
+
+# Localize to CET
+def to_cet(date_time):
+    return TIMEZONE_CET.localize(date_time)
