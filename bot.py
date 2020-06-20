@@ -170,7 +170,7 @@ def get_chettam_data(update):
 def chettam(update, context):
     random_int = random.randint(0, 100)
     if random_int == 1:
-        reply = f"Enjoing the bot? *Buy me a coffee.*"
+        reply = f"Enjoing the bot? *Buy me a coffee, maybe?.*"
         parrot = STICKERS["coffee_parrot"]
         update.message.reply_markdown(reply, reply_to_message_id=None)
         update.message.reply_sticker(
@@ -272,10 +272,11 @@ def pick_minute(update, context):
 def alert(context, game):
     """Send the alarm message."""
     job = context.job
-    timediff = to_utc(game.timeslot.minute) - dt.now(pytz.utc).minute
+    timediff = to_utc(game.timeslot).minute - dt.now(pytz.utc).minute
     players = ", ".join(game.players_call)
     reply = f"{players} game starts in {timediff} min(s)!"
-    context.bot.send_message(job.context, text=reply)
+    if players:
+        context.bot.send_message(job.context, text=reply)
 
 
 def set_time_alert(update, context, game):
