@@ -12,9 +12,7 @@ TODO: comments!!!
 """
 
 import random
-from datetime import datetime as dt, timedelta
 
-import pytz
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 from telegram.ext import (
     Updater,
@@ -25,20 +23,8 @@ from telegram.ext import (
     Filters,
 )
 
-from utils import get_player, get_game, slot_status, is_dayoff, logger, wrapped_partial
-from vars import (
-    DEBUG,
-    TOKEN,
-    PORT,
-    HEROKU_APP,
-    EMOJI,
-    STICKERS,
-    INVITE,
-    START_MESSAGE,
-    HOUR_PATTERN,
-    HOUR_MINUTE_PATTERN,
-    FIRST_STAGE,
-)
+from utils import *
+from vars import *
 
 
 def error(update, context):
@@ -286,7 +272,7 @@ def pick_minute(update, context):
 def alert(context, game):
     """Send the alarm message."""
     job = context.job
-    timediff = game.timeslot_cet.minute - dt.now(pytz.utc).minute
+    timediff = to_utc(game.timeslot.minute) - dt.now(pytz.utc).minute
     players = ", ".join(game.players_call)
     reply = f"{players} game starts in {timediff} min(s)!"
     context.bot.send_message(job.context, text=reply)
@@ -294,9 +280,9 @@ def alert(context, game):
 
 def set_time_alert(update, context, game):
     # Set time alert
-    if game.timeslot_cet > dt.now(pytz.utc):
+    if to_utc(game.timeslot) > dt.now(pytz.utc):
         chat_id = update.effective_chat.id
-        due = game.timeslot_cet - timedelta(minutes=5)
+        due = to_utc(game.timeslot) - timedelta(minutes=5)
         if "job" in context.chat_data:
             old_job = context.chat_data["job"]
             old_job.schedule_removal()
