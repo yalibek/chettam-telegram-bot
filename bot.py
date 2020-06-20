@@ -13,6 +13,7 @@ TODO: comments!!!
 
 import random
 
+import sentry_sdk
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 from telegram.ext import (
     Updater,
@@ -388,4 +389,5 @@ def main():
 
 
 if __name__ == "__main__":
+    sentry_sdk.init(SENTRY_DSN)
     main()
