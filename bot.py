@@ -31,11 +31,12 @@ from vars import (
     PORT,
     HEROKU_APP,
     EMOJI,
+    STICKERS,
     INVITE,
+    START,
     HOUR_PATTERN,
     HOUR_MINUTE_PATTERN,
     FIRST_STAGE,
-    PARROT_COFFEE,
 )
 
 
@@ -45,6 +46,20 @@ def error(update, context):
 
 
 # Command actions
+def start(update, context):
+    random_sticker = random.choice(
+        [
+            STICKERS["lenin"],
+            STICKERS["racoon"],
+            STICKERS["borat"],
+            STICKERS["harry"],
+            STICKERS["sheikh"],
+        ]
+    )
+    update.message.reply_text(START)
+    update.message.reply_sticker(random_sticker)
+
+
 def dayoff(update, context):
     update.message.reply_text("It's day off, fool!")
 
@@ -162,12 +177,13 @@ def get_chettam_data(update):
 
 
 def chettam(update, context):
-    random_int = random.randint(0, 200)
+    random_int = random.randint(0, 100)
     if random_int == 1:
         reply = f"Enjoing the bot? *Buy me a coffee.*"
+        parrot = STICKERS["coffee_parrot"]
         update.message.reply_markdown(reply, reply_to_message_id=None)
         update.message.reply_sticker(
-            PARROT_COFFEE, reply_to_message_id=None,
+            parrot, reply_to_message_id=None,
         )
     reply, keyboard = get_chettam_data(update)
     update.message.reply_markdown(
@@ -304,6 +320,8 @@ def main():
     dp.add_error_handler(error)
 
     # Handlers
+    dp.add_handler(CommandHandler("start", start))
+
     if is_dayoff():
         dp.add_handler(MessageHandler(Filters.command, dayoff))
     else:

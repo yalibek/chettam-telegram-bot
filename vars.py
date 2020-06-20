@@ -12,7 +12,18 @@ def arg_parse():
     return parser.parse_args()
 
 
-# Emojis
+# Stickers
+STICKERS = {
+    "coffee_parrot": "CAACAgIAAxkBAAL0iF7r4SfAEYdYrTVkMXYiHXqYEA1cAAL5AgAChmBXDp2WPdbev1lCGgQ",
+    "racoon": "CAACAgIAAxkBAAL1cF7t3YatTs3VWK3xR0fbpRPW9vB5AAKMBgAC-gu2CPxnxUG2V7CeGgQ",
+    "hahaclassic": "CAACAgIAAxkBAAL1al7t3M55gfj6YTVuJuETd2ZttQY0AAL6AANWnb0KR976l3F0cQEaBA",
+    "lenin": "CAACAgIAAxkBAAL1bF7t3V3P7PGfi-AGPfBvuudGFE-BAAKyAQADOKAK3daY89Zw03oaBA",
+    "borat": "CAACAgIAAxkBAAL1bl7t3WTXnaw2bDVUAddB91Mc3mY6AAJJCgACLw_wBgX8BGoorU2iGgQ",
+    "harry": "CAACAgMAAxkBAAL1cl7t3jZN6_vbGKu3dRQv7J55p9G7AAK3BQACv4yQBCGrZtOhEOmVGgQ",
+    "sheikh": "CAACAgIAAxkBAAL1dF7t3mPeoSK1LclyivuIksnN90zqAAL1BQAClvoSBcZ_YHxtJ4JzGgQ",
+}
+
+# Emoji
 EMOJI = {
     "pistol": emojize(":pistol:", use_aliases=True),
     "knife": emojize(":dagger:", use_aliases=True),
@@ -63,10 +74,16 @@ INVITE = [
     "Мышку надо опробовать.",
 ]
 
-# Stickers
-PARROT_COFFEE = (
-    "CAACAgIAAxkBAAL0iF7r4SfAEYdYrTVkMXYiHXqYEA1cAAL5AgAChmBXDp2WPdbev1lCGgQ"
-)
+# Reply to /start command
+START = f"""
+Hi, this is a bot for chettam guys! {EMOJI['pistol']}
+
+/start - help
+/chettam - invite everyone to play at specified time
+/slot_in - reserve a slot for yourself
+/slot_out - abandon your slot
+/status - get current status
+"""
 
 # Timezones
 TIMEZONE_CET = pytz.timezone("CET")
