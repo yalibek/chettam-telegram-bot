@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime as dt, timedelta
+from functools import partial, update_wrapper
 
 import pytz
 
@@ -89,7 +90,7 @@ def get_game(update, timeslot=None):
 def slot_status(game):
     players = "\n".join(f"- {player}" for player in game.players_list)
     slots = game.slots
-    timeslot = game.game_time_cet
+    timeslot = game.timeslot_cet.strftime("%H:%M")
     pistol = EMOJI["pistol"]
     if slots == 0:
         reply = f"All slots are available!"
@@ -127,3 +128,10 @@ def to_utc(date_time):
 # Localize to CET
 def to_cet(date_time):
     return TIMEZONE_CET.localize(date_time)
+
+
+# Hack to pass additional args to any func()
+def wrapped_partial(func, *args, **kwargs):
+    partial_func = partial(func, *args, **kwargs)
+    update_wrapper(partial_func, func)
+    return partial_func

@@ -7,11 +7,12 @@ TODO: добавь еще slot_next_in, чтобы бот создал 2й па�
 TODO: Предлагаю когда набирается команда предлагать poll на время игры. 5 из очереди согласные на это время формируют команду
 TODO: sort players by joined_at
 TODO: 2 parties
-TODO: game reminder
+TODO: refactor!!!
+TODO: comments!!!
 """
 
 import random
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta
 
 import pytz
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
@@ -24,7 +25,7 @@ from telegram.ext import (
     Filters,
 )
 
-from functions import get_player, get_game, slot_status, is_dayoff, logger
+from utils import get_player, get_game, slot_status, is_dayoff, logger, wrapped_partial
 from vars import (
     DEBUG,
     TOKEN,
@@ -33,7 +34,7 @@ from vars import (
     EMOJI,
     STICKERS,
     INVITE,
-    START,
+    START_MESSAGE,
     HOUR_PATTERN,
     HOUR_MINUTE_PATTERN,
     FIRST_STAGE,
@@ -56,8 +57,12 @@ def start(update, context):
             STICKERS["sheikh"],
         ]
     )
-    update.message.reply_text(START)
-    update.message.reply_sticker(random_sticker)
+    update.message.reply_text(
+        START_MESSAGE, reply_to_message_id=None,
+    )
+    update.message.reply_sticker(
+        random_sticker, reply_to_message_id=None,
+    )
 
 
 def dayoff(update, context):
@@ -111,7 +116,7 @@ def slot_out(update, context):
         update.message.reply_text("start a game with /chettam")
 
 
-def join_game(update, context):
+def slot_in_conv(update, context):
     query = update.callback_query
     player = get_player(update)
     game = get_game(update)
@@ -125,7 +130,7 @@ def join_game(update, context):
     return ConversationHandler.END
 
 
-def leave_game(update, context):
+def slot_out_conv(update, context):
     query = update.callback_query
     player = get_player(update)
     game = get_game(update)
@@ -261,10 +266,10 @@ def pick_minute(update, context):
     cross = EMOJI["cross"]
     keyboard = [
         [
-            InlineKeyboardButton(f"{hour}:00", callback_data=f"{hour}:00"),
-            InlineKeyboardButton(f"{hour}:15", callback_data=f"{hour}:15"),
-            InlineKeyboardButton(f"{hour}:30", callback_data=f"{hour}:30"),
-            InlineKeyboardButton(f"{hour}:45", callback_data=f"{hour}:45"),
+            InlineKeyboardButton(
+                f"{hour}:{minutes:02d}", callback_data=f"{hour}:{minutes:02d}"
+            )
+            for minutes in range(0, 60, 15)
         ],
         [
             InlineKeyboardButton("« Back", callback_data="back_to_hours"),
@@ -276,6 +281,30 @@ def pick_minute(update, context):
         text="Choose time:", reply_markup=InlineKeyboardMarkup(keyboard),
     )
     return FIRST_STAGE
+
+
+def alert(context, game):
+    """Send the alarm message."""
+    job = context.job
+    timediff = game.timeslot_cet.minute - dt.now(pytz.utc).minute
+    players = ", ".join(game.players_call)
+    reply = f"{players} game starts in {timediff} min(s)!"
+    context.bot.send_message(job.context, text=reply)
+
+
+def set_time_alert(update, context, game):
+    # Set time alert
+    if game.timeslot_cet > dt.now(pytz.utc):
+        chat_id = update.effective_chat.id
+        due = game.timeslot_cet - timedelta(minutes=5)
+        if "job" in context.chat_data:
+            old_job = context.chat_data["job"]
+            old_job.schedule_removal()
+
+        # Hack to pass additional args to alert()
+        partial_alert = wrapped_partial(alert, game=game)
+        new_job = context.job_queue.run_once(partial_alert, due, context=chat_id)
+        context.chat_data["job"] = new_job
 
 
 def new_game(update, context):
@@ -291,6 +320,7 @@ def new_game(update, context):
     query.edit_message_text(
         text=f"{fire} {invite}\n\n{slot_status(game)}", parse_mode=ParseMode.MARKDOWN
     )
+    set_time_alert(update, context, game)
     return ConversationHandler.END
 
 
@@ -337,9 +367,14 @@ def main():
                     CallbackQueryHandler(pick_hour, pattern="^back_to_hours$"),
                     CallbackQueryHandler(more_hours, pattern="^more_hours$"),
                     CallbackQueryHandler(pick_minute, pattern=HOUR_PATTERN),
-                    CallbackQueryHandler(new_game, pattern=HOUR_MINUTE_PATTERN),
-                    CallbackQueryHandler(join_game, pattern="^join_game$"),
-                    CallbackQueryHandler(leave_game, pattern="^leave_game$"),
+                    CallbackQueryHandler(
+                        new_game,
+                        pattern=HOUR_MINUTE_PATTERN,
+                        pass_job_queue=True,
+                        pass_chat_data=True,
+                    ),
+                    CallbackQueryHandler(slot_in_conv, pattern="^join_game$"),
+                    CallbackQueryHandler(slot_out_conv, pattern="^leave_game$"),
                     CallbackQueryHandler(status_conv, pattern="^status_conv$"),
                     CallbackQueryHandler(start_over, pattern="^start_over$"),
                     CallbackQueryHandler(cancel, pattern="^cancel$"),

@@ -61,6 +61,13 @@ class Player(Base):
             .replace("<", "\<")
         )
 
+    @property
+    def callme(self):
+        if self.username:
+            return f"@{self.username}"
+        else:
+            return self.first_name
+
     def create(self):
         session.add(self)
 
@@ -88,14 +95,17 @@ class Game(Base):
         return [player.sanitized_name for player in self.players]
 
     @property
+    def players_call(self):
+        return [player.callme for player in self.players]
+
+    @property
     def slots(self):
         return len(self.players)
 
     @property
-    def game_time_cet(self):
+    def timeslot_cet(self):
         timeslot_utc = TIMEZONE_UTC.localize(self.timeslot)
-        timeslot_cet = timeslot_utc.astimezone(TIMEZONE_CET)
-        return timeslot_cet.time().strftime("%H:%M")
+        return timeslot_utc.astimezone(TIMEZONE_CET)
 
     def create(self):
         session.add(self)

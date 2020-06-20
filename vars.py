@@ -75,10 +75,10 @@ INVITE = [
 ]
 
 # Reply to /start command
-START = f"""
+START_MESSAGE = f"""
 Hi, this is a bot for chettam guys! {EMOJI['pistol']}
 
-/start - help
+/start - help me pls
 /chettam - invite everyone to play at specified time
 /slot_in - reserve a slot for yourself
 /slot_out - abandon your slot
