@@ -38,7 +38,8 @@ def error(update, context):
 def start(update, context):
     random_sticker = random.choice(
         [
-            STICKERS["lenin"],STICKERS["racoon"],
+            STICKERS["lenin"],
+            STICKERS["racoon"],
             STICKERS["borat"],
             STICKERS["harry"],
             STICKERS["sheikh"],
