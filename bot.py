@@ -7,6 +7,7 @@ TODO: добавь еще slot_next_in, чтобы бот создал 2й па�
 TODO: Предлагаю когда набирается команда предлагать poll на время игры. 5 из очереди согласные на это время формируют команду
 TODO: sort players by joined_at
 TODO: 2 parties
+TODO: logging
 TODO: refactor!!!
 TODO: comments!!!
 """
@@ -37,8 +38,7 @@ def error(update, context):
 def start(update, context):
     random_sticker = random.choice(
         [
-            STICKERS["lenin"],
-            STICKERS["racoon"],
+            STICKERS["lenin"],STICKERS["racoon"],
             STICKERS["borat"],
             STICKERS["harry"],
             STICKERS["sheikh"],
