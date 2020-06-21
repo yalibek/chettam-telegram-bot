@@ -107,7 +107,7 @@ def slot_status(game):
 def is_dayoff():
     now = dt.now(pytz.utc)
     is_not_night = now.hour >= 6
-    is_wed_sun = now.weekday() in ["2", "6"]
+    is_wed_sun = now.weekday() in [2, 6]
     return is_not_night and is_wed_sun
 
 
