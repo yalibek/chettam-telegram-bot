@@ -54,7 +54,14 @@ def start(update, context):
 
 
 def dayoff(update, context):
-    update.message.reply_text("It's day off, fool!")
+    try:
+        quote, author = get_quote()
+        if not author:
+            author = "Unknown"
+        reply = f"_{quote}_\n\n — {author}"
+    except:
+        reply = "It's dayoff, fool!"
+    update.message.reply_markdown(reply, reply_to_message_id=None)
 
 
 def status(update, context):
@@ -309,7 +316,7 @@ def new_game(update, context):
     query.edit_message_text(
         text=f"{fire} {invite}\n\n{slot_status(game)}", parse_mode=ParseMode.MARKDOWN
     )
-    set_time_alert(update, context, game)
+    # set_time_alert(update, context, game)
     return ConversationHandler.END
 
 

@@ -3,6 +3,7 @@ from datetime import datetime as dt, timedelta
 from functools import partial, update_wrapper
 
 import pytz
+import requests
 
 from models import Game, Player, session
 from vars import EMOJI, TIMEZONE_CET, TIMEZONE_UTC
@@ -106,7 +107,7 @@ def slot_status(game):
 # Checks if today is cs:go dayoff
 def is_dayoff():
     now = dt.now(pytz.utc)
-    is_not_night = now.hour >= 6
+    is_not_night = now.hour >= 3
     is_wed_sun = now.weekday() in [2, 6]
     return is_not_night and is_wed_sun
 
@@ -135,3 +136,13 @@ def wrapped_partial(func, *args, **kwargs):
     partial_func = partial(func, *args, **kwargs)
     update_wrapper(partial_func, func)
     return partial_func
+
+
+def get_quote():
+    url = "https://api.forismatic.com/api/1.0/"
+    response = requests.get(
+        url, params={"method": "getQuote", "lang": "en", "format": "json"}
+    )
+    quote = response.json().get("quoteText")
+    author = response.json().get("quoteAuthor")
+    return quote, author
