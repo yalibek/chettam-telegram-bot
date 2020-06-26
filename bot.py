@@ -148,6 +148,7 @@ def get_chettam_data(update):
     chart = EMOJI["chart"]
     cross = EMOJI["cross"]
     zzz = EMOJI["zzz"]
+    party = EMOJI["party"]
     if game:
         reply = f"Game already exist:\n\n{slot_status(game)}"
         keyboard = [
@@ -158,9 +159,17 @@ def get_chettam_data(update):
             ]
         ]
         if player in game.players:
-            keyboard.insert(
-                0, [InlineKeyboardButton(f"{zzz} Leave", callback_data="leave_game")]
-            )
+            kb = [
+                InlineKeyboardButton(f"{zzz} Leave", callback_data="leave_game"),
+            ]
+            if game.slots >= 5:
+                kb.insert(
+                    1,
+                    InlineKeyboardButton(
+                        f"{party} Call everyone", callback_data="call_players"
+                    ),
+                )
+            keyboard.insert(0, kb)
         elif player not in game.players and game.slots < 10:
             keyboard.insert(
                 0, [InlineKeyboardButton(f"{pistol} Join", callback_data="join_game")]
@@ -278,7 +287,7 @@ def pick_minute(update, context):
     return FIRST_STAGE
 
 
-def alert(context, game):
+def alert_game(context, game):
     """Send the alarm message."""
     job = context.job
     timediff = to_utc(game.timeslot).minute - dt.now(pytz.utc).minute
@@ -288,19 +297,17 @@ def alert(context, game):
         context.bot.send_message(job.context, text=reply)
 
 
-def set_time_alert(update, context, game):
+def set_time_alert(update, context, alert, due, game):
     # Set time alert
-    if to_utc(game.timeslot) > dt.now(pytz.utc):
-        chat_id = update.effective_chat.id
-        due = to_utc(game.timeslot) - timedelta(minutes=5)
-        if "job" in context.chat_data:
-            old_job = context.chat_data["job"]
-            old_job.schedule_removal()
+    chat_id = update.effective_chat.id
+    if "job" in context.chat_data:
+        old_job = context.chat_data["job"]
+        old_job.schedule_removal()
 
-        # Hack to pass additional args to alert()
-        partial_alert = wrapped_partial(alert, game=game)
-        new_job = context.job_queue.run_once(partial_alert, due, context=chat_id)
-        context.chat_data["job"] = new_job
+    # Hack to pass additional args to alert()
+    partial_alert = wrapped_partial(alert, game=game)
+    new_job = context.job_queue.run_once(partial_alert, due, context=chat_id)
+    context.chat_data["job"] = new_job
 
 
 def new_game(update, context):
@@ -316,7 +323,9 @@ def new_game(update, context):
     query.edit_message_text(
         text=f"{fire} {invite}\n\n{slot_status(game)}", parse_mode=ParseMode.MARKDOWN
     )
-    # set_time_alert(update, context, game)
+    # if to_utc(game.timeslot) > dt.now(pytz.utc):
+    #     due = to_utc(game.timeslot) - timedelta(minutes=5)
+    #     set_time_alert(update, context, alert_game, due, game)
     return ConversationHandler.END
 
 
@@ -332,6 +341,24 @@ def cancel(update, context):
     query = update.callback_query
     query.answer()
     query.edit_message_text(text="cancelled :(")
+    return ConversationHandler.END
+
+
+def alert_players(context, game):
+    """Send the alarm message."""
+    job = context.job
+    players = [p.callme for p in game.players]
+    timeslot = game.timeslot_cet.strftime("%H:%M")
+    reply = f"*{timeslot}*: {', '.join(players)} go go!"
+    context.bot.send_message(job.context, text=reply, parse_mode=ParseMode.MARKDOWN)
+
+
+def call_players(update, context):
+    query = update.callback_query
+    game = get_game(update)
+    query.answer()
+    query.edit_message_text(text=slot_status(game), parse_mode=ParseMode.MARKDOWN)
+    set_time_alert(update, context, alert_players, 0, game)
     return ConversationHandler.END
 
 
@@ -371,6 +398,12 @@ def main():
                     ),
                     CallbackQueryHandler(slot_in_conv, pattern="^join_game$"),
                     CallbackQueryHandler(slot_out_conv, pattern="^leave_game$"),
+                    CallbackQueryHandler(
+                        call_players,
+                        pattern="^call_players$",
+                        pass_job_queue=True,
+                        pass_chat_data=True,
+                    ),
                     CallbackQueryHandler(status_conv, pattern="^status_conv$"),
                     CallbackQueryHandler(start_over, pattern="^start_over$"),
                     CallbackQueryHandler(cancel, pattern="^cancel$"),

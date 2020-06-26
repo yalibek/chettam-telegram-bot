@@ -66,7 +66,7 @@ class Player(Base):
         if self.username:
             return f"@{self.username}"
         else:
-            return self.first_name
+            return f"{self.first_name}(tg://user?id={self.user_id})"
 
     def create(self):
         session.add(self)
