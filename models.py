@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, BigInteger, String, ForeignKey, DateTime
 from sqlalchemy import create_engine, Table
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
+from telegram.utils.helpers import escape_markdown
 
 from vars import DB_URL, TIMEZONE_CET, TIMEZONE_UTC
 
@@ -38,30 +39,6 @@ class Player(Base):
             return f"{self.first_name}"
 
     @property
-    def sanitized_name(self):
-        return (
-            str(self)
-            .replace("\\", "\\\\")
-            .replace("`", "\`")
-            .replace("*", "\*")
-            .replace("_", "\_")
-            .replace("{", "\{")
-            .replace("}", "\}")
-            .replace("[", "\[")
-            .replace("]", "\]")
-            .replace("(", "\(")
-            .replace(")", "\)")
-            .replace("#", "\#")
-            .replace("+", "\+")
-            .replace("-", "\-")
-            .replace(".", "\.")
-            .replace("!", "\!")
-            .replace("&", "\&")
-            .replace(">", "\>")
-            .replace("<", "\<")
-        )
-
-    @property
     def callme(self):
         if self.username:
             return f"@{self.username}"
@@ -92,7 +69,7 @@ class Game(Base):
 
     @property
     def players_list(self):
-        return [player.sanitized_name for player in self.players]
+        return [escape_markdown(str(player)) for player in self.players]
 
     @property
     def players_call(self):

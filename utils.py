@@ -37,7 +37,8 @@ def get_player(update):
 
 
 # Creates new game
-def create_game(chat, timeslot):
+def create_game(update, timeslot):
+    chat = update.effective_chat
     game = Game(
         updated_at=dt.now(pytz.utc),
         timeslot=timeslot,
@@ -58,18 +59,19 @@ def game_is_old(game):
     return (now - updated_at > delta) or (now - played_at > delta)
 
 
+# Converts time into datetime object in UTC timezone
+def convert_to_dt(timeslot):
+    date_today = dt.now(pytz.utc).date()
+    date_time = f"{date_today} {timeslot}"
+    timeslot_obj = dt.strptime(date_time, "%Y-%m-%d %H:%M")
+    timeslot_cet = to_cet(timeslot_obj)
+    return timeslot_cet.astimezone(TIMEZONE_UTC)
+
+
 # Returns Game model for current chat
 def get_game(update, timeslot=None):
     chat = update.effective_chat
     game = session.query(Game).filter_by(chat_id=chat.id).first()
-
-    if timeslot:
-        # Convert time into datetime object in UTC timezone
-        date_today = dt.now(pytz.utc).date()
-        date_time = f"{date_today} {timeslot}"
-        timeslot_obj = dt.strptime(date_time, "%Y-%m-%d %H:%M")
-        timeslot_cet = to_cet(timeslot_obj)
-        timeslot = timeslot_cet.astimezone(TIMEZONE_UTC)
 
     if game and timeslot:
         # Update timeslot if given
@@ -80,9 +82,6 @@ def get_game(update, timeslot=None):
         # Delete existing game if it wasn't updated for 8 hours
         game.delete()
         game = None
-    elif not game and timeslot:
-        # Create new game only if new timeslot is given
-        game = create_game(chat, timeslot)
 
     return game
 

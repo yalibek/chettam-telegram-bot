@@ -326,7 +326,7 @@ def alert_game(context, game):
         context.bot.send_message(job.context, text=reply)
 
 
-def set_time_alert(update, context, alert, due, game):
+def set_time_alert(update, context, alert, due, game, message):
     # Set time alert
     chat_id = update.effective_chat.id
     if "job" in context.chat_data:
@@ -334,16 +334,34 @@ def set_time_alert(update, context, alert, due, game):
         old_job.schedule_removal()
 
     # Hack to pass additional args to alert()
-    partial_alert = wrapped_partial(alert, game=game)
+    partial_alert = wrapped_partial(alert, game=game, message=message)
     new_job = context.job_queue.run_once(partial_alert, due, context=chat_id)
     context.chat_data["job"] = new_job
 
 
 def new_game(update, context):
     query = update.callback_query
+    new_timeslot = convert_to_dt(query.data)
     invite = random.choice(INVITE)
     fire = EMOJI["fire"]
-    game = get_game(update, timeslot=query.data)
+    game = get_game(update)
+
+    if not game:
+        game = create_game(update, new_timeslot)
+    elif game:
+        old_ts = game.timeslot_cet.strftime("%H:%M")
+        new_ts = new_timeslot.astimezone(TIMEZONE_CET).strftime("%H:%M")
+        if game.players and old_ts != new_ts:
+            game = get_game(update, timeslot=new_timeslot)
+            user = get_player(update)
+            players = [p.callme for p in game.players]
+            message = (
+                f"{', '.join(players)} warning!\n\n"
+                f"Timeslot changed by {user.callme}:\n"
+                f"{old_ts} -> *{new_ts}*"
+            )
+            set_time_alert(update, context, alert_players, 0, game, message)
+
     player = get_player(update)
     game.players.append(player)
     game.updated_at = dt.now(pytz.utc)
@@ -379,13 +397,10 @@ def cancel(update, context):
     return ConversationHandler.END
 
 
-def alert_players(context, game):
+def alert_players(context, game, message):
     """Send the alarm message."""
     job = context.job
-    players = [p.callme for p in game.players]
-    timeslot = game.timeslot_cet.strftime("%H:%M")
-    reply = f"*{timeslot}*: {', '.join(players)} go go!"
-    context.bot.send_message(job.context, text=reply, parse_mode=ParseMode.MARKDOWN)
+    context.bot.send_message(job.context, text=message, parse_mode=ParseMode.MARKDOWN)
 
 
 def call_players(update, context):
@@ -393,7 +408,10 @@ def call_players(update, context):
     game = get_game(update)
     query.answer()
     query.edit_message_text(text=slot_status(game), parse_mode=ParseMode.MARKDOWN)
-    set_time_alert(update, context, alert_players, 0, game)
+    players = [p.callme for p in game.players]
+    timeslot = game.timeslot_cet.strftime("%H:%M")
+    message = f"*{timeslot}*: {', '.join(players)} go go!"
+    set_time_alert(update, context, alert_players, 0, game, message)
     return ConversationHandler.END
 
 
