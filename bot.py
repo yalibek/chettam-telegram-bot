@@ -60,7 +60,6 @@ def dayoff(update, context):
             author = "Unknown"
         reply = f"_{quote}_\n\n — {author}"
     except:
-
         reply = "It's dayoff, fool!"
     update.message.reply_markdown(reply, reply_to_message_id=None)
 
