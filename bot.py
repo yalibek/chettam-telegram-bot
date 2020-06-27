@@ -163,8 +163,7 @@ def get_chettam_data(update):
                 InlineKeyboardButton(f"{zzz} Leave", callback_data="leave_game"),
             ]
             if game.slots >= 5:
-                kb.insert(
-                    1,
+                kb.append(
                     InlineKeyboardButton(
                         f"{party} Call everyone", callback_data="call_players"
                     ),
