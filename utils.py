@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime as dt, timedelta
+from datetime import datetime as dt, timedelta, date
 from functools import partial, update_wrapper
 
 import pytz

@@ -60,8 +60,18 @@ def dayoff(update, context):
             author = "Unknown"
         reply = f"_{quote}_\n\n — {author}"
     except:
+
         reply = "It's dayoff, fool!"
     update.message.reply_markdown(reply, reply_to_message_id=None)
+
+    # Notify Aseke about his abstinence period
+    today = dt.today().date()
+    goal = date(2020, 7, 27)
+    diff = goal - today
+    if diff.days > 0:
+        update.message.reply_markdown(
+            f"{diff.days} days left for Aseke", reply_to_message_id=None
+        )
 
 
 def status(update, context):
@@ -88,6 +98,12 @@ def slot_in(update, context):
                 reply = f"{fire} *{player}* joined! {fire}\n\n{slot_status(game)}"
         else:
             reply = f"No more than 10 players allowed."
+        logger().info(
+            'User "%s" joined a game "%s" for chat "%s"',
+            player,
+            game.timeslot,
+            game.chat_id,
+        )
         update.message.reply_markdown(reply, reply_to_message_id=None)
     else:
         update.message.reply_text("start a game with /chettam")
@@ -106,6 +122,12 @@ def slot_out(update, context):
         else:
             status(update, context)
             return
+        logger().info(
+            'User "%s" left a game "%s" for chat "%s"',
+            player,
+            game.timeslot,
+            game.chat_id,
+        )
         update.message.reply_markdown(reply, reply_to_message_id=None)
     else:
         update.message.reply_text("start a game with /chettam")
@@ -122,6 +144,12 @@ def slot_in_conv(update, context):
     reply = f"{fire} *{player}* joined! {fire}\n\n{slot_status(game)}"
     query.answer()
     query.edit_message_text(text=reply, parse_mode=ParseMode.MARKDOWN)
+    logger().info(
+        'User "%s" joined a game "%s" for chat "%s"',
+        player,
+        game.timeslot,
+        game.chat_id,
+    )
     return ConversationHandler.END
 
 
@@ -136,6 +164,9 @@ def slot_out_conv(update, context):
     reply = f"{cry} *{player}* left {cry}\n\n{slot_status(game)}"
     query.answer()
     query.edit_message_text(text=reply, parse_mode=ParseMode.MARKDOWN)
+    logger().info(
+        'User "%s" left a game "%s" for chat "%s"', player, game.timeslot, game.chat_id,
+    )
     return ConversationHandler.END
 
 
@@ -325,6 +356,12 @@ def new_game(update, context):
     # if to_utc(game.timeslot) > dt.now(pytz.utc):
     #     due = to_utc(game.timeslot) - timedelta(minutes=5)
     #     set_time_alert(update, context, alert_game, due, game)
+    logger().info(
+        'User "%s" created new game "%s" for chat "%s"',
+        player,
+        game.timeslot,
+        game.chat_id,
+    )
     return ConversationHandler.END
 
 
@@ -374,7 +411,7 @@ def main():
     # Handlers
     dp.add_handler(CommandHandler("start", start))
 
-    if is_dayoff():
+    if not is_dayoff():
         dp.add_handler(MessageHandler(Filters.command, dayoff))
     else:
         dp.add_handler(CommandHandler("slot_in", slot_in))
