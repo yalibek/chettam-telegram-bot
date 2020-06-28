@@ -70,7 +70,7 @@ def dayoff(update, context):
     diff = goal - today
     if diff.days > 0:
         update.message.reply_markdown(
-            f"{diff.days} days left for Aseke", reply_to_message_id=None
+            f"Aseke can't play for {diff.days} more days", reply_to_message_id=None
         )
 
 
