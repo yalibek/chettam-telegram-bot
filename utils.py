@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime as dt, timedelta, date
+from datetime import datetime as dt, timedelta
 from functools import partial, update_wrapper
 
 import pytz
@@ -36,9 +36,17 @@ def get_player(update):
     return player
 
 
+# Converts time into datetime object in UTC timezone
+def convert_to_dt(timeslot):
+    date_today = dt.now(pytz.utc).date()
+    date_time = f"{date_today} {timeslot}"
+    timeslot_obj = dt.strptime(date_time, "%Y-%m-%d %H:%M")
+    timeslot_cet = to_cet(timeslot_obj)
+    return timeslot_cet.astimezone(TIMEZONE_UTC)
+
+
 # Creates new game
-def create_game(update, timeslot):
-    chat = update.effective_chat
+def create_game(chat, timeslot):
     game = Game(
         updated_at=dt.now(pytz.utc),
         timeslot=timeslot,
@@ -46,6 +54,14 @@ def create_game(update, timeslot):
         chat_type=chat.type,
     )
     game.create()
+    game.save()
+    return game
+
+
+# Updates existing game with new timeslot
+def update_game(game, timeslot):
+    game.timeslot = timeslot
+    game.updated_at = dt.now(pytz.utc)
     game.save()
     return game
 
@@ -59,30 +75,12 @@ def game_is_old(game):
     return (now - updated_at > delta) or (now - played_at > delta)
 
 
-# Converts time into datetime object in UTC timezone
-def convert_to_dt(timeslot):
-    date_today = dt.now(pytz.utc).date()
-    date_time = f"{date_today} {timeslot}"
-    timeslot_obj = dt.strptime(date_time, "%Y-%m-%d %H:%M")
-    timeslot_cet = to_cet(timeslot_obj)
-    return timeslot_cet.astimezone(TIMEZONE_UTC)
-
-
 # Returns Game model for current chat
-def get_game(update, timeslot=None):
-    chat = update.effective_chat
-    game = session.query(Game).filter_by(chat_id=chat.id).first()
-
-    if game and timeslot:
-        # Update timeslot if given
-        game.timeslot = timeslot
-        game.updated_at = dt.now(pytz.utc)
-        game.save()
-    elif game and game_is_old(game):
-        # Delete existing game if it wasn't updated for 8 hours
+def get_game(update):
+    game = session.query(Game).filter_by(chat_id=update.effective_chat.id).first()
+    if game and game_is_old(game):
         game.delete()
         game = None
-
     return game
 
 
@@ -137,6 +135,19 @@ def wrapped_partial(func, *args, **kwargs):
     return partial_func
 
 
+# Set time alert
+def set_time_alert(update, context, alert, message, due):
+    chat_id = update.effective_chat.id
+    if "job" in context.chat_data:
+        old_job = context.chat_data["job"]
+        old_job.schedule_removal()
+
+    partial_alert = wrapped_partial(alert, message=message)
+    new_job = context.job_queue.run_once(partial_alert, due, context=chat_id)
+    context.chat_data["job"] = new_job
+
+
+# Get random famous quote
 def get_quote():
     url = "https://api.forismatic.com/api/1.0/"
     response = requests.get(

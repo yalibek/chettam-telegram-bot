@@ -6,7 +6,7 @@ from telegram.utils.helpers import escape_markdown
 
 from vars import DB_URL, TIMEZONE_CET, TIMEZONE_UTC
 
-# DB stuff
+# Connect to DB
 Base = declarative_base()
 engine = create_engine(DB_URL)
 Session = sessionmaker(bind=engine)
@@ -20,7 +20,7 @@ association_table = Table(
     Column("game_id", Integer, ForeignKey("game.id")),
 )
 
-
+# Class for user
 class Player(Base):
     __tablename__ = "player"
     id = Column(Integer, primary_key=True)
@@ -39,7 +39,7 @@ class Player(Base):
             return f"{self.first_name}"
 
     @property
-    def callme(self):
+    def mention(self):
         if self.username:
             return f"@{self.username}"
         else:
@@ -56,6 +56,7 @@ class Player(Base):
         session.commit()
 
 
+# Class for unique game per chat
 class Game(Base):
     __tablename__ = "game"
     id = Column(Integer, primary_key=True)
@@ -73,7 +74,7 @@ class Game(Base):
 
     @property
     def players_call(self):
-        return [player.callme for player in self.players]
+        return ", ".join(player.mention for player in self.players)
 
     @property
     def slots(self):
