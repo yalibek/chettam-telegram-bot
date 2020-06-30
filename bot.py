@@ -235,7 +235,7 @@ def get_chettam_data(update):
             for i, game in enumerate(games)
         ]
     else:
-        keyboard = None
+        keyboard = [[]]
         reply = "Game doesn't exist."
 
     if len(games) < 4:
