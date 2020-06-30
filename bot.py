@@ -12,7 +12,9 @@ TODO: refactor!!!
 TODO: comments!!!
 """
 
+import inspect
 import random
+import re
 from datetime import date
 
 import sentry_sdk
@@ -75,16 +77,16 @@ def dayoff(update, context):
 
 
 def status(update, context):
-    game = get_game(update)
-    if game:
-        update.message.reply_markdown(slot_status(game), reply_to_message_id=None)
+    games = get_all_games(update)
+    if games:
+        update.message.reply_markdown(slot_status_all(games), reply_to_message_id=None)
     else:
         update.message.reply_text("start a game with /chettam")
 
 
 def slot_in(update, context):
     player = get_player(update)
-    game = get_game(update)
+    game = get_all_games(update)
     if game:
         if game.slots < 10:
             if player in game.players:
@@ -111,7 +113,7 @@ def slot_in(update, context):
 
 def slot_out(update, context):
     player = get_player(update)
-    game = get_game(update)
+    game = get_all_games(update)
     if game:
         if player in game.players:
             game.players.remove(player)
@@ -133,10 +135,11 @@ def slot_out(update, context):
         update.message.reply_text("start a game with /chettam")
 
 
+# Inline keyboard actions
 def slot_in_conv(update, context):
     query = update.callback_query
     player = get_player(update)
-    game = get_game(update)
+    game = get_game(update, context.bot_data["game_id"])
     game.updated_at = dt.now(pytz.utc)
     game.players.append(player)
     game.save()
@@ -156,7 +159,7 @@ def slot_in_conv(update, context):
 def slot_out_conv(update, context):
     query = update.callback_query
     player = get_player(update)
-    game = get_game(update)
+    game = get_game(update, context.bot_data["game_id"])
     game.players.remove(player)
     game.updated_at = dt.now(pytz.utc)
     game.save()
@@ -170,55 +173,82 @@ def slot_out_conv(update, context):
     return ConversationHandler.END
 
 
-# Inline keyboard actions
-def get_chettam_data(update):
-    game = get_game(update)
+def game_data(update, context):
+    query = update.callback_query
     player = get_player(update)
+    game_id = re.search("[1-9]+", query.data).group(0)
+    game = get_game(update, game_id)
+    context.bot_data["game_id"] = game.id
+
     pistol = EMOJI["pistol"]
     pencil = EMOJI["pencil"]
     chart = EMOJI["chart"]
     cross = EMOJI["cross"]
     zzz = EMOJI["zzz"]
     party = EMOJI["party"]
-    if game:
-        reply = f"Game already exist:\n\n{slot_status(game)}"
+    keyboard = [
+        [
+            InlineKeyboardButton(f"{pencil} Edit", callback_data="edit_existing_game"),
+            InlineKeyboardButton(f"{chart} Status", callback_data="status_conv"),
+            InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
+        ]
+    ]
+    if player in game.players:
+        kb = [
+            InlineKeyboardButton(f"{zzz} Leave", callback_data="leave_game"),
+        ]
+        if game.slots >= 5:
+            kb.append(
+                InlineKeyboardButton(
+                    f"{party} Call everyone", callback_data="call_everyone"
+                ),
+            )
+        keyboard.insert(0, kb)
+    elif player not in game.players and game.slots < 10:
+        keyboard.insert(
+            0, [InlineKeyboardButton(f"{pistol} Join", callback_data="join_game")]
+        )
+    reply = f"You picked a game:\n\n{slot_status(game)}"
+    query.answer()
+    query.edit_message_text(
+        text=reply,
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode=ParseMode.MARKDOWN,
+    )
+    return FIRST_STAGE
+
+
+def get_chettam_data(update):
+    games = get_all_games(update)
+    pistol = EMOJI["pistol"]
+    cross = EMOJI["cross"]
+    if games:
+        reply = f"Game(s) already exist:\n\n{slot_status_all(games)}"
         keyboard = [
             [
-                InlineKeyboardButton(f"{pencil} Edit", callback_data="game"),
-                InlineKeyboardButton(f"{chart} Status", callback_data="status_conv"),
-                InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
-            ]
-        ]
-        if player in game.players:
-            kb = [
-                InlineKeyboardButton(f"{zzz} Leave", callback_data="leave_game"),
-            ]
-            if game.slots >= 5:
-                kb.append(
-                    InlineKeyboardButton(
-                        f"{party} Call everyone", callback_data="call_everyone"
-                    ),
+                InlineKeyboardButton(
+                    f"Game #{i+1} {game.timeslot_cet_time}",
+                    callback_data=f"GAME{game.id}",
                 )
-            keyboard.insert(0, kb)
-        elif player not in game.players and game.slots < 10:
-            keyboard.insert(
-                0, [InlineKeyboardButton(f"{pistol} Join", callback_data="join_game")]
-            )
+            ]
+            for i, game in enumerate(games)
+        ]
     else:
         reply = "Game doesn't exist."
-        keyboard = [
-            [
-                InlineKeyboardButton(f"{pistol} New game", callback_data="game"),
-                InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
-            ]
-        ]
+    if len(get_all_games(update)) <= 4:
+        keyboard.append(
+            [InlineKeyboardButton(f"{pistol} New game", callback_data="new_game"),]
+        )
+    keyboard.append(
+        [InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),]
+    )
     return reply, keyboard
 
 
 def chettam(update, context):
     random_int = random.randint(0, 100)
     if random_int == 1:
-        reply = f"Enjoing the bot? *Buy me a coffee, maybe?.*"
+        reply = f"Enjoing the bot? *Buy me a coffee, maybe?*"
         parrot = STICKERS["coffee_parrot"]
         update.message.reply_markdown(reply, reply_to_message_id=None)
         update.message.reply_sticker(
@@ -245,6 +275,7 @@ def start_over(update, context):
 
 def pick_hour(update, context):
     query = update.callback_query
+    context.bot_data["game_action"] = query.data
     cross = EMOJI["cross"]
     keyboard = [
         [
@@ -317,40 +348,24 @@ def pick_minute(update, context):
     return FIRST_STAGE
 
 
-def alert_game(context, game):
-    """Send the alarm message."""
-    job = context.job
-    timediff = to_utc(game.timeslot).minute - dt.now(pytz.utc).minute
-    reply = f"{game.players_call} game starts in {timediff} min(s)!"
-    if game.players:
-        context.bot.send_message(job.context, text=reply)
-
-
 def new_game(update, context):
     query = update.callback_query
     fire = EMOJI["fire"]
     new_timeslot = convert_to_dt(query.data)
     invite = random.choice(INVITE)
     player = get_player(update)
-    game = get_game(update)
-
-    if not game:
-        game = create_game(update.effective_chat, new_timeslot)
-        logger().info(
-            'User "%s" created new game "%s" for chat "%s"',
-            player,
-            game.timeslot,
-            game.chat_id,
-        )
-    elif game:
+    if context.bot_data["game_action"] == "edit_existing_game":
+        game = get_game(update, context.bot_data["game_id"])
         old_ts = game.timeslot_cet.strftime("%H:%M")
         new_ts = new_timeslot.astimezone(TIMEZONE_CET).strftime("%H:%M")
         if game.players and old_ts != new_ts:
             game = update_game(game, new_timeslot)
-            message = (
-                f"{game.players_call} warning!\n\n"
-                f"Timeslot changed by {player.mention}:\n"
-                f"{old_ts} -> *{new_ts}*"
+            message = inspect.cleandoc(
+                f"""
+                {game.players_call} warning!\n
+                Timeslot changed by {player.mention}:
+                {old_ts} -> *{new_ts}*
+                """
             )
             set_time_alert(update, context, alert_message, message, 0)
             logger().info(
@@ -360,6 +375,14 @@ def new_game(update, context):
                 new_ts,
                 game.chat_id,
             )
+    elif context.bot_data["game_action"] == "new_game":
+        game = create_game(update.effective_chat, new_timeslot)
+        logger().info(
+            'User "%s" created new game "%s" for chat "%s"',
+            player,
+            game.timeslot,
+            game.chat_id,
+        )
 
     game.players.append(player)
     game.updated_at = dt.now(pytz.utc)
@@ -368,18 +391,15 @@ def new_game(update, context):
     query.edit_message_text(
         text=f"{fire} {invite}\n\n{slot_status(game)}", parse_mode=ParseMode.MARKDOWN
     )
-    # if to_utc(game.timeslot) > dt.now(pytz.utc):
-    #     due = to_utc(game.timeslot) - timedelta(minutes=5)
-    #     set_time_alert(update, context, alert_game, due, game)
-
+    context.bot_data.update()
     return ConversationHandler.END
 
 
 def status_conv(update, context):
     query = update.callback_query
-    game = get_game(update)
+    games = get_all_games(update)
     query.answer()
-    query.edit_message_text(text=slot_status(game), parse_mode=ParseMode.MARKDOWN)
+    query.edit_message_text(text=slot_status_all(games), parse_mode=ParseMode.MARKDOWN)
     return ConversationHandler.END
 
 
@@ -398,7 +418,7 @@ def alert_message(context, message):
 
 def call_everyone(update, context):
     query = update.callback_query
-    game = get_game(update)
+    game = get_game(update, context.bot_data["game_id"])
     query.answer()
     query.edit_message_text(text=slot_status(game), parse_mode=ParseMode.MARKDOWN)
     timeslot = game.timeslot_cet.strftime("%H:%M")
@@ -423,15 +443,17 @@ def main():
     if is_dayoff():
         dp.add_handler(MessageHandler(Filters.command, dayoff))
     else:
-        dp.add_handler(CommandHandler("slot_in", slot_in))
-        dp.add_handler(CommandHandler("slot_out", slot_out))
+        # dp.add_handler(CommandHandler("slot_in", slot_in))
+        # dp.add_handler(CommandHandler("slot_out", slot_out))
         dp.add_handler(CommandHandler("status", status))
 
         chettam_conversation = ConversationHandler(
             entry_points=[CommandHandler("chettam", chettam)],
             states={
                 FIRST_STAGE: [
-                    CallbackQueryHandler(pick_hour, pattern="^game$"),
+                    CallbackQueryHandler(pick_hour, pattern="^new_game$"),
+                    CallbackQueryHandler(pick_hour, pattern="^edit_existing_game$"),
+                    CallbackQueryHandler(game_data, pattern="^GAME[1-9]+$"),
                     CallbackQueryHandler(pick_hour, pattern="^back_to_hours$"),
                     CallbackQueryHandler(more_hours, pattern="^more_hours$"),
                     CallbackQueryHandler(pick_minute, pattern=HOUR_PATTERN),

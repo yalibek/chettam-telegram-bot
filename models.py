@@ -20,6 +20,7 @@ association_table = Table(
     Column("game_id", Integer, ForeignKey("game.id")),
 )
 
+
 # Class for user
 class Player(Base):
     __tablename__ = "player"
@@ -61,7 +62,7 @@ class Game(Base):
     __tablename__ = "game"
     id = Column(Integer, primary_key=True)
     updated_at = Column(DateTime)
-    chat_id = Column(BigInteger, unique=True)
+    chat_id = Column(BigInteger)
     chat_type = Column(String)
     timeslot = Column(DateTime)
     players = relationship(
@@ -84,6 +85,10 @@ class Game(Base):
     def timeslot_cet(self):
         timeslot_utc = TIMEZONE_UTC.localize(self.timeslot)
         return timeslot_utc.astimezone(TIMEZONE_CET)
+
+    @property
+    def timeslot_cet_time(self):
+        return self.timeslot_cet.strftime("%H:%M")
 
     def create(self):
         session.add(self)

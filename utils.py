@@ -76,15 +76,29 @@ def game_is_old(game):
 
 
 # Returns Game model for current chat
-def get_game(update):
-    game = session.query(Game).filter_by(chat_id=update.effective_chat.id).first()
-    if game and game_is_old(game):
-        game.delete()
-        game = None
-    return game
+def get_game(update, game_id):
+    return (
+        session.query(Game)
+        .filter_by(chat_id=update.effective_chat.id, id=game_id)
+        .first()
+    )
 
 
-# Returns slots data
+# Returns all Game models for current chat
+def get_all_games(update):
+    games = (
+        session.query(Game)
+        .filter_by(chat_id=update.effective_chat.id)
+        .order_by(Game.id)
+        .all()
+    )
+    for game in games:
+        if game and game_is_old(game):
+            game.delete()
+    return games
+
+
+# Returns slots data for game
 def slot_status(game):
     players = "\n".join(f"- {player}" for player in game.players_list)
     slots = game.slots
@@ -98,7 +112,15 @@ def slot_status(game):
         reply = f"10 slots. 2 parties! gogo! {pistol}{pistol}"
     else:
         reply = f"{slots} slot(s) taken."
-    return f"*{timeslot}*: {reply}\n{players}"
+    if players:
+        return f"*{timeslot}*: {reply}\n{players}"
+    else:
+        return f"*{timeslot}*: {reply}"
+
+
+# Returns slots data for all games
+def slot_status_all(games):
+    return "\n\n".join(slot_status(game) for game in games)
 
 
 # Checks if today is cs:go dayoff
