@@ -176,9 +176,12 @@ def slot_out_conv(update, context):
 def game_data(update, context):
     query = update.callback_query
     player = get_player(update)
-    game_id = re.search("[1-9]+", query.data).group(0)
+    g = re.search("GAME([1-9]+)\.([1-9]+)", query.data)
+    game_id = g.group(1)
+    game_num = g.group(2)
     game = get_game(update, game_id)
     context.bot_data["game_id"] = game.id
+    context.bot_data["game_num"] = game_num
 
     pistol = EMOJI["pistol"]
     pencil = EMOJI["pencil"]
@@ -186,6 +189,7 @@ def game_data(update, context):
     cross = EMOJI["cross"]
     zzz = EMOJI["zzz"]
     party = EMOJI["party"]
+
     keyboard = [
         [
             InlineKeyboardButton(f"{pencil} Edit", callback_data="edit_existing_game"),
@@ -208,6 +212,7 @@ def game_data(update, context):
         keyboard.insert(
             0, [InlineKeyboardButton(f"{pistol} Join", callback_data="join_game")]
         )
+
     reply = f"You picked a game:\n\n{slot_status(game)}"
     query.answer()
     query.edit_message_text(
@@ -229,7 +234,7 @@ def get_chettam_data(update):
             [
                 InlineKeyboardButton(
                     f"Game #{i+1} {game.timeslot_cet_time}",
-                    callback_data=f"GAME{game.id}",
+                    callback_data=f"GAME{game.id}.{i+1}",
                 )
             ]
             for i, game in enumerate(games)
@@ -357,22 +362,24 @@ def pick_minute(update, context):
 
 def new_game(update, context):
     query = update.callback_query
-    fire = EMOJI["fire"]
-    new_timeslot = convert_to_dt(query.data)
-    invite = random.choice(INVITE)
     player = get_player(update)
-    print(context.bot_data)
-    if context.bot_data["game_action"] == "edit_existing_game":
+    action = context.bot_data["game_action"]
+    new_timeslot = convert_to_dt(query.data)
+    fire = EMOJI["fire"]
+    invite = random.choice(INVITE)
+
+    if action == "edit_existing_game":
         game = get_game(update, context.bot_data["game_id"])
         old_ts = game.timeslot_cet.strftime("%H:%M")
         new_ts = new_timeslot.astimezone(TIMEZONE_CET).strftime("%H:%M")
+        num = context.bot_data["game_num"]
         if game.players and old_ts != new_ts:
             game = update_game(game, new_timeslot)
             message = inspect.cleandoc(
                 f"""
                 {game.players_call} warning!\n
                 Timeslot changed by {player.mention}:
-                {old_ts} -> *{new_ts}*
+                Game #{num} {old_ts} -> *{new_ts}*
                 """
             )
             set_time_alert(update, context, alert_message, message, 0)
@@ -383,7 +390,7 @@ def new_game(update, context):
                 new_ts,
                 game.chat_id,
             )
-    elif context.bot_data["game_action"] == "new_game":
+    elif action == "new_game":
         game = create_game(update.effective_chat, new_timeslot)
         logger().info(
             'User "%s" created new game "%s" for chat "%s"',
@@ -461,7 +468,7 @@ def main():
                 FIRST_STAGE: [
                     CallbackQueryHandler(pick_hour, pattern="^new_game$"),
                     CallbackQueryHandler(pick_hour, pattern="^edit_existing_game$"),
-                    CallbackQueryHandler(game_data, pattern="^GAME[1-9]+$"),
+                    CallbackQueryHandler(game_data, pattern="^GAME[1-9]+\.[1-9]+$"),
                     CallbackQueryHandler(pick_hour, pattern="^back_to_hours$"),
                     CallbackQueryHandler(more_hours, pattern="^more_hours$"),
                     CallbackQueryHandler(pick_minute, pattern=HOUR_PATTERN),
