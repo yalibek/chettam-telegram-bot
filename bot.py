@@ -222,6 +222,7 @@ def get_chettam_data(update):
     games = get_all_games(update)
     pistol = EMOJI["pistol"]
     cross = EMOJI["cross"]
+
     if games:
         reply = f"Game(s) already exist:\n\n{slot_status_all(games)}"
         keyboard = [
@@ -234,14 +235,20 @@ def get_chettam_data(update):
             for i, game in enumerate(games)
         ]
     else:
+        keyboard = None
         reply = "Game doesn't exist."
-    if len(get_all_games(update)) <= 4:
-        keyboard.append(
-            [InlineKeyboardButton(f"{pistol} New game", callback_data="new_game"),]
-        )
-    keyboard.append(
-        [InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),]
-    )
+
+    if len(games) < 4:
+        kb = [
+            InlineKeyboardButton(f"{pistol} New game", callback_data="new_game"),
+            InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
+        ]
+    else:
+        kb = [
+            InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
+        ]
+
+    keyboard.append(kb)
     return reply, keyboard
 
 
@@ -354,6 +361,7 @@ def new_game(update, context):
     new_timeslot = convert_to_dt(query.data)
     invite = random.choice(INVITE)
     player = get_player(update)
+    print(context.bot_data)
     if context.bot_data["game_action"] == "edit_existing_game":
         game = get_game(update, context.bot_data["game_id"])
         old_ts = game.timeslot_cet.strftime("%H:%M")
