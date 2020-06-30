@@ -48,9 +48,11 @@ class Player(Base):
 
     def create(self):
         session.add(self)
+        session.commit()
 
     def delete(self):
         session.delete(self)
+        session.commit()
 
     @staticmethod
     def save():
@@ -92,9 +94,11 @@ class Game(Base):
 
     def create(self):
         session.add(self)
+        session.commit()
 
     def delete(self):
         session.delete(self)
+        session.commit()
 
     @staticmethod
     def save():
