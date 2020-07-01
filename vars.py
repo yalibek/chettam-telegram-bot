@@ -81,8 +81,6 @@ Hi, this is a bot for chettam guys! {EMOJI['pistol']}
 
 /start - help me pls
 /chettam - invite everyone to play at specified time
-/slot_in - reserve a slot for yourself
-/slot_out - abandon your slot
 /status - get current status
 """
 

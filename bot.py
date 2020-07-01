@@ -169,16 +169,15 @@ def slot_out_conv(update, context):
     if game.players:
         reply = f"{cry} *{player}* left {cry}\n\n{slot_status(game)}"
     else:
-        reply = (
-            f"{cry} *{player}* left {cry}\nGame {game.timeslot_cet_time} was deleted."
-        )
         game.delete()
+        reply = (
+            f"{cry} *{player}* left {cry}\n\nGame {game.timeslot_cet_time} was deleted."
+        )
     query.answer()
     query.edit_message_text(text=reply, parse_mode=ParseMode.MARKDOWN)
     logger().info(
         'User "%s" left a game "%s" for chat "%s"', player, game.timeslot, game.chat_id,
     )
-
     return ConversationHandler.END
 
 
