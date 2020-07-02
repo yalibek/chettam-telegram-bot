@@ -73,13 +73,12 @@ def update_game(game: Game, timeslot) -> Game:
     return game
 
 
-# Checks if game wasn't updated for 8+ hours
-def game_is_old(game: Game) -> bool:
+# Checks if game wasn't updated for given time frame
+def game_timediff(game: Game, hours=0, minutes=0, seconds=0) -> bool:
     now = dt.now(pytz.utc)
-    updated_at = to_utc(game.updated_at)
-    played_at = to_utc(game.timeslot)
-    delta = timedelta(hours=8)
-    return (now - updated_at > delta) or (now - played_at > delta)
+    played_at = game.timeslot_utc
+    delta = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+    return now - played_at > delta
 
 
 # Returns Game model for current chat
@@ -101,7 +100,7 @@ def get_all_games(update) -> list:
     )
     games_list = []
     for game in games:
-        if game_is_old(game):
+        if game_timediff(game, hours=8):
             game.delete()
         else:
             games_list.append(game)
@@ -114,18 +113,19 @@ def slot_status(game) -> str:
     slots = game.slots
     timeslot = game.timeslot_cet_time
     pistol = EMOJI["pistol"]
-    if slots == 0:
-        reply = f"All slots are available!"
-    elif 5 <= slots < 10:
+    dizzy = EMOJI["dizzy"]
+
+    if 5 <= slots < 10:
         reply = f"{slots} slot(s). 1 full party! {pistol}"
     elif slots == 10:
         reply = f"10 slots. 2 parties! gogo! {pistol}{pistol}"
     else:
         reply = f"{slots} slot(s) taken."
-    if players:
-        return f"*{timeslot}*: {reply}\n{players}"
+
+    if game_timediff(game, minutes=30):
+        return f"{timeslot} ({dizzy} expired):\n{players}"
     else:
-        return f"*{timeslot}*: {reply}"
+        return f"*{timeslot}*: {reply}\n{players}"
 
 
 # Returns slots data for all games

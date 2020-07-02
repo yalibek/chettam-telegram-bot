@@ -84,9 +84,12 @@ class Game(Base):
         return len(self.players)
 
     @property
+    def timeslot_utc(self):
+        return TIMEZONE_UTC.localize(self.timeslot)
+
+    @property
     def timeslot_cet(self):
-        timeslot_utc = TIMEZONE_UTC.localize(self.timeslot)
-        return timeslot_utc.astimezone(TIMEZONE_CET)
+        return self.timeslot_utc.astimezone(TIMEZONE_CET)
 
     @property
     def timeslot_cet_time(self) -> str:

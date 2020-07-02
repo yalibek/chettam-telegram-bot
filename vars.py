@@ -39,6 +39,7 @@ EMOJI = {
     "zzz": emojize(":zzz:", use_aliases=True),
     "coffee": emojize(":coffee:", use_aliases=True),
     "party": emojize(":party_popper:", use_aliases=True),
+    "dizzy": emojize(":dizzy_face:", use_aliases=True),
 }
 
 # Chettam mating calls
