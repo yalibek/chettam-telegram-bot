@@ -88,7 +88,72 @@ def status(update, context):
 
 
 # Inline keyboard actions
-def game_data(update, context):
+def chettam(update, context):
+    """Entry point for conversation"""
+    random_int = random.randint(0, 100)
+    if random_int == 1:
+        reply = f"Enjoing the bot? *Buy me a coffee, maybe?*"
+        parrot = STICKERS["coffee_parrot"]
+        update.message.reply_markdown(reply, reply_to_message_id=None)
+        update.message.reply_sticker(
+            parrot, reply_to_message_id=None,
+        )
+    reply, keyboard = get_chettam_data(update)
+    update.message.reply_markdown(
+        reply, reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+    return FIRST_STAGE
+
+
+def start_over(update, context):
+    """Fallback function to start conversation over"""
+    query = update.callback_query
+    reply, keyboard = get_chettam_data(update)
+    query.answer()
+    query.edit_message_text(
+        reply,
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode=ParseMode.MARKDOWN,
+    )
+    return FIRST_STAGE
+
+
+def get_chettam_data(update):
+    """Reply message and keyboard for entry point"""
+    games = get_all_games(update)
+    pistol = EMOJI["pistol"]
+    cross = EMOJI["cross"]
+
+    if games:
+        reply = f"Game(s) already exist:\n\n{slot_status_all(games)}"
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    f"Game #{i+1} {game.timeslot_cet_time}",
+                    callback_data=f"GAME{game.id}.{i+1}",
+                )
+            ]
+            for i, game in enumerate(games)
+        ]
+    else:
+        keyboard = [[]]
+        reply = "Game doesn't exist."
+
+    if len(games) < 4:
+        kb = [
+            InlineKeyboardButton(f"{pistol} New game", callback_data="new_game"),
+            InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
+        ]
+    else:
+        kb = [
+            InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
+        ]
+
+    keyboard.append(kb)
+    return reply, keyboard
+
+
+def selected_game(update, context):
     """Data for selected game"""
     query = update.callback_query
     player = get_player(update)
@@ -133,71 +198,6 @@ def game_data(update, context):
     query.answer()
     query.edit_message_text(
         text=reply,
-        reply_markup=InlineKeyboardMarkup(keyboard),
-        parse_mode=ParseMode.MARKDOWN,
-    )
-    return FIRST_STAGE
-
-
-def get_chettam_data(update):
-    """Reply message and keyboard for entry point"""
-    games = get_all_games(update)
-    pistol = EMOJI["pistol"]
-    cross = EMOJI["cross"]
-
-    if games:
-        reply = f"Game(s) already exist:\n\n{slot_status_all(games)}"
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    f"Game #{i+1} {game.timeslot_cet_time}",
-                    callback_data=f"GAME{game.id}.{i+1}",
-                )
-            ]
-            for i, game in enumerate(games)
-        ]
-    else:
-        keyboard = [[]]
-        reply = "Game doesn't exist."
-
-    if len(games) < 4:
-        kb = [
-            InlineKeyboardButton(f"{pistol} New game", callback_data="new_game"),
-            InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
-        ]
-    else:
-        kb = [
-            InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
-        ]
-
-    keyboard.append(kb)
-    return reply, keyboard
-
-
-def chettam(update, context):
-    """Entry point for conversation"""
-    random_int = random.randint(0, 100)
-    if random_int == 1:
-        reply = f"Enjoing the bot? *Buy me a coffee, maybe?*"
-        parrot = STICKERS["coffee_parrot"]
-        update.message.reply_markdown(reply, reply_to_message_id=None)
-        update.message.reply_sticker(
-            parrot, reply_to_message_id=None,
-        )
-    reply, keyboard = get_chettam_data(update)
-    update.message.reply_markdown(
-        reply, reply_markup=InlineKeyboardMarkup(keyboard),
-    )
-    return FIRST_STAGE
-
-
-def start_over(update, context):
-    """Fallback function to start conversation over"""
-    query = update.callback_query
-    reply, keyboard = get_chettam_data(update)
-    query.answer()
-    query.edit_message_text(
-        reply,
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode=ParseMode.MARKDOWN,
     )
@@ -438,7 +438,7 @@ def main():
                 FIRST_STAGE: [
                     CallbackQueryHandler(pick_hour, pattern="^new_game$"),
                     CallbackQueryHandler(pick_hour, pattern="^edit_existing_game$"),
-                    CallbackQueryHandler(game_data, pattern="^GAME[1-9]+\.[1-9]+$"),
+                    CallbackQueryHandler(selected_game, pattern="^GAME[1-9]+\.[1-9]+$"),
                     CallbackQueryHandler(pick_hour, pattern="^back_to_hours$"),
                     CallbackQueryHandler(more_hours, pattern="^more_hours$"),
                     CallbackQueryHandler(pick_minute, pattern=HOUR_PATTERN),
