@@ -38,8 +38,15 @@ def get_player(update) -> Player:
 
 # Converts time into datetime object in UTC timezone
 def convert_to_dt(timeslot) -> dt:
+    time = dt.strptime(timeslot, "%H:%M")
     date_today = dt.now(pytz.utc).date()
-    date_time = f"{date_today} {timeslot}"
+
+    if time.hour in range(4):
+        day = date_today + timedelta(days=1)
+    else:
+        day = date_today
+
+    date_time = f"{day} {time.hour}:{time.minute}"
     timeslot_obj = dt.strptime(date_time, "%Y-%m-%d %H:%M")
     timeslot_cet = to_cet(timeslot_obj)
     return timeslot_cet.astimezone(TIMEZONE_UTC)

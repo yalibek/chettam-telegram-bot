@@ -123,6 +123,7 @@ def get_chettam_data(update):
     games = get_all_games(update)
     pistol = EMOJI["pistol"]
     cross = EMOJI["cross"]
+    chart = EMOJI["chart"]
 
     if games:
         reply = f"Game(s) already exist:\n\n{slot_status_all(games)}"
@@ -141,13 +142,18 @@ def get_chettam_data(update):
 
     if len(games) < 4:
         kb = [
-            InlineKeyboardButton(f"{pistol} New game", callback_data="new_game"),
+            InlineKeyboardButton(f"{pistol} New", callback_data="new_game"),
             InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
         ]
     else:
         kb = [
             InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
         ]
+
+    if games:
+        kb.insert(
+            -1, InlineKeyboardButton(f"{chart} Status", callback_data="status_conv"),
+        )
 
     keyboard.append(kb)
     return reply, keyboard
@@ -166,15 +172,14 @@ def selected_game(update, context):
 
     pistol = EMOJI["pistol"]
     pencil = EMOJI["pencil"]
-    chart = EMOJI["chart"]
     cross = EMOJI["cross"]
     zzz = EMOJI["zzz"]
     party = EMOJI["party"]
 
     keyboard = [
         [
+            InlineKeyboardButton("« Back", callback_data="start_over"),
             InlineKeyboardButton(f"{pencil} Edit", callback_data="edit_existing_game"),
-            InlineKeyboardButton(f"{chart} Status", callback_data="status_conv"),
             InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
         ]
     ]
@@ -285,13 +290,14 @@ def pick_minute(update, context):
 def new_edit_game(update, context):
     """Create new game or edit an existing game"""
     query = update.callback_query
+    data = context.bot_data
+    action = data["game_action"]
     player = get_player(update)
-    action = context.bot_data["game_action"]
     new_timeslot = convert_to_dt(query.data)
 
     if action == "edit_existing_game":
-        game = context.bot_data["game"]
-        num = context.bot_data["game_num"]
+        game = data["game"]
+        num = data["game_num"]
         old_ts = game.timeslot_cet_time
         new_ts = new_timeslot.astimezone(TIMEZONE_CET).strftime("%H:%M")
 
