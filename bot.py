@@ -141,7 +141,7 @@ def slot_out(update, context):
 def slot_in_conv(update, context):
     query = update.callback_query
     player = get_player(update)
-    game = get_game(update, context.bot_data["game_id"])
+    game = context.bot_data["game"]
     game.updated_at = dt.now(pytz.utc)
     game.players.append(player)
     game.save()
@@ -161,7 +161,7 @@ def slot_in_conv(update, context):
 def slot_out_conv(update, context):
     query = update.callback_query
     player = get_player(update)
-    game = get_game(update, context.bot_data["game_id"])
+    game = context.bot_data["game"]
     game.players.remove(player)
     game.updated_at = dt.now(pytz.utc)
     game.save()
@@ -188,7 +188,7 @@ def game_data(update, context):
     game_id = g.group(1)
     game_num = g.group(2)
     game = get_game(update, game_id)
-    context.bot_data["game_id"] = game.id
+    context.bot_data["game"] = game
     context.bot_data["game_num"] = game_num
 
     pistol = EMOJI["pistol"]
@@ -375,10 +375,10 @@ def new_game(update, context):
     new_timeslot = convert_to_dt(query.data)
 
     if action == "edit_existing_game":
-        game = get_game(update, context.bot_data["game_id"])
-        old_ts = game.timeslot_cet.strftime("%H:%M")
-        new_ts = new_timeslot.astimezone(TIMEZONE_CET).strftime("%H:%M")
+        game = context.bot_data["game"]
         num = context.bot_data["game_num"]
+        old_ts = game.timeslot_cet_time
+        new_ts = new_timeslot.astimezone(TIMEZONE_CET).strftime("%H:%M")
 
         if game.players and old_ts != new_ts:
             game = update_game(game, new_timeslot)
@@ -437,11 +437,10 @@ def cancel(update, context):
 
 def call_everyone(update, context):
     query = update.callback_query
-    game = get_game(update, context.bot_data["game_id"])
+    game = context.bot_data["game"]
     query.answer()
     query.edit_message_text(text=slot_status(game), parse_mode=ParseMode.MARKDOWN)
-    timeslot = game.timeslot_cet_time
-    message = f"*{timeslot}*: {game.players_call} go go!"
+    message = f"*{game.timeslot_cet_time}*: {game.players_call} go go!"
     set_time_alert(update, context, alert_message, message, 0)
     return ConversationHandler.END
 

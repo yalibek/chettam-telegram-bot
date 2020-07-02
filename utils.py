@@ -37,7 +37,7 @@ def get_player(update) -> Player:
 
 
 # Converts time into datetime object in UTC timezone
-def convert_to_dt(timeslot):
+def convert_to_dt(timeslot) -> dt:
     date_today = dt.now(pytz.utc).date()
     date_time = f"{date_today} {timeslot}"
     timeslot_obj = dt.strptime(date_time, "%Y-%m-%d %H:%M")
@@ -135,7 +135,7 @@ def is_dayoff() -> bool:
 
 
 # Enables logging
-def logger():
+def logger() -> logging.Logger:
     logging.basicConfig(
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         level=logging.INFO,
@@ -144,17 +144,17 @@ def logger():
 
 
 # Localize to UTC
-def to_utc(date_time):
+def to_utc(date_time) -> dt:
     return TIMEZONE_UTC.localize(date_time)
 
 
 # Localize to CET
-def to_cet(date_time):
+def to_cet(date_time) -> dt:
     return TIMEZONE_CET.localize(date_time)
 
 
 # Hack to pass additional args to any func()
-def wrapped_partial(func, *args, **kwargs):
+def wrapped_partial(func, *args, **kwargs) -> partial:
     partial_func = partial(func, *args, **kwargs)
     update_wrapper(partial_func, func)
     return partial_func
