@@ -39,6 +39,7 @@ def error(update, context):
 
 # Command actions
 def start(update, context):
+    """Bot start messages"""
     random_sticker = random.choice(
         [
             STICKERS["lenin"],
@@ -57,6 +58,7 @@ def start(update, context):
 
 
 def dayoff(update, context):
+    """Dayoff messages"""
     try:
         quote, author = get_quote()
         if not author:
@@ -77,6 +79,7 @@ def dayoff(update, context):
 
 
 def status(update, context):
+    """Get games status for current chat"""
     games = get_all_games(update)
     if games:
         update.message.reply_markdown(slot_status_all(games), reply_to_message_id=None)
@@ -85,50 +88,8 @@ def status(update, context):
 
 
 # Inline keyboard actions
-def slot_in_conv(update, context):
-    query = update.callback_query
-    player = get_player(update)
-    game = context.bot_data["game"]
-    game.updated_at = dt.now(pytz.utc)
-    game.players.append(player)
-    game.save()
-    fire = EMOJI["fire"]
-    reply = f"{fire} *{player}* joined! {fire}\n\n{slot_status(game)}"
-    query.answer()
-    query.edit_message_text(text=reply, parse_mode=ParseMode.MARKDOWN)
-    logger().info(
-        'User "%s" joined a game "%s" for chat "%s"',
-        player,
-        game.timeslot,
-        game.chat_id,
-    )
-    return ConversationHandler.END
-
-
-def slot_out_conv(update, context):
-    query = update.callback_query
-    player = get_player(update)
-    game = context.bot_data["game"]
-    game.players.remove(player)
-    game.updated_at = dt.now(pytz.utc)
-    game.save()
-    cry = EMOJI["cry"]
-    if game.players:
-        reply = f"{cry} *{player}* left {cry}\n\n{slot_status(game)}"
-    else:
-        game.delete()
-        reply = (
-            f"{cry} *{player}* left {cry}\n\nGame {game.timeslot_cet_time} was deleted."
-        )
-    query.answer()
-    query.edit_message_text(text=reply, parse_mode=ParseMode.MARKDOWN)
-    logger().info(
-        'User "%s" left a game "%s" for chat "%s"', player, game.timeslot, game.chat_id,
-    )
-    return ConversationHandler.END
-
-
 def game_data(update, context):
+    """Data for selected game"""
     query = update.callback_query
     player = get_player(update)
     g = re.search("GAME([1-9]+)\.([1-9]+)", query.data)
@@ -179,6 +140,7 @@ def game_data(update, context):
 
 
 def get_chettam_data(update):
+    """Reply message and keyboard for entry point"""
     games = get_all_games(update)
     pistol = EMOJI["pistol"]
     cross = EMOJI["cross"]
@@ -213,6 +175,7 @@ def get_chettam_data(update):
 
 
 def chettam(update, context):
+    """Entry point for conversation"""
     random_int = random.randint(0, 100)
     if random_int == 1:
         reply = f"Enjoing the bot? *Buy me a coffee, maybe?*"
@@ -229,6 +192,7 @@ def chettam(update, context):
 
 
 def start_over(update, context):
+    """Fallback function to start conversation over"""
     query = update.callback_query
     reply, keyboard = get_chettam_data(update)
     query.answer()
@@ -241,6 +205,7 @@ def start_over(update, context):
 
 
 def pick_hour(update, context):
+    """Choice of hours"""
     query = update.callback_query
     context.bot_data["game_action"] = query.data
     cross = EMOJI["cross"]
@@ -265,6 +230,7 @@ def pick_hour(update, context):
 
 
 def more_hours(update, context):
+    """Additional choice of hours"""
     query = update.callback_query
     cross = EMOJI["cross"]
     keyboard = [
@@ -293,6 +259,7 @@ def more_hours(update, context):
 
 
 def pick_minute(update, context):
+    """Choice of minutes"""
     query = update.callback_query
     hour = query.data
     cross = EMOJI["cross"]
@@ -315,7 +282,8 @@ def pick_minute(update, context):
     return FIRST_STAGE
 
 
-def new_game(update, context):
+def new_edit_game(update, context):
+    """Create new game or edit an existing game"""
     query = update.callback_query
     player = get_player(update)
     action = context.bot_data["game_action"]
@@ -367,7 +335,53 @@ def new_game(update, context):
     return ConversationHandler.END
 
 
+def slot_in(update, context):
+    """Join current game"""
+    query = update.callback_query
+    player = get_player(update)
+    game = context.bot_data["game"]
+    game.updated_at = dt.now(pytz.utc)
+    game.players.append(player)
+    game.save()
+    fire = EMOJI["fire"]
+    reply = f"{fire} *{player}* joined! {fire}\n\n{slot_status(game)}"
+    query.answer()
+    query.edit_message_text(text=reply, parse_mode=ParseMode.MARKDOWN)
+    logger().info(
+        'User "%s" joined a game "%s" for chat "%s"',
+        player,
+        game.timeslot,
+        game.chat_id,
+    )
+    return ConversationHandler.END
+
+
+def slot_out(update, context):
+    """Leave current game"""
+    query = update.callback_query
+    player = get_player(update)
+    game = context.bot_data["game"]
+    game.players.remove(player)
+    game.updated_at = dt.now(pytz.utc)
+    game.save()
+    cry = EMOJI["cry"]
+    if game.players:
+        reply = f"{cry} *{player}* left {cry}\n\n{slot_status(game)}"
+    else:
+        game.delete()
+        reply = (
+            f"{cry} *{player}* left {cry}\n\nGame {game.timeslot_cet_time} was deleted."
+        )
+    query.answer()
+    query.edit_message_text(text=reply, parse_mode=ParseMode.MARKDOWN)
+    logger().info(
+        'User "%s" left a game "%s" for chat "%s"', player, game.timeslot, game.chat_id,
+    )
+    return ConversationHandler.END
+
+
 def status_conv(update, context):
+    """Get games status for current chat"""
     query = update.callback_query
     games = get_all_games(update)
     query.answer()
@@ -375,14 +389,8 @@ def status_conv(update, context):
     return ConversationHandler.END
 
 
-def cancel(update, context):
-    query = update.callback_query
-    query.answer()
-    query.edit_message_text(text="cancelled :(")
-    return ConversationHandler.END
-
-
 def call_everyone(update, context):
+    """Mention all players about current game"""
     query = update.callback_query
     game = context.bot_data["game"]
     query.answer()
@@ -392,8 +400,16 @@ def call_everyone(update, context):
     return ConversationHandler.END
 
 
-# Alert used by bot jobs
+def cancel(update, context):
+    """End current conversation"""
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text="cancelled :(")
+    return ConversationHandler.END
+
+
 def alert_message(context, message):
+    """Alert used by bot jobs"""
     job = context.job
     context.bot.send_message(job.context, text=message, parse_mode=ParseMode.MARKDOWN)
 
@@ -427,13 +443,13 @@ def main():
                     CallbackQueryHandler(more_hours, pattern="^more_hours$"),
                     CallbackQueryHandler(pick_minute, pattern=HOUR_PATTERN),
                     CallbackQueryHandler(
-                        new_game,
+                        new_edit_game,
                         pattern=HOUR_MINUTE_PATTERN,
                         pass_job_queue=True,
                         pass_chat_data=True,
                     ),
-                    CallbackQueryHandler(slot_in_conv, pattern="^join_game$"),
-                    CallbackQueryHandler(slot_out_conv, pattern="^leave_game$"),
+                    CallbackQueryHandler(slot_in, pattern="^join_game$"),
+                    CallbackQueryHandler(slot_out, pattern="^leave_game$"),
                     CallbackQueryHandler(
                         call_everyone,
                         pattern="^call_everyone$",
