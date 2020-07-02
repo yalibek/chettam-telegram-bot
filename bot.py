@@ -84,59 +84,6 @@ def status(update, context):
         update.message.reply_text("start a game with /chettam")
 
 
-def slot_in(update, context):
-    player = get_player(update)
-    game = get_all_games(update)
-    if game:
-        if game.slots < 10:
-            if player in game.players:
-                status(update, context)
-                return
-            else:
-                game.players.append(player)
-                game.updated_at = dt.now(pytz.utc)
-                game.save()
-                fire = EMOJI["fire"]
-                reply = f"{fire} *{player}* joined! {fire}\n\n{slot_status(game)}"
-        else:
-            reply = f"No more than 10 players allowed."
-        logger().info(
-            'User "%s" joined a game "%s" for chat "%s"',
-            player,
-            game.timeslot,
-            game.chat_id,
-        )
-        update.message.reply_markdown(reply, reply_to_message_id=None)
-    else:
-        update.message.reply_text("start a game with /chettam")
-
-
-def slot_out(update, context):
-    player = get_player(update)
-    game = get_all_games(update)
-    if game:
-        if player in game.players:
-            game.players.remove(player)
-            game.updated_at = dt.now(pytz.utc)
-            game.save()
-            cry = EMOJI["cry"]
-            reply = f"{cry} *{player}* left {cry}\n\n{slot_status(game)}"
-            if not game.players:
-                game.delete()
-        else:
-            status(update, context)
-            return
-        logger().info(
-            'User "%s" left a game "%s" for chat "%s"',
-            player,
-            game.timeslot,
-            game.chat_id,
-        )
-        update.message.reply_markdown(reply, reply_to_message_id=None)
-    else:
-        update.message.reply_text("start a game with /chettam")
-
-
 # Inline keyboard actions
 def slot_in_conv(update, context):
     query = update.callback_query
@@ -467,8 +414,6 @@ def main():
     if is_dayoff():
         dp.add_handler(MessageHandler(Filters.command, dayoff))
     else:
-        # dp.add_handler(CommandHandler("slot_in", slot_in))
-        # dp.add_handler(CommandHandler("slot_out", slot_out))
         dp.add_handler(CommandHandler("status", status))
 
         chettam_conversation = ConversationHandler(
