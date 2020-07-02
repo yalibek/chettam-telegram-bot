@@ -10,7 +10,7 @@ from vars import EMOJI, TIMEZONE_CET, TIMEZONE_UTC
 
 
 # Updates player's data if it has changed
-def sync_player_data(player, user):
+def sync_player_data(player: Player, user):
     p_data = [player.username, player.first_name, player.last_name]
     u_data = [user.username, user.first_name, user.last_name]
     if p_data != u_data:
@@ -19,7 +19,7 @@ def sync_player_data(player, user):
 
 
 # Returns Player model for current user
-def get_player(update):
+def get_player(update) -> Player:
     user = update.effective_user
     player = session.query(Player).filter_by(user_id=user.id).first()
     if player:
@@ -46,7 +46,7 @@ def convert_to_dt(timeslot):
 
 
 # Creates new game
-def create_game(chat, timeslot):
+def create_game(chat, timeslot) -> Game:
     game = Game(
         updated_at=dt.now(pytz.utc),
         timeslot=timeslot,
@@ -59,7 +59,7 @@ def create_game(chat, timeslot):
 
 
 # Updates existing game with new timeslot
-def update_game(game, timeslot):
+def update_game(game: Game, timeslot) -> Game:
     game.timeslot = timeslot
     game.updated_at = dt.now(pytz.utc)
     game.save()
@@ -67,7 +67,7 @@ def update_game(game, timeslot):
 
 
 # Checks if game wasn't updated for 8+ hours
-def game_is_old(game):
+def game_is_old(game: Game) -> bool:
     now = dt.now(pytz.utc)
     updated_at = to_utc(game.updated_at)
     played_at = to_utc(game.timeslot)
@@ -76,7 +76,7 @@ def game_is_old(game):
 
 
 # Returns Game model for current chat
-def get_game(update, game_id):
+def get_game(update, game_id) -> Game:
     return (
         session.query(Game)
         .filter_by(chat_id=update.effective_chat.id, id=game_id)
@@ -85,24 +85,27 @@ def get_game(update, game_id):
 
 
 # Returns all Game models for current chat
-def get_all_games(update):
+def get_all_games(update) -> list:
     games = (
         session.query(Game)
         .filter_by(chat_id=update.effective_chat.id)
         .order_by(Game.id)
         .all()
     )
+    games_list = []
     for game in games:
-        if game and game_is_old(game):
+        if game_is_old(game):
             game.delete()
-    return games
+        else:
+            games_list.append(game)
+    return games_list
 
 
 # Returns slots data for game
-def slot_status(game):
+def slot_status(game) -> str:
     players = "\n".join(f"- {player}" for player in game.players_list)
     slots = game.slots
-    timeslot = game.timeslot_cet.strftime("%H:%M")
+    timeslot = game.timeslot_cet_time
     pistol = EMOJI["pistol"]
     if slots == 0:
         reply = f"All slots are available!"
@@ -119,12 +122,12 @@ def slot_status(game):
 
 
 # Returns slots data for all games
-def slot_status_all(games):
+def slot_status_all(games) -> str:
     return "\n\n".join(slot_status(game) for game in games)
 
 
 # Checks if today is cs:go dayoff
-def is_dayoff():
+def is_dayoff() -> bool:
     now = dt.now(pytz.utc)
     is_not_night = now.hour >= 3
     is_wed_sun = now.weekday() in [2, 6]
@@ -159,18 +162,19 @@ def wrapped_partial(func, *args, **kwargs):
 
 # Set time alert
 def set_time_alert(update, context, alert, message, due):
-    chat_id = update.effective_chat.id
     if "job" in context.chat_data:
         old_job = context.chat_data["job"]
         old_job.schedule_removal()
 
     partial_alert = wrapped_partial(alert, message=message)
-    new_job = context.job_queue.run_once(partial_alert, due, context=chat_id)
+    new_job = context.job_queue.run_once(
+        partial_alert, due, context=update.effective_chat.id
+    )
     context.chat_data["job"] = new_job
 
 
 # Get random famous quote
-def get_quote():
+def get_quote() -> tuple:
     url = "https://api.forismatic.com/api/1.0/"
     response = requests.get(
         url, params={"method": "getQuote", "lang": "en", "format": "json"}

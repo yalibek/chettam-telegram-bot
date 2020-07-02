@@ -373,14 +373,13 @@ def new_game(update, context):
     player = get_player(update)
     action = context.bot_data["game_action"]
     new_timeslot = convert_to_dt(query.data)
-    fire = EMOJI["fire"]
-    invite = random.choice(INVITE)
 
     if action == "edit_existing_game":
         game = get_game(update, context.bot_data["game_id"])
         old_ts = game.timeslot_cet.strftime("%H:%M")
         new_ts = new_timeslot.astimezone(TIMEZONE_CET).strftime("%H:%M")
         num = context.bot_data["game_num"]
+
         if game.players and old_ts != new_ts:
             game = update_game(game, new_timeslot)
             message = inspect.cleandoc(
@@ -410,6 +409,9 @@ def new_game(update, context):
     game.players.append(player)
     game.updated_at = dt.now(pytz.utc)
     game.save()
+
+    fire = EMOJI["fire"]
+    invite = random.choice(INVITE)
     query.answer()
     query.edit_message_text(
         text=f"{fire} {invite}\n\n{slot_status(game)}", parse_mode=ParseMode.MARKDOWN
@@ -433,21 +435,21 @@ def cancel(update, context):
     return ConversationHandler.END
 
 
-def alert_message(context, message):
-    """Send the alarm message."""
-    job = context.job
-    context.bot.send_message(job.context, text=message, parse_mode=ParseMode.MARKDOWN)
-
-
 def call_everyone(update, context):
     query = update.callback_query
     game = get_game(update, context.bot_data["game_id"])
     query.answer()
     query.edit_message_text(text=slot_status(game), parse_mode=ParseMode.MARKDOWN)
-    timeslot = game.timeslot_cet.strftime("%H:%M")
+    timeslot = game.timeslot_cet_time
     message = f"*{timeslot}*: {game.players_call} go go!"
     set_time_alert(update, context, alert_message, message, 0)
     return ConversationHandler.END
+
+
+# Alert used by bot jobs
+def alert_message(context, message):
+    job = context.job
+    context.bot.send_message(job.context, text=message, parse_mode=ParseMode.MARKDOWN)
 
 
 def main():

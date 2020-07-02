@@ -40,7 +40,7 @@ class Player(Base):
             return f"{self.first_name}"
 
     @property
-    def mention(self):
+    def mention(self) -> str:
         if self.username:
             return f"@{self.username}"
         else:
@@ -72,15 +72,15 @@ class Game(Base):
     )
 
     @property
-    def players_list(self):
+    def players_list(self) -> list:
         return [escape_markdown(str(player)) for player in self.players]
 
     @property
-    def players_call(self):
+    def players_call(self) -> str:
         return ", ".join(player.mention for player in self.players)
 
     @property
-    def slots(self):
+    def slots(self) -> int:
         return len(self.players)
 
     @property
@@ -89,7 +89,7 @@ class Game(Base):
         return timeslot_utc.astimezone(TIMEZONE_CET)
 
     @property
-    def timeslot_cet_time(self):
+    def timeslot_cet_time(self) -> str:
         return self.timeslot_cet.strftime("%H:%M")
 
     def create(self):
