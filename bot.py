@@ -212,7 +212,8 @@ def selected_game(update, context):
 def pick_hour(update, context):
     """Choice of hours"""
     query = update.callback_query
-    context.bot_data["game_action"] = query.data
+    if query.data in ["new_game", "edit_existing_game"]:
+        context.bot_data["game_action"] = query.data
     cross = EMOJI["cross"]
     keyboard = [
         [

@@ -115,16 +115,15 @@ def slot_status(game) -> str:
     pistol = EMOJI["pistol"]
     dizzy = EMOJI["dizzy"]
 
-    if 5 <= slots < 10:
-        reply = f"{slots} slot(s). 1 full party! {pistol}"
-    elif slots == 10:
-        reply = f"10 slots. 2 parties! gogo! {pistol}{pistol}"
-    else:
-        reply = f"{slots} slot(s) taken."
-
     if game_timediff(game, minutes=30):
-        return f"{timeslot} ({dizzy} expired):\n{players}"
+        return f"{dizzy} _{timeslot} expired_\n{players}"
     else:
+        if 5 <= slots < 10:
+            reply = f"{slots} slot(s). 1 full party! {pistol}"
+        elif slots == 10:
+            reply = f"10 slots. 2 parties! gogo! {pistol}{pistol}"
+        else:
+            reply = f"{slots} slot(s) taken"
         return f"*{timeslot}*: {reply}\n{players}"
 
 
