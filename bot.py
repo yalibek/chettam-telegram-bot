@@ -163,6 +163,7 @@ def selected_game(update, context):
     """Data for selected game"""
     query = update.callback_query
     player = get_player(update)
+
     g = re.search("GAME([1-9]+)\.([1-9]+)", query.data)
     game_id = g.group(1)
     game_num = g.group(2)
@@ -228,9 +229,10 @@ def pick_hour(update, context):
             InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
         ],
     ]
+    reply = get_reply_for_time(context)
     query.answer()
     query.edit_message_text(
-        text="Choose time:", reply_markup=InlineKeyboardMarkup(keyboard),
+        text=reply, reply_markup=InlineKeyboardMarkup(keyboard),
     )
     return FIRST_STAGE
 
@@ -257,9 +259,10 @@ def more_hours(update, context):
             InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
         ],
     ]
+    reply = get_reply_for_time(context)
     query.answer()
     query.edit_message_text(
-        text="Choose time:", reply_markup=InlineKeyboardMarkup(keyboard),
+        text=reply, reply_markup=InlineKeyboardMarkup(keyboard),
     )
     return FIRST_STAGE
 
@@ -281,9 +284,10 @@ def pick_minute(update, context):
             InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
         ],
     ]
+    reply = get_reply_for_time(context)
     query.answer()
     query.edit_message_text(
-        text="Choose time:", reply_markup=InlineKeyboardMarkup(keyboard),
+        text=reply, reply_markup=InlineKeyboardMarkup(keyboard),
     )
     return FIRST_STAGE
 

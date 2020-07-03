@@ -36,6 +36,19 @@ def get_player(update) -> Player:
     return player
 
 
+# Returns reply message when user picking a time slot
+def get_reply_for_time(context):
+    data = context.bot_data
+    pencil = EMOJI["pencil"]
+    clock = EMOJI["clock"]
+    if data["game_action"] == "edit_existing_game":
+        game = data["game"]
+        game_num = data["game_num"]
+        return f"{pencil} Editing game #{game_num} {game.timeslot_cet_time}:"
+    else:
+        return f"{clock} Choose time:"
+
+
 # Converts time into datetime object in UTC timezone
 def convert_to_dt(timeslot) -> dt:
     time = dt.strptime(timeslot, "%H:%M")
@@ -100,7 +113,7 @@ def get_all_games(update) -> list:
     )
     games_list = []
     for game in games:
-        if game_timediff(game, hours=8):
+        if game_timediff(game, hours=6):
             game.delete()
         else:
             games_list.append(game)
