@@ -9,8 +9,8 @@ from models import Game, Player, session
 from vars import EMOJI, TIMEZONE_CET, TIMEZONE_UTC
 
 
-# Updates player's data if it has changed
 def sync_player_data(player: Player, user):
+    """Updates player's data if it has changed"""
     p_data = [player.username, player.first_name, player.last_name]
     u_data = [user.username, user.first_name, user.last_name]
     if p_data != u_data:
@@ -18,8 +18,8 @@ def sync_player_data(player: Player, user):
         player.save()
 
 
-# Returns Player model for current user
 def get_player(update) -> Player:
+    """Returns Player model for current user"""
     user = update.effective_user
     player = session.query(Player).filter_by(user_id=user.id).first()
     if player:
@@ -36,8 +36,8 @@ def get_player(update) -> Player:
     return player
 
 
-# Returns reply message when user picking a time slot
-def get_reply_for_time_menu(context):
+def get_reply_for_time_menu(context) -> str:
+    """Returns reply message when user picking a time slot"""
     data = context.bot_data
     pencil = EMOJI["pencil"]
     clock = EMOJI["clock"]
@@ -49,8 +49,8 @@ def get_reply_for_time_menu(context):
         return f"{clock} Choose time:"
 
 
-# Converts time into datetime object in UTC timezone
 def convert_to_dt(timeslot) -> dt:
+    """Converts time into datetime object in UTC timezone"""
     time = dt.strptime(timeslot, "%H:%M")
     date_today = dt.now(pytz.utc).date()
 
@@ -65,8 +65,8 @@ def convert_to_dt(timeslot) -> dt:
     return timeslot_cet.astimezone(TIMEZONE_UTC)
 
 
-# Creates new game
 def create_game(chat, timeslot) -> Game:
+    """Creates new game"""
     game = Game(
         updated_at=dt.now(pytz.utc),
         timeslot=timeslot,
@@ -78,24 +78,24 @@ def create_game(chat, timeslot) -> Game:
     return game
 
 
-# Updates existing game with new timeslot
 def update_game(game: Game, timeslot) -> Game:
+    """Updates existing game with new timeslot"""
     game.timeslot = timeslot
     game.updated_at = dt.now(pytz.utc)
     game.save()
     return game
 
 
-# Checks if game wasn't updated for given time frame
 def game_timediff(game: Game, hours=0, minutes=0, seconds=0) -> bool:
+    """Checks if game wasn't updated for given time frame"""
     now = dt.now(pytz.utc)
     played_at = game.timeslot_utc
     delta = timedelta(hours=hours, minutes=minutes, seconds=seconds)
     return now - played_at > delta
 
 
-# Returns Game model for current chat
 def get_game(update, game_id) -> Game:
+    """Returns Game model for current chat"""
     return (
         session.query(Game)
         .filter_by(chat_id=update.effective_chat.id, id=game_id)
@@ -103,8 +103,8 @@ def get_game(update, game_id) -> Game:
     )
 
 
-# Returns all Game models for current chat
 def get_all_games(update) -> list:
+    """Returns all Game models for current chat"""
     games = (
         session.query(Game)
         .filter_by(chat_id=update.effective_chat.id)
@@ -120,8 +120,8 @@ def get_all_games(update) -> list:
     return games_list
 
 
-# Returns slots data for game
 def slot_status(game) -> str:
+    """Returns slots data for game"""
     players = "\n".join(f"- {player}" for player in game.players_list)
     slots = game.slots
     timeslot = game.timeslot_cet_time
@@ -140,21 +140,21 @@ def slot_status(game) -> str:
         return f"*{timeslot}*: {reply}\n{players}"
 
 
-# Returns slots data for all games
 def slot_status_all(games) -> str:
+    """Returns slots data for all games"""
     return "\n\n".join(slot_status(game) for game in games)
 
 
-# Checks if today is cs:go dayoff
 def is_dayoff() -> bool:
+    """Checks if today is cs:go dayoff"""
     now = dt.now(pytz.utc)
     is_not_night = now.hour >= 3
     is_wed_sun = now.weekday() in [2, 6]
     return is_not_night and is_wed_sun
 
 
-# Enables logging
 def logger() -> logging.Logger:
+    """Enables logging"""
     logging.basicConfig(
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         level=logging.INFO,
@@ -162,25 +162,25 @@ def logger() -> logging.Logger:
     return logging.getLogger(__name__)
 
 
-# Localize to UTC
 def to_utc(date_time) -> dt:
+    """Localize to UTC"""
     return TIMEZONE_UTC.localize(date_time)
 
 
-# Localize to CET
 def to_cet(date_time) -> dt:
+    """Localize to CET"""
     return TIMEZONE_CET.localize(date_time)
 
 
-# Hack to pass additional args to any func()
 def wrapped_partial(func, *args, **kwargs) -> partial:
+    """Hack to pass additional args to any func()"""
     partial_func = partial(func, *args, **kwargs)
     update_wrapper(partial_func, func)
     return partial_func
 
 
-# Set time alert
 def set_time_alert(update, context, alert, message, due):
+    """Set time alert"""
     if "job" in context.chat_data:
         old_job = context.chat_data["job"]
         old_job.schedule_removal()
@@ -192,8 +192,8 @@ def set_time_alert(update, context, alert, message, due):
     context.chat_data["job"] = new_job
 
 
-# Get random famous quote
 def get_quote() -> tuple:
+    """Get random famous quote"""
     url = "https://api.forismatic.com/api/1.0/"
     response = requests.get(
         url, params={"method": "getQuote", "lang": "en", "format": "json"}

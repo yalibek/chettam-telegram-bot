@@ -21,8 +21,9 @@ association_table = Table(
 )
 
 
-# Class for user
 class Player(Base):
+    """Class for user"""
+
     __tablename__ = "player"
     id = Column(Integer, primary_key=True)
     user_id = Column(BigInteger, unique=True)
@@ -59,8 +60,9 @@ class Player(Base):
         session.commit()
 
 
-# Class for unique game per chat
 class Game(Base):
+    """Class for unique game per chat"""
+
     __tablename__ = "game"
     id = Column(Integer, primary_key=True)
     updated_at = Column(DateTime)
