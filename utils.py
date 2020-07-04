@@ -37,7 +37,7 @@ def get_player(update) -> Player:
 
 
 # Returns reply message when user picking a time slot
-def get_reply_for_time(context):
+def get_reply_for_time_menu(context):
     data = context.bot_data
     pencil = EMOJI["pencil"]
     clock = EMOJI["clock"]

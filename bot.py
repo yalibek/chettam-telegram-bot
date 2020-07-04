@@ -3,11 +3,7 @@
 
 """
 Chettamm telegram bot for csgo guys
-TODO: добавь еще slot_next_in, чтобы бот создал 2й пати и добавлял туда уже
-TODO: Предлагаю когда набирается команда предлагать poll на время игры. 5 из очереди согласные на это время формируют команду
 TODO: sort players by joined_at
-TODO: 2 parties
-TODO: logging
 TODO: refactor!!!
 TODO: comments!!!
 """
@@ -213,8 +209,17 @@ def selected_game(update, context):
 def pick_hour(update, context):
     """Choice of hours"""
     query = update.callback_query
+    data = context.bot_data
     if query.data in ["new_game", "edit_existing_game"]:
-        context.bot_data["game_action"] = query.data
+        data["game_action"] = query.data
+
+    if data["game_action"] == "new_game":
+        callback = "start_over"
+    elif data["game_action"] == "edit_existing_game":
+        game = data["game"]
+        game_num = data["game_num"]
+        callback = f"GAME{game.id}.{game_num}"
+
     cross = EMOJI["cross"]
     keyboard = [
         [
@@ -225,11 +230,11 @@ def pick_hour(update, context):
             InlineKeyboardButton("+", callback_data="more_hours"),
         ],
         [
-            InlineKeyboardButton("« Back", callback_data="start_over"),
+            InlineKeyboardButton("« Back", callback_data=callback),
             InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
         ],
     ]
-    reply = get_reply_for_time(context)
+    reply = get_reply_for_time_menu(context)
     query.answer()
     query.edit_message_text(
         text=reply, reply_markup=InlineKeyboardMarkup(keyboard),
@@ -259,7 +264,7 @@ def more_hours(update, context):
             InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
         ],
     ]
-    reply = get_reply_for_time(context)
+    reply = get_reply_for_time_menu(context)
     query.answer()
     query.edit_message_text(
         text=reply, reply_markup=InlineKeyboardMarkup(keyboard),
@@ -284,7 +289,7 @@ def pick_minute(update, context):
             InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
         ],
     ]
-    reply = get_reply_for_time(context)
+    reply = get_reply_for_time_menu(context)
     query.answer()
     query.edit_message_text(
         text=reply, reply_markup=InlineKeyboardMarkup(keyboard),

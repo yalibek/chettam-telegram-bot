@@ -77,7 +77,7 @@ class Game(Base):
 
     @property
     def players_call(self) -> str:
-        return ", ".join(player.mention for player in self.players)
+        return ", ".join(escape_markdown(player.mention) for player in self.players)
 
     @property
     def slots(self) -> int:
