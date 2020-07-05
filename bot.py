@@ -122,7 +122,7 @@ def get_chettam_data(update):
     chart = EMOJI["chart"]
 
     if games:
-        reply = f"Game(s) already exist:\n\n{slot_status_all(games)}"
+        reply = f"{len(games)} game(s) already exist:\n\n{slot_status_all(games)}"
         keyboard = [
             [
                 InlineKeyboardButton(
@@ -160,7 +160,7 @@ def selected_game(update, context):
     query = update.callback_query
     player = get_player(update)
 
-    g = re.search("GAME([1-9]+)\.([1-9]+)", query.data)
+    g = re.search("GAME([0-9]+)\.([0-9]+)", query.data)
     game_id = g.group(1)
     game_num = g.group(2)
     game = get_game(update, game_id)
@@ -443,7 +443,7 @@ def main():
     # Handlers
     dp.add_handler(CommandHandler("start", start))
 
-    if is_dayoff():
+    if not is_dayoff():
         dp.add_handler(MessageHandler(Filters.command, dayoff))
     else:
         dp.add_handler(CommandHandler("status", status))
@@ -454,7 +454,7 @@ def main():
                 FIRST_STAGE: [
                     CallbackQueryHandler(pick_hour, pattern="^new_game$"),
                     CallbackQueryHandler(pick_hour, pattern="^edit_existing_game$"),
-                    CallbackQueryHandler(selected_game, pattern="^GAME[1-9]+\.[1-9]+$"),
+                    CallbackQueryHandler(selected_game, pattern="^GAME[0-9]+\.[0-9]+$"),
                     CallbackQueryHandler(pick_hour, pattern="^back_to_hours$"),
                     CallbackQueryHandler(more_hours, pattern="^more_hours$"),
                     CallbackQueryHandler(pick_minute, pattern=HOUR_PATTERN),
