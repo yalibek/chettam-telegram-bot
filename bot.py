@@ -4,8 +4,6 @@
 """
 Chettamm telegram bot for csgo guys
 TODO: sort players by joined_at
-TODO: refactor!!!
-TODO: comments!!!
 """
 
 import inspect
@@ -443,7 +441,7 @@ def main():
     # Handlers
     dp.add_handler(CommandHandler("start", start))
 
-    if not is_dayoff():
+    if is_dayoff():
         dp.add_handler(MessageHandler(Filters.command, dayoff))
     else:
         dp.add_handler(CommandHandler("status", status))
