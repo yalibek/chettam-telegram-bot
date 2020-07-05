@@ -75,6 +75,10 @@ INVITE = [
     "дроп скиньте.",
     "Кто катает.",
     "Мышку надо опробовать.",
+    "kto ewe ho4et join?",
+    "sobiraus’ sei4as katnut’",
+    "Я фейсит поставил миллион лет назад",
+    "Интернет поставил",
 ]
 
 # Reply to /start command
@@ -82,6 +86,7 @@ START_MESSAGE = f"""
 Hi, this is a bot for chettam guys! {EMOJI['pistol']}
 
 /start - help me pls
+/gogo - go go
 /chettam - invite everyone to play at specified time
 /status - get current status
 """

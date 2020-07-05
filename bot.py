@@ -81,6 +81,13 @@ def status(update, context):
         update.message.reply_text("start a game with /chettam")
 
 
+def gogo(update, context):
+    """Reply with random quote from invite list just for fun"""
+    pistol = EMOJI["pistol"]
+    invite = random.choice(INVITE)
+    update.message.reply_text(f"{invite} {pistol}", reply_to_message_id=None)
+
+
 # Inline keyboard actions
 def chettam(update, context):
     """Entry point for conversation"""
@@ -124,8 +131,8 @@ def get_chettam_data(update):
         keyboard = [
             [
                 InlineKeyboardButton(
-                    f"Game #{i+1} {game.timeslot_cet_time}",
-                    callback_data=f"GAME{game.id}.{i+1}",
+                    f"Game #{i + 1} {game.timeslot_cet_time}",
+                    callback_data=f"GAME{game.id}.{i + 1}",
                 )
             ]
             for i, game in enumerate(games)
@@ -211,6 +218,7 @@ def pick_hour(update, context):
     if query.data in ["new_game", "edit_existing_game"]:
         data["game_action"] = query.data
 
+    # Different callback data for "Back" button based on context
     if data["game_action"] == "new_game":
         callback = "start_over"
     elif data["game_action"] == "edit_existing_game":
@@ -280,7 +288,7 @@ def pick_minute(update, context):
             InlineKeyboardButton(
                 f"{hour}:{minutes:02d}", callback_data=f"{hour}:{minutes:02d}"
             )
-            for minutes in range(0, 60, 15)
+            for minutes in range(0, 60, step=15)
         ],
         [
             InlineKeyboardButton("« Back", callback_data="back_to_hours"),
@@ -441,10 +449,11 @@ def main():
     # Handlers
     dp.add_handler(CommandHandler("start", start))
 
-    if is_dayoff():
+    if not is_dayoff():
         dp.add_handler(MessageHandler(Filters.command, dayoff))
     else:
         dp.add_handler(CommandHandler("status", status))
+        dp.add_handler(CommandHandler("gogo", gogo))
 
         chettam_conversation = ConversationHandler(
             entry_points=[CommandHandler("chettam", chettam)],
