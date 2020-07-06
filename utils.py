@@ -61,7 +61,7 @@ def convert_to_dt(timeslot) -> dt:
 
     date_time = f"{day} {time.hour}:{time.minute}"
     timeslot_obj = dt.strptime(date_time, "%Y-%m-%d %H:%M")
-    timeslot_cet = to_cet(timeslot_obj)
+    timeslot_cet = TIMEZONE_CET.localize(timeslot_obj)
     return timeslot_cet.astimezone(TIMEZONE_UTC)
 
 
@@ -160,16 +160,6 @@ def logger() -> logging.Logger:
         level=logging.INFO,
     )
     return logging.getLogger(__name__)
-
-
-def to_utc(date_time) -> dt:
-    """Localize to UTC"""
-    return TIMEZONE_UTC.localize(date_time)
-
-
-def to_cet(date_time) -> dt:
-    """Localize to CET"""
-    return TIMEZONE_CET.localize(date_time)
 
 
 def wrapped_partial(func, *args, **kwargs) -> partial:

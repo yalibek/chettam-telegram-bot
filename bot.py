@@ -288,7 +288,7 @@ def pick_minute(update, context):
             InlineKeyboardButton(
                 f"{hour}:{minutes:02d}", callback_data=f"{hour}:{minutes:02d}"
             )
-            for minutes in range(0, 60, step=15)
+            for minutes in range(0, 60, 15)
         ],
         [
             InlineKeyboardButton("« Back", callback_data="back_to_hours"),
