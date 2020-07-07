@@ -2,6 +2,7 @@ import logging
 from datetime import datetime as dt, timedelta
 from functools import partial, update_wrapper
 
+import inflect
 import pytz
 import requests
 
@@ -132,11 +133,11 @@ def slot_status(game) -> str:
         return f"{dizzy} _{timeslot} expired_\n{players}"
     else:
         if 5 <= slots < 10:
-            reply = f"{slots} slot(s). 1 full party! {pistol}"
+            reply = f"{pluralize(slots, 'slot')}. 1 full party! {pistol}"
         elif slots == 10:
             reply = f"10 slots. 2 parties! gogo! {pistol}{pistol}"
         else:
-            reply = f"{slots} slot(s) taken"
+            reply = f"{pluralize(slots, 'slot')} taken"
         return f"*{timeslot}*: {reply}\n{players}"
 
 
@@ -191,3 +192,9 @@ def get_quote() -> tuple:
     quote = response.json().get("quoteText")
     author = response.json().get("quoteAuthor")
     return quote, author
+
+
+def pluralize(quantity, noun) -> str:
+    """Return plural noun for given quantity"""
+    p = inflect.engine()
+    return p.inflect(f"num({quantity}) plural('{noun}')")

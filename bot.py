@@ -127,7 +127,7 @@ def get_chettam_data(update):
     chart = EMOJI["chart"]
 
     if games:
-        reply = f"{len(games)} game(s) already exist:\n\n{slot_status_all(games)}"
+        reply = f"{pluralize(len(games), 'game')} already exist:\n\n{slot_status_all(games)}"
         keyboard = [
             [
                 InlineKeyboardButton(
