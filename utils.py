@@ -133,12 +133,12 @@ def slot_status(game) -> str:
         return f"{dizzy} _{timeslot} expired_\n{players}"
     else:
         if 5 <= slots < 10:
-            reply = f"{pluralize(slots, 'slot')}. 1 full party! {pistol}"
+            reply = f"1 full party! {pistol}"
         elif slots == 10:
-            reply = f"10 slots. 2 parties! gogo! {pistol}{pistol}"
+            reply = f"5x5! gogo! {pistol}{pistol}"
         else:
-            reply = f"{pluralize(slots, 'slot')} taken"
-        return f"*{timeslot}*: {reply}\n{players}"
+            reply = ""
+        return f"*{timeslot}*: {pluralize(slots, 'slot')}. {reply}\n{players}"
 
 
 def slot_status_all(games) -> str:
