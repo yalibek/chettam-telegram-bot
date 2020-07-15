@@ -2,8 +2,17 @@
 # -*- coding: utf-8 -*-
 
 """
-Chettamm telegram bot for csgo guys
-TODO: sort players by joined_at
+Chettamm telegram bot for csgo guys.
+This bot let's players schedule their cs:go games and join them.
+
+Main functionality is run under chettam() function.
+It uses inline keyboard buttons inside conversation mode.
+
+In development run bot.py with --debug flag
+
+TODO: Sort players by joined_at. Current implementation limits the use only to 1 game.
+      If player joins a game in multiple chats, their order will be based on latest game
+      they've joined across all games in all chats.
 """
 
 import inspect
