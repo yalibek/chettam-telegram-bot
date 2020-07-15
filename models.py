@@ -1,3 +1,6 @@
+from datetime import datetime as dt
+
+import pytz
 from sqlalchemy import Column, Integer, BigInteger, String, ForeignKey, DateTime
 from sqlalchemy import create_engine, Table
 from sqlalchemy.ext.declarative import declarative_base
@@ -26,6 +29,7 @@ class Player(Base):
 
     __tablename__ = "player"
     id = Column(Integer, primary_key=True)
+    updated_at = Column(DateTime, default=dt.now(pytz.utc))
     user_id = Column(BigInteger, unique=True)
     username = Column(String, nullable=True)
     first_name = Column(String)
@@ -55,8 +59,8 @@ class Player(Base):
         session.delete(self)
         session.commit()
 
-    @staticmethod
-    def save():
+    def save(self):
+        self.updated_at = dt.now(pytz.utc)
         session.commit()
 
 
@@ -65,7 +69,7 @@ class Game(Base):
 
     __tablename__ = "game"
     id = Column(Integer, primary_key=True)
-    updated_at = Column(DateTime)
+    updated_at = Column(DateTime, default=dt.now(pytz.utc))
     chat_id = Column(BigInteger)
     chat_type = Column(String)
     timeslot = Column(DateTime)
@@ -75,7 +79,8 @@ class Game(Base):
 
     @property
     def players_list(self) -> list:
-        return [escape_markdown(str(player)) for player in self.players]
+        p = sorted(self.players, key=lambda player: player.updated_at)
+        return [escape_markdown(str(player)) for player in p]
 
     @property
     def players_call(self) -> str:
@@ -105,8 +110,8 @@ class Game(Base):
         session.delete(self)
         session.commit()
 
-    @staticmethod
-    def save():
+    def save(self):
+        self.updated_at = dt.now(pytz.utc)
         session.commit()
 
 

@@ -344,8 +344,8 @@ def new_edit_game(update, context):
         )
 
     game.players.append(player)
-    game.updated_at = dt.now(pytz.utc)
     game.save()
+    player.save()
 
     fire = EMOJI["fire"]
     invite = random.choice(INVITE)
@@ -362,9 +362,11 @@ def slot_in(update, context):
     query = update.callback_query
     player = get_player(update)
     game = context.bot_data["game"]
-    game.updated_at = dt.now(pytz.utc)
+
     game.players.append(player)
     game.save()
+    player.save()
+
     fire = EMOJI["fire"]
     reply = f"{fire} *{player}* joined! {fire}\n\n{slot_status(game)}"
     query.answer()
@@ -384,7 +386,6 @@ def slot_out(update, context):
     player = get_player(update)
     game = context.bot_data["game"]
     game.players.remove(player)
-    game.updated_at = dt.now(pytz.utc)
     game.save()
     cry = EMOJI["cry"]
     if game.players:

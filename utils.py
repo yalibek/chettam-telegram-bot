@@ -68,12 +68,7 @@ def convert_to_dt(timeslot) -> dt:
 
 def create_game(chat, timeslot) -> Game:
     """Creates new game"""
-    game = Game(
-        updated_at=dt.now(pytz.utc),
-        timeslot=timeslot,
-        chat_id=chat.id,
-        chat_type=chat.type,
-    )
+    game = Game(timeslot=timeslot, chat_id=chat.id, chat_type=chat.type,)
     game.create()
     game.save()
     return game
@@ -82,7 +77,6 @@ def create_game(chat, timeslot) -> Game:
 def update_game(game: Game, timeslot) -> Game:
     """Updates existing game with new timeslot"""
     game.timeslot = timeslot
-    game.updated_at = dt.now(pytz.utc)
     game.save()
     return game
 
