@@ -1,6 +1,6 @@
+import functools
 import logging
 from datetime import datetime as dt, timedelta
-from functools import partial, update_wrapper
 
 import inflect
 import pytz
@@ -163,10 +163,10 @@ def logger() -> logging.Logger:
     return logging.getLogger(__name__)
 
 
-def wrapped_partial(func, *args, **kwargs) -> partial:
+def wrapped_partial(func, *args, **kwargs) -> functools.partial:
     """Hack to pass additional args to any func()"""
-    partial_func = partial(func, *args, **kwargs)
-    update_wrapper(partial_func, func)
+    partial_func = functools.partial(func, *args, **kwargs)
+    functools.update_wrapper(partial_func, func)
     return partial_func
 
 

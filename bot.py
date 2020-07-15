@@ -93,7 +93,7 @@ def chettam(update, context):
     """Entry point for conversation"""
     random_int = random.randint(0, 100)
     if random_int == 1:
-        reply = f"Enjoing the bot? *Buy me a coffee, maybe?*"
+        reply = f"Enjoying the bot?\n*Buy me a coffee, maybe?*"
         parrot = STICKERS["coffee_parrot"]
         update.message.reply_markdown(reply, reply_to_message_id=None)
         update.message.reply_sticker(
