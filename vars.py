@@ -40,6 +40,7 @@ EMOJI = {
     "coffee": emojize(":coffee:", use_aliases=True),
     "party": emojize(":party_popper:", use_aliases=True),
     "dizzy": emojize(":dizzy_face:", use_aliases=True),
+    "angry": emojize(":angry_face:", use_aliases=True),
     "clock": emojize(":alarm_clock:", use_aliases=True),
 }
 

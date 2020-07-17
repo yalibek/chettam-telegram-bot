@@ -76,8 +76,10 @@ def dayoff(update, context):
     goal = date(2020, 7, 27)
     diff = goal - today
     if diff.days > 0:
+        angry = EMOJI["angry"]
         update.message.reply_markdown(
-            f"Aseke can't play for {diff.days} more days", reply_to_message_id=None
+            f"Aseke wasn't allowed to play for {diff.days} more days {angry}",
+            reply_to_message_id=None,
         )
 
 
@@ -100,14 +102,6 @@ def gogo(update, context):
 # Inline keyboard actions
 def chettam(update, context):
     """Entry point for conversation"""
-    random_int = random.randint(0, 100)
-    if random_int == 1:
-        reply = f"Enjoying the bot?\n*Buy me a coffee, maybe?*"
-        parrot = STICKERS["coffee_parrot"]
-        update.message.reply_markdown(reply, reply_to_message_id=None)
-        update.message.reply_sticker(
-            parrot, reply_to_message_id=None,
-        )
     reply, keyboard = get_chettam_data(update)
     update.message.reply_markdown(
         reply, reply_markup=InlineKeyboardMarkup(keyboard),
