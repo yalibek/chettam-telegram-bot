@@ -15,41 +15,9 @@ engine = create_engine(DB_URL)
 Session = sessionmaker(bind=engine)
 session = Session()
 
-# Many-to-many association table
-association_table = Table(
-    "association",
-    Base.metadata,
-    Column("player_id", Integer, ForeignKey("player.id")),
-    Column("game_id", Integer, ForeignKey("game.id")),
-)
 
-
-class Player(Base):
-    """Class for user"""
-
-    __tablename__ = "player"
-    id = Column(Integer, primary_key=True)
-    updated_at = Column(DateTime, default=dt.now(pytz.utc))
-    user_id = Column(BigInteger, unique=True)
-    username = Column(String, nullable=True)
-    first_name = Column(String)
-    last_name = Column(String, nullable=True)
-    games = relationship("Game", secondary=association_table, back_populates="players")
-
-    def __str__(self):
-        if self.username:
-            return f"{self.username}"
-        elif self.first_name and self.last_name:
-            return f"{self.first_name} {self.last_name}"
-        else:
-            return f"{self.first_name}"
-
-    @property
-    def mention(self) -> str:
-        if self.username:
-            return f"@{self.username}"
-        else:
-            return f"[{self.first_name}](tg://user?id={self.user_id})"
+class Generic:
+    """Class with generic methods used by both Player and Game classes"""
 
     def create(self):
         session.add(self)
@@ -64,7 +32,44 @@ class Player(Base):
         session.commit()
 
 
-class Game(Base):
+# Many-to-many association table
+association_table = Table(
+    "association",
+    Base.metadata,
+    Column("player_id", Integer, ForeignKey("player.id")),
+    Column("game_id", Integer, ForeignKey("game.id")),
+)
+
+
+class Player(Base, Generic):
+    """Class for user"""
+
+    __tablename__ = "player"
+    id = Column(Integer, primary_key=True)
+    updated_at = Column(DateTime, default=dt.now(pytz.utc))
+    user_id = Column(BigInteger, unique=True)
+    username = Column(String, nullable=True)
+    first_name = Column(String)
+    last_name = Column(String, nullable=True)
+    games = relationship("Game", secondary=association_table, back_populates="players")
+
+    def __str__(self) -> str:
+        if self.username:
+            return f"{self.username}"
+        elif self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        else:
+            return f"{self.first_name}"
+
+    @property
+    def mention(self) -> str:
+        if self.username:
+            return f"@{self.username}"
+        else:
+            return f"[{self.first_name}](tg://user?id={self.user_id})"
+
+
+class Game(Base, Generic):
     """Class for unique game per chat"""
 
     __tablename__ = "game"
@@ -91,28 +96,16 @@ class Game(Base):
         return len(self.players)
 
     @property
-    def timeslot_utc(self):
+    def timeslot_utc(self) -> dt:
         return TIMEZONE_UTC.localize(self.timeslot)
 
     @property
-    def timeslot_cet(self):
+    def timeslot_cet(self) -> dt:
         return self.timeslot_utc.astimezone(TIMEZONE_CET)
 
     @property
     def timeslot_cet_time(self) -> str:
         return self.timeslot_cet.strftime("%H:%M")
-
-    def create(self):
-        session.add(self)
-        session.commit()
-
-    def delete(self):
-        session.delete(self)
-        session.commit()
-
-    def save(self):
-        self.updated_at = dt.now(pytz.utc)
-        session.commit()
 
 
 # Create tables in DB

@@ -387,7 +387,9 @@ def slot_out(update, context):
     """Leave current game"""
     query = update.callback_query
     player = get_player(update)
-    game = context.bot_data["game"]
+    data = context.bot_data
+    game = data["game"]
+    game_num = data["game_num"]
     game.players.remove(player)
     game.save()
     cry = EMOJI["cry"]
@@ -395,9 +397,7 @@ def slot_out(update, context):
         reply = f"{cry} *{player}* left {cry}\n\n{slot_status(game)}"
     else:
         game.delete()
-        reply = (
-            f"{cry} *{player}* left {cry}\n\nGame {game.timeslot_cet_time} was deleted."
-        )
+        reply = f"{cry} *{player}* left {cry}\n\nGame #{game_num} {game.timeslot_cet_time} was deleted."
     query.answer()
     query.edit_message_text(text=reply, parse_mode=ParseMode.MARKDOWN)
     logger().info(
