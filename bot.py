@@ -310,6 +310,10 @@ def new_edit_game(update, context):
     """Create new game or edit an existing game"""
     query = update.callback_query
     data = context.bot_data
+
+    fire = EMOJI["fire"]
+    invite = random.choice(INVITE)
+
     action = data["game_action"]
     player = get_player(update)
     new_timeslot = convert_to_dt(query.data)
@@ -322,6 +326,7 @@ def new_edit_game(update, context):
 
         if game.players and old_ts != new_ts:
             game = update_game(game, new_timeslot)
+            reply = "Game was edited"
             message = inspect.cleandoc(
                 f"""
                 {game.players_call} warning!\n
@@ -341,6 +346,7 @@ def new_edit_game(update, context):
         game = search_game(update, new_timeslot)
         if action == "new_game" and not game:
             game = create_game(update.effective_chat, new_timeslot)
+            reply = f"{fire} {invite}"
             logger().info(
                 'User "%s" created new game "%s" for chat "%s"',
                 player,
@@ -348,17 +354,15 @@ def new_edit_game(update, context):
                 game.chat_id,
             )
         elif game:
-            pass
+            reply = f"{fire} *{player}* joined! {fire}"
 
     game.players.append(player)
     game.save()
     player.save()
 
-    fire = EMOJI["fire"]
-    invite = random.choice(INVITE)
     query.answer()
     query.edit_message_text(
-        text=f"{fire} {invite}\n\n{slot_status(game)}", parse_mode=ParseMode.MARKDOWN
+        text=f"{reply}\n\n{slot_status(game)}", parse_mode=ParseMode.MARKDOWN
     )
     context.bot_data.update()
     return ConversationHandler.END
