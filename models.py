@@ -16,6 +16,15 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 
+# Many-to-many association table
+association_table = Table(
+    "association",
+    Base.metadata,
+    Column("player_id", Integer, ForeignKey("player.id")),
+    Column("game_id", Integer, ForeignKey("game.id")),
+)
+
+
 class Generic:
     """Class with generic methods used by both Player and Game classes"""
 
@@ -30,15 +39,6 @@ class Generic:
     def save(self):
         self.updated_at = dt.now(pytz.utc)
         session.commit()
-
-
-# Many-to-many association table
-association_table = Table(
-    "association",
-    Base.metadata,
-    Column("player_id", Integer, ForeignKey("player.id")),
-    Column("game_id", Integer, ForeignKey("game.id")),
-)
 
 
 class Player(Base, Generic):

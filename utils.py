@@ -89,6 +89,15 @@ def game_timediff(game: Game, hours=0, minutes=0, seconds=0) -> bool:
     return now - played_at > delta
 
 
+def search_game(update, timeslot) -> Game:
+    """Search Game with given timeslot for current chat"""
+    return (
+        session.query(Game)
+        .filter_by(chat_id=update.effective_chat.id, timeslot=timeslot)
+        .first()
+    )
+
+
 def get_game(update, game_id) -> Game:
     """Returns Game model for current chat"""
     return (

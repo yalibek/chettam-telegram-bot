@@ -337,14 +337,18 @@ def new_edit_game(update, context):
                 new_ts,
                 game.chat_id,
             )
-    elif action == "new_game":
-        game = create_game(update.effective_chat, new_timeslot)
-        logger().info(
-            'User "%s" created new game "%s" for chat "%s"',
-            player,
-            game.timeslot,
-            game.chat_id,
-        )
+    else:
+        game = search_game(update, new_timeslot)
+        if action == "new_game" and not game:
+            game = create_game(update.effective_chat, new_timeslot)
+            logger().info(
+                'User "%s" created new game "%s" for chat "%s"',
+                player,
+                game.timeslot,
+                game.chat_id,
+            )
+        elif game:
+            pass
 
     game.players.append(player)
     game.save()
