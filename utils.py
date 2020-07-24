@@ -112,7 +112,7 @@ def get_all_games(update) -> list:
     games = (
         session.query(Game)
         .filter_by(chat_id=update.effective_chat.id)
-        .order_by(Game.id)
+        .order_by(Game.timeslot)
         .all()
     )
     games_list = []

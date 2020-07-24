@@ -10,6 +10,7 @@ It uses inline keyboard buttons inside conversation mode.
 
 In development run bot.py with --debug flag
 
+TODO: fix markdown for players mentions in call_everyone
 TODO: Sort players by joined_at. Current implementation limits the use only to 1 game.
       If player joins a game in multiple chats, their order will be based on latest game
       they've joined across all games in all chats.
