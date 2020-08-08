@@ -11,9 +11,6 @@ It uses inline keyboard buttons inside conversation mode.
 In development run bot.py with --debug flag
 
 TODO: fix markdown for players mentions in call_everyone
-TODO: Sort players by joined_at. Current implementation limits the use only to 1 game.
-      If player joins a game in multiple chats, their order will be based on latest game
-      they've joined across all games in all chats.
 """
 
 import inspect
@@ -71,17 +68,6 @@ def dayoff(update, context):
     except:
         reply = "It's dayoff, fool!"
     update.message.reply_markdown(reply, reply_to_message_id=None)
-
-    # Notify Aseke about his abstinence period
-    today = dt.today().date()
-    goal = date(2020, 7, 27)
-    diff = goal - today
-    if diff.days > 0:
-        angry = EMOJI["angry"]
-        update.message.reply_markdown(
-            f"Aseke wasn't allowed to play for {diff.days} more days {angry}",
-            reply_to_message_id=None,
-        )
 
 
 def status(update, context):
@@ -357,7 +343,7 @@ def new_edit_game(update, context):
         elif game:
             reply = f"{fire} *{player}* joined! {fire}"
 
-    game.players.append(player)
+    game.add_player(player, joined_at=dt.now(pytz.utc))
     game.save()
     player.save()
 
@@ -375,7 +361,7 @@ def slot_in(update, context):
     player = get_player(update)
     game = context.bot_data["game"]
 
-    game.players.append(player)
+    game.add_player(player, joined_at=dt.now(pytz.utc))
     game.save()
     player.save()
 

@@ -16,13 +16,15 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 
-# Many-to-many association table
-association_table = Table(
-    "association",
-    Base.metadata,
-    Column("player_id", Integer, ForeignKey("player.id")),
-    Column("game_id", Integer, ForeignKey("game.id")),
-)
+class Association(Base):
+    """Many-to-many association table"""
+
+    __tablename__ = "association"
+    game_id = Column(Integer, ForeignKey("game.id"), primary_key=True)
+    player_id = Column(Integer, ForeignKey("player.id"), primary_key=True)
+    joined_at = Column(DateTime)
+    player = relationship("Player", backref="player_game")
+    game = relationship("Game", backref="player_game")
 
 
 class Generic:
@@ -36,8 +38,8 @@ class Generic:
         session.delete(self)
         session.commit()
 
-    def save(self):
-        self.updated_at = dt.now(pytz.utc)
+    @staticmethod
+    def save():
         session.commit()
 
 
@@ -46,12 +48,11 @@ class Player(Base, Generic):
 
     __tablename__ = "player"
     id = Column(Integer, primary_key=True)
-    updated_at = Column(DateTime, default=dt.now(pytz.utc))
     user_id = Column(BigInteger, unique=True)
     username = Column(String, nullable=True)
     first_name = Column(String)
     last_name = Column(String, nullable=True)
-    games = relationship("Game", secondary=association_table, back_populates="players")
+    games = relationship("Game", secondary="association", back_populates="players")
 
     def __str__(self) -> str:
         if self.username:
@@ -74,17 +75,24 @@ class Game(Base, Generic):
 
     __tablename__ = "game"
     id = Column(Integer, primary_key=True)
-    updated_at = Column(DateTime, default=dt.now(pytz.utc))
     chat_id = Column(BigInteger)
     chat_type = Column(String)
     timeslot = Column(DateTime)
-    players = relationship(
-        "Player", secondary=association_table, back_populates="games"
-    )
+    players = relationship("Player", secondary="association", back_populates="games")
+
+    def add_player(self, player, joined_at):
+        self.player_game.append(
+            Association(game=self, player=player, joined_at=joined_at)
+        )
 
     @property
     def players_list(self) -> list:
-        p = sorted(self.players, key=lambda player: player.updated_at)
+        p = [
+            association.player
+            for association in sorted(
+                self.player_game, key=lambda player: player.joined_at
+            )
+        ]
         return [escape_markdown(str(player)) for player in p]
 
     @property
