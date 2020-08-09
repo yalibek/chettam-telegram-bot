@@ -131,12 +131,10 @@ def slot_status(game) -> str:
     pistol = EMOJI["pistol"]
     dizzy = EMOJI["dizzy"]
 
-    if slots > 5:
-        party_1 = "\n".join(f"- {player}" for player in game.players_list[:5])
-        party_2 = "\n".join(f"- [queue] {player}" for player in game.players_list[5:])
-        players = party_1 + party_2
-    else:
-        players = "\n".join(f"- {player}" for player in game.players_list)
+    players = "\n".join(
+        f"- {player}" if index < 5 else f"- [queue] {player}"
+        for index, player in enumerate(game.players_list)
+    )
 
     if game_timediff(game, minutes=30):
         return f"{dizzy} _{timeslot} expired_\n{players}"

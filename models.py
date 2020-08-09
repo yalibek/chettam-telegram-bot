@@ -3,7 +3,7 @@ from datetime import datetime as dt
 from sqlalchemy import Column, Integer, BigInteger, String, ForeignKey, DateTime
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import sessionmaker, relationship, backref
 from telegram.utils.helpers import escape_markdown
 
 from vars import DB_URL, TIMEZONE_CET, TIMEZONE_UTC
@@ -22,8 +22,12 @@ class Association(Base):
     game_id = Column(Integer, ForeignKey("game.id"), primary_key=True)
     player_id = Column(Integer, ForeignKey("player.id"), primary_key=True)
     joined_at = Column(DateTime)
-    player = relationship("Player", backref="player_game")
-    game = relationship("Game", backref="player_game")
+    player = relationship(
+        "Player", backref=backref("player_game", cascade="all, delete-orphan")
+    )
+    game = relationship(
+        "Game", backref=backref("player_game", cascade="all, delete-orphan")
+    )
 
 
 class Generic:
@@ -31,11 +35,11 @@ class Generic:
 
     def create(self):
         session.add(self)
-        session.commit()
+        self.save()
 
     def delete(self):
         session.delete(self)
-        session.commit()
+        self.save()
 
     @staticmethod
     def save():
@@ -86,13 +90,12 @@ class Game(Base, Generic):
 
     @property
     def players_list(self) -> list:
-        p = [
-            association.player
-            for association in sorted(
-                self.player_game, key=lambda player: player.joined_at
-            )
+        """Sort players by joined_at and return list of names"""
+        sorted_association = sorted(self.player_game, key=lambda x: x.joined_at)
+        return [
+            escape_markdown(str(association.player))
+            for association in sorted_association
         ]
-        return [escape_markdown(str(player)) for player in p]
 
     @property
     def players_call(self) -> str:
