@@ -1,8 +1,7 @@
 from datetime import datetime as dt
 
-import pytz
 from sqlalchemy import Column, Integer, BigInteger, String, ForeignKey, DateTime
-from sqlalchemy import create_engine, Table
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from telegram.utils.helpers import escape_markdown

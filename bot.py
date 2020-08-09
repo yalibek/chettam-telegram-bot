@@ -16,7 +16,6 @@ TODO: fix markdown for players mentions in call_everyone
 import inspect
 import random
 import re
-from datetime import date
 
 import sentry_sdk
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
