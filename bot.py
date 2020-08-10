@@ -10,6 +10,7 @@ It uses inline keyboard buttons inside conversation mode.
 
 In development run bot.py with --debug flag
 
+TODO: FIX GAME TIMESLOT EDITING
 TODO: fix markdown for players mentions in call_everyone
 """
 
@@ -170,7 +171,8 @@ def selected_game(update, context):
     keyboard = [
         [
             InlineKeyboardButton("« Back", callback_data="start_over"),
-            InlineKeyboardButton(f"{pencil} Edit", callback_data="edit_existing_game"),
+            # Facing Association objects conflict when editing a game
+            # InlineKeyboardButton(f"{pencil} Edit", callback_data="edit_existing_game"),
             InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
         ]
     ]
