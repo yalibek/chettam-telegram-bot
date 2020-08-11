@@ -15,6 +15,9 @@ def arg_parse():
 # Stickers
 STICKERS = {
     "coffee_parrot": "CAACAgIAAxkBAAL0iF7r4SfAEYdYrTVkMXYiHXqYEA1cAAL5AgAChmBXDp2WPdbev1lCGgQ",
+    "pistol_parrot": "CAACAgIAAxkBAAIJrF8yOnVN-0osZOUFf8Frf0RakGLZAAIMOwAC6VUFGNYFnNP4oeCaGgQ",
+    "pistol_duck_left": "CAACAgIAAxkBAAIJr18yOnuVSZ1vAr2mtkPa2CWk2p8AA14AA6quUgRDa8fZOTT8_RoE",
+    "pistol_duck_right": "CAACAgIAAxkBAAIJsl8yOn1xC5EcbE6CYNL-EsEt_9wTAAKRAAOqrlIEnpWDdp5WX-caBA",
     "racoon": "CAACAgIAAxkBAAL1cF7t3YatTs3VWK3xR0fbpRPW9vB5AAKMBgAC-gu2CPxnxUG2V7CeGgQ",
     "hahaclassic": "CAACAgIAAxkBAAL1al7t3M55gfj6YTVuJuETd2ZttQY0AAL6AANWnb0KR976l3F0cQEaBA",
     "lenin": "CAACAgIAAxkBAAL1bF7t3V3P7PGfi-AGPfBvuudGFE-BAAKyAQADOKAK3daY89Zw03oaBA",

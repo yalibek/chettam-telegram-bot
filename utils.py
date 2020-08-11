@@ -196,6 +196,8 @@ def get_quote() -> tuple:
     )
     quote = response.json().get("quoteText")
     author = response.json().get("quoteAuthor")
+    if not author:
+        author = "Unknown"
     return quote, author
 
 

@@ -10,7 +10,7 @@ It uses inline keyboard buttons inside conversation mode.
 
 In development run bot.py with --debug flag
 
-TODO: fix markdown for players mentions in call_everyone
+TODO: fix markdown for players mentions in call_everyone()
 TODO: implement unique timeslot for Game. Current implementation only adds player to existing
       game if timeslot is same. However if game is edited, 2 games can have same timeslot.
 """
@@ -49,6 +49,9 @@ def start(update, context):
             STICKERS["borat"],
             STICKERS["harry"],
             STICKERS["sheikh"],
+            STICKERS["pistol_parrot"],
+            STICKERS["pistol_duck_left"],
+            STICKERS["pistol_duck_right"],
         ]
     )
     update.message.reply_text(
@@ -63,11 +66,12 @@ def dayoff(update, context):
     """Dayoff messages"""
     try:
         quote, author = get_quote()
-        if not author:
-            author = "Unknown"
         reply = f"_{quote}_\n\n — {author}"
     except:
         reply = "It's dayoff, fool!"
+        update.message.reply_sticker(
+            STICKERS["hahaclassic"], reply_to_message_id=None,
+        )
     update.message.reply_markdown(reply, reply_to_message_id=None)
 
 
