@@ -10,8 +10,9 @@ It uses inline keyboard buttons inside conversation mode.
 
 In development run bot.py with --debug flag
 
-TODO: FIX GAME TIMESLOT EDITING
 TODO: fix markdown for players mentions in call_everyone
+TODO: implement unique timeslot for Game. Current implementation only adds player to existing
+      game if timeslot is same. However if game is edited, 2 games can have same timeslot.
 """
 
 import inspect
@@ -171,8 +172,7 @@ def selected_game(update, context):
     keyboard = [
         [
             InlineKeyboardButton("« Back", callback_data="start_over"),
-            # Facing Association objects conflict when editing a game
-            # InlineKeyboardButton(f"{pencil} Edit", callback_data="edit_existing_game"),
+            InlineKeyboardButton(f"{pencil} Edit", callback_data="edit_existing_game"),
             InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
         ]
     ]
@@ -344,9 +344,8 @@ def new_edit_game(update, context):
         elif game:
             reply = f"{fire} *{player}* joined! {fire}"
 
-    game.add_player(player, joined_at=dt.now(pytz.utc))
-    game.save()
-    player.save()
+        game.add_player(player, joined_at=dt.now(pytz.utc))
+        game.save()
 
     query.answer()
     query.edit_message_text(
@@ -364,7 +363,6 @@ def slot_in(update, context):
 
     game.add_player(player, joined_at=dt.now(pytz.utc))
     game.save()
-    player.save()
 
     fire = EMOJI["fire"]
     reply = f"{fire} *{player}* joined! {fire}\n\n{slot_status(game)}"

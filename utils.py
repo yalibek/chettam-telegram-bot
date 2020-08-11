@@ -33,7 +33,6 @@ def get_player(update) -> Player:
             last_name=user.last_name,
         )
         player.create()
-        player.save()
     return player
 
 
@@ -70,7 +69,6 @@ def create_game(chat, timeslot) -> Game:
     """Creates new game"""
     game = Game(timeslot=timeslot, chat_id=chat.id, chat_type=chat.type,)
     game.create()
-    game.save()
     return game
 
 
