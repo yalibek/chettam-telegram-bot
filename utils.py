@@ -130,7 +130,7 @@ def slot_status(game) -> str:
     dizzy = EMOJI["dizzy"]
 
     players = "\n".join(
-        f"- {player}" if index < 5 else f"- [queue] {player}"
+        f"- {player}" if index < 5 else f"- \[_queue_] {player}"
         for index, player in enumerate(game.players_list)
     )
 
