@@ -334,6 +334,8 @@ def new_edit_game(update, context):
                 new_ts,
                 game.chat_id,
             )
+        else:
+            reply = "Timeslot wasn't changed"
     else:
         game = search_game(update, new_timeslot)
         if action == "new_game" and not game:
