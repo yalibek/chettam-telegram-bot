@@ -115,7 +115,7 @@ def get_all_games(update) -> list:
     )
     games_list = []
     for game in games:
-        if game_timediff(game, hours=6):
+        if game_timediff(game, hours=2):
             game.delete()
         else:
             games_list.append(game)
