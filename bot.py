@@ -184,7 +184,7 @@ def selected_game(update, context):
         kb = [
             InlineKeyboardButton(f"{zzz} Leave", callback_data="leave_game"),
         ]
-        if game.slots >= 3:
+        if game.slots >= 3 and game_timediff(game, minutes=-30):
             kb.append(
                 InlineKeyboardButton(
                     f"{party} Call everyone", callback_data="call_everyone"

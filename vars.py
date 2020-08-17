@@ -90,9 +90,9 @@ START_MESSAGE = f"""
 Hi, this is a bot for chettam guys! {EMOJI['pistol']}
 
 /start - help me pls
-/gogo - go go
-/chettam - invite everyone to play at specified time
+/chettam - create new game or join existing one
 /status - get current status
+/gogo - go go
 """
 
 # Timezones
