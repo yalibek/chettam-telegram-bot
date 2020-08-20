@@ -10,7 +10,8 @@ It uses inline keyboard buttons inside conversation mode.
 
 In development run bot.py with --debug flag
 
-TODO: fix markdown for players mentions in call_everyone()
+TODO: call_everyone(): fix markdown for players mentions
+TODO: call_everyone(): mention only players who are not in queue
 TODO: implement unique timeslot for Game. Current implementation only adds player to existing
       game if timeslot is same. However if game is edited, 2 games can have same timeslot.
 """
