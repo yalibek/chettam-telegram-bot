@@ -89,13 +89,27 @@ class Game(Base, Generic):
         )
 
     @property
-    def players_list(self) -> list:
+    def players_sorted(self) -> list:
         """Sort players by joined_at and return list of names"""
         sorted_association = sorted(self.player_game, key=lambda x: x.joined_at)
         return [
             escape_markdown(str(association.player))
             for association in sorted_association
         ]
+
+    @property
+    def players_list(self) -> str:
+        """Return unnumbered list of players for 1 party with queue or splitted into 2 parties"""
+        if self.slots == 10:
+            return "\n".join(
+                f"- \[_1st_] {player}" if index < 5 else f"- \[_2nd_] {player}"
+                for index, player in enumerate(self.players_sorted)
+            )
+        else:
+            return "\n".join(
+                f"- {player}" if index < 5 else f"- \[_queue_] {player}"
+                for index, player in enumerate(self.players_sorted)
+            )
 
     @property
     def players_call(self) -> str:
