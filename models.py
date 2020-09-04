@@ -59,18 +59,20 @@ class Player(Base, Generic):
 
     def __str__(self) -> str:
         if self.username:
-            return f"{self.username}"
+            uname = f"{self.username}"
         elif self.first_name and self.last_name:
-            return f"{self.first_name} {self.last_name}"
+            uname = f"{self.first_name} {self.last_name}"
         else:
-            return f"{self.first_name}"
+            uname = f"{self.first_name}"
+        return escape_markdown(uname)
 
     @property
     def mention(self) -> str:
         if self.username:
-            return f"@{self.username}"
+            uname = f"@{self.username}"
         else:
-            return f"[{self.first_name}](tg://user?id={self.user_id})"
+            uname = f"[{self.first_name}](tg://user?id={self.user_id})"
+        return escape_markdown(uname)
 
 
 class Game(Base, Generic):
@@ -110,9 +112,7 @@ class Game(Base, Generic):
 
     @property
     def players_call(self) -> str:
-        return ", ".join(
-            escape_markdown(player.mention) for player in self.players_sorted
-        )
+        return ", ".join(player.mention for player in self.players_sorted)
 
     @property
     def slots(self) -> int:
