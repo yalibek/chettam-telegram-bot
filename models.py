@@ -92,28 +92,29 @@ class Game(Base, Generic):
     def players_sorted(self) -> list:
         """Sort players by joined_at and return list of names"""
         sorted_association = sorted(self.player_game, key=lambda x: x.joined_at)
-        return [
-            escape_markdown(str(association.player))
-            for association in sorted_association
-        ]
+        return [association.player for association in sorted_association]
 
     @property
     def players_list(self) -> str:
         """Return unnumbered list of players for 1 party with queue or splitted into 2 parties"""
         if self.slots == 10:
             return "\n".join(
-                f"- \[_1st_] {player}" if index < 5 else f"- \[_2nd_] {player}"
+                f"- \[_1st_] {str(player)}"
+                if index < 5
+                else f"- \[_2nd_] {str(player)}"
                 for index, player in enumerate(self.players_sorted)
             )
         else:
             return "\n".join(
-                f"- {player}" if index < 5 else f"- \[_queue_] {player}"
+                f"- {str(player)}" if index < 5 else f"- \[_queue_] {str(player)}"
                 for index, player in enumerate(self.players_sorted)
             )
 
     @property
     def players_call(self) -> str:
-        return ", ".join(escape_markdown(player.mention) for player in self.players)
+        return ", ".join(
+            escape_markdown(player.mention) for player in self.players_sorted
+        )
 
     @property
     def slots(self) -> int:

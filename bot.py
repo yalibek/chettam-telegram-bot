@@ -11,10 +11,8 @@ It uses inline keyboard buttons inside conversation mode.
 In development run bot.py with --debug flag
 
 TODO: game.has_expired? add possibility to delete expired game; prevent from joining an expired game
-TODO: only players in the game can edit the timeslot
 TODO: don't allow game creation for timeslot earlier than current time
-TODO: call_everyone(): fix markdown for players mentions
-TODO: call_everyone(): mention only players who are not in queue
+TODO: call_everyone(): fix markdown for players first_name mentions
 TODO: implement unique timeslot for Game. Current implementation only adds player to existing
       game if timeslot is same. However if game is edited, 2 games can have same timeslot.
 """
