@@ -10,6 +10,8 @@ It uses inline keyboard buttons inside conversation mode.
 
 In development run bot.py with --debug flag
 
+TODO: game.has_expired? add possibility to delete expired game; prevent from joining an expired game
+TODO: only players in the game can edit the timeslot
 TODO: don't allow game creation for timeslot earlier than current time
 TODO: call_everyone(): fix markdown for players mentions
 TODO: call_everyone(): mention only players who are not in queue
@@ -175,28 +177,30 @@ def selected_game(update, context):
     zzz = EMOJI["zzz"]
     party = EMOJI["party"]
 
-    keyboard = [
-        [
-            InlineKeyboardButton("« Back", callback_data="start_over"),
-            InlineKeyboardButton(f"{pencil} Edit", callback_data="edit_existing_game"),
-            InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
-        ]
+    kb_row1 = []
+    kb_row2 = [
+        InlineKeyboardButton("« Back", callback_data="start_over"),
+        InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
     ]
+
     if player in game.players:
-        kb = [
+        kb_row1 = [
             InlineKeyboardButton(f"{zzz} Leave", callback_data="leave_game"),
         ]
         if game.slots >= 3 and game_timediff(game, minutes=-30):
-            kb.append(
+            kb_row1.append(
                 InlineKeyboardButton(
                     f"{party} Call everyone", callback_data="call_everyone"
                 ),
             )
-        keyboard.insert(0, kb)
-    elif player not in game.players and game.slots < 10:
-        keyboard.insert(
-            0, [InlineKeyboardButton(f"{pistol} Join", callback_data="join_game")]
+        kb_row2.insert(
+            1,
+            InlineKeyboardButton(f"{pencil} Edit", callback_data="edit_existing_game"),
         )
+    elif player not in game.players and game.slots < 10:
+        kb_row1 = [InlineKeyboardButton(f"{pistol} Join", callback_data="join_game")]
+
+    keyboard = [kb_row1, kb_row2]
 
     reply = f"You picked a game:\n\n{slot_status(game)}"
     query.answer()

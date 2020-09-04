@@ -83,11 +83,15 @@ INVITE = [
     "Интернет поставил",
     "Я сегодня как раз звезду солью",
     "По разам шыгасынба",
+    "Гоу вечерком на банане доски красить?",
+    "Келеci «Пирожковая» аялдамасы",
+    "пирожки распечатал",
 ]
 
 # Reply to /start command
 START_MESSAGE = f"""
 Hi, this is a bot for chettam guys! {EMOJI['pistol']}
+Wednesday and Sunday are days off.
 
 /start - help me pls
 /chettam - create new game or join existing one
