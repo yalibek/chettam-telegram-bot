@@ -99,14 +99,12 @@ class Game(Base, Generic):
         """Return unnumbered list of players for 1 party with queue or splitted into 2 parties"""
         if self.slots == 10:
             return "\n".join(
-                f"- \[_1st_] {str(player)}"
-                if index < 5
-                else f"- \[_2nd_] {str(player)}"
+                f"- \[_1st_] {player}" if index < 5 else f"- \[_2nd_] {player}"
                 for index, player in enumerate(self.players_sorted)
             )
         else:
             return "\n".join(
-                f"- {str(player)}" if index < 5 else f"- \[_queue_] {str(player)}"
+                f"- {player}" if index < 5 else f"- \[_queue_] {player}"
                 for index, player in enumerate(self.players_sorted)
             )
 
