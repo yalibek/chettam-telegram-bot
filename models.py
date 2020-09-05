@@ -99,15 +99,17 @@ class Game(Base, Generic):
         """Return unnumbered list of players for 1 party with queue or splitted into 2 parties"""
         players = [escape_markdown(str(uname)) for uname in self.players_sorted]
         if self.slots == 10:
-            return "\n".join(
-                f"- \[_1st_] {player}" if index < 5 else f"- \[_2nd_] {player}"
-                for index, player in enumerate(players)
-            )
+            appendix1 = "\[_1st_] "
+            appendix2 = "\[_2nd_] "
         else:
-            return "\n".join(
-                f"- {player}" if index < 5 else f"- \[_queue_] {player}"
-                for index, player in enumerate(players)
-            )
+            appendix1 = ""
+            appendix2 = "\[_queue_] "
+        return "\n".join(
+            f"- {appendix1}{player_name}"
+            if index < 5
+            else f"- {appendix2}{player_name}"
+            for index, player_name in enumerate(players)
+        )
 
     @property
     def players_call(self) -> str:
