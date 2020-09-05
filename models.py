@@ -59,20 +59,18 @@ class Player(Base, Generic):
 
     def __str__(self) -> str:
         if self.username:
-            uname = f"{self.username}"
+            return f"{self.username}"
         elif self.first_name and self.last_name:
-            uname = f"{self.first_name} {self.last_name}"
+            return f"{self.first_name} {self.last_name}"
         else:
-            uname = f"{self.first_name}"
-        return escape_markdown(uname)
+            return f"{self.first_name}"
 
     @property
     def mention(self) -> str:
         if self.username:
-            uname = f"@{self.username}"
+            return f"@{self.username}"
         else:
-            uname = f"[{self.first_name}](tg://user?id={self.user_id})"
-        return escape_markdown(uname)
+            return f"[{self.first_name}](tg://user?id={self.user_id})"
 
 
 class Game(Base, Generic):
@@ -99,15 +97,16 @@ class Game(Base, Generic):
     @property
     def players_list(self) -> str:
         """Return unnumbered list of players for 1 party with queue or splitted into 2 parties"""
+        players = [escape_markdown(str(uname)) for uname in self.players_sorted]
         if self.slots == 10:
             return "\n".join(
                 f"- \[_1st_] {player}" if index < 5 else f"- \[_2nd_] {player}"
-                for index, player in enumerate(self.players_sorted)
+                for index, player in enumerate(players)
             )
         else:
             return "\n".join(
                 f"- {player}" if index < 5 else f"- \[_queue_] {player}"
-                for index, player in enumerate(self.players_sorted)
+                for index, player in enumerate(players)
             )
 
     @property
