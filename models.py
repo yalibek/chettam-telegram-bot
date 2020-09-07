@@ -113,7 +113,9 @@ class Game(Base, Generic):
 
     @property
     def players_call(self) -> str:
-        return ", ".join(player.mention for player in self.players_sorted)
+        return ", ".join(
+            escape_markdown(player.mention) for player in self.players_sorted
+        )
 
     @property
     def slots(self) -> int:
