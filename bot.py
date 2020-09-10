@@ -354,8 +354,9 @@ def new_edit_game(update, context):
         elif game:
             reply = f"{fire} *{player}* joined! {fire}"
 
-        game.add_player(player, joined_at=dt.now(pytz.utc))
-        game.save()
+        if player not in game.players:
+            game.add_player(player, joined_at=dt.now(pytz.utc))
+            game.save()
 
     query.answer()
     query.edit_message_text(
