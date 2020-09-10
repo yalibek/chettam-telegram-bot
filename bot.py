@@ -195,7 +195,7 @@ def selected_game(update, context):
             1,
             InlineKeyboardButton(f"{pencil} Edit", callback_data="edit_existing_game"),
         )
-    elif player not in game.players and game.slots < 10:
+    elif player not in game.players and game.slots < 20:
         kb_row1 = [InlineKeyboardButton(f"{pistol} Join", callback_data="join_game")]
 
     keyboard = [kb_row1, kb_row2]

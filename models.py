@@ -98,16 +98,18 @@ class Game(Base, Generic):
     def players_list(self) -> str:
         """Return unnumbered list of players for 1 party with queue or splitted into 2 parties"""
         players = [escape_markdown(str(uname)) for uname in self.players_sorted]
-        if self.slots == 10:
-            appendix1 = "\[_1st_] "
-            appendix2 = "\[_2nd_] "
-        else:
+        if self.slots < 10:
             appendix1 = ""
             appendix2 = "\[_queue_] "
+        else:
+            appendix1 = "\[_1st_] "
+            appendix2 = "\[_2nd_] "
         return "\n".join(
             f"- {appendix1}{player_name}"
             if index < 5
             else f"- {appendix2}{player_name}"
+            if 5 <= index < 10
+            else f"- \[_queue_] {player_name}"
             for index, player_name in enumerate(players)
         )
 

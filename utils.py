@@ -135,7 +135,7 @@ def slot_status(game) -> str:
     else:
         if 5 <= slots < 10:
             reply = f"1 full party! {pistol}"
-        elif slots == 10:
+        elif slots >= 10:
             reply = f"5x5! gogo! {pistol}{pistol}"
         else:
             reply = ""
