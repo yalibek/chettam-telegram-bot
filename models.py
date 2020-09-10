@@ -68,7 +68,7 @@ class Player(Base, Generic):
     @property
     def mention(self) -> str:
         if self.username:
-            return f"@{self.username}"
+            return escape_markdown(f"@{self.username}")
         else:
             return f"[{self.first_name}](tg://user?id={self.user_id})"
 
