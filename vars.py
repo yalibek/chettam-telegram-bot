@@ -45,6 +45,7 @@ EMOJI = {
     "dizzy": emojize(":dizzy_face:", use_aliases=True),
     "angry": emojize(":angry_face:", use_aliases=True),
     "clock": emojize(":alarm_clock:", use_aliases=True),
+    "collision": emojize(":collision:", use_aliases=True),
 }
 
 # Chettam mating calls

@@ -12,7 +12,6 @@ In development run bot.py with --debug flag
 
 TODO: game.has_expired? add possibility to delete expired game; prevent from joining an expired game
 TODO: don't allow game creation for timeslot earlier than current time
-TODO: call_everyone(): fix markdown for players first_name mentions
 TODO: implement unique timeslot for Game. Current implementation only adds player to existing
       game if timeslot is same. However if game is edited, 2 games can have same timeslot.
 """
@@ -138,7 +137,7 @@ def get_chettam_data(update):
         keyboard = [[]]
         reply = "Game doesn't exist."
 
-    if len(games) < 4:
+    if len(games) < 5:
         kb = [
             InlineKeyboardButton(f"{pistol} New", callback_data="new_game"),
             InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
@@ -308,6 +307,7 @@ def new_edit_game(update, context):
     data = context.bot_data
 
     fire = EMOJI["fire"]
+    collision = EMOJI["collision"]
     invite = random.choice(INVITE)
 
     action = data["game_action"]
@@ -344,7 +344,7 @@ def new_edit_game(update, context):
         game = search_game(update, new_timeslot)
         if action == "new_game" and not game:
             game = create_game(update.effective_chat, new_timeslot)
-            reply = f"{fire} {invite}"
+            reply = f"{collision} {invite}"
             logger().info(
                 'User "%s" created new game "%s" for chat "%s"',
                 player,
