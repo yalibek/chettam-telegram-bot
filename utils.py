@@ -164,26 +164,6 @@ def logger() -> logging.Logger:
     return logging.getLogger(__name__)
 
 
-def wrapped_partial(func, *args, **kwargs) -> functools.partial:
-    """Hack to pass additional args to any func()"""
-    partial_func = functools.partial(func, *args, **kwargs)
-    functools.update_wrapper(partial_func, func)
-    return partial_func
-
-
-def set_time_alert(update, context, alert, message, due):
-    """Set time alert"""
-    if "job" in context.chat_data:
-        old_job = context.chat_data["job"]
-        old_job.schedule_removal()
-
-    partial_alert = wrapped_partial(alert, message=message)
-    new_job = context.job_queue.run_once(
-        partial_alert, due, context=update.effective_chat.id
-    )
-    context.chat_data["job"] = new_job
-
-
 def get_quote() -> tuple:
     """Get random famous quote"""
     url = "https://api.forismatic.com/api/1.0/"

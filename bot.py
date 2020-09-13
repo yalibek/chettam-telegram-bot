@@ -137,7 +137,7 @@ def get_chettam_data(update):
         keyboard = [[]]
         reply = "Game doesn't exist."
 
-    if len(games) < 5:
+    if len(games) < 10:
         kb = [
             InlineKeyboardButton(f"{pistol} New", callback_data="new_game"),
             InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
@@ -330,7 +330,12 @@ def new_edit_game(update, context):
                 Game #{num} {old_ts} -> *{new_ts}*
                 """
             )
-            set_time_alert(update, context, alert_message, message, 0)
+            send_notification(
+                context=context,
+                due=0,
+                chat_id=update.effective_chat.id,
+                message=message,
+            )
             logger().info(
                 'User "%s" edited timeslot "%s" -> "%s" for chat "%s"',
                 player,
@@ -426,9 +431,22 @@ def call_everyone(update, context):
     game = context.bot_data["game"]
     query.answer()
     query.edit_message_text(text=slot_status(game), parse_mode=ParseMode.MARKDOWN)
-    message = f"*{game.timeslot_cet_time}*: {game.players_call} go go!"
-    set_time_alert(update, context, alert_message, message, 0)
+    send_notification(
+        context=context,
+        due=0,
+        chat_id=update.effective_chat.id,
+        message=f"*{game.timeslot_cet_time}*: {game.players_call} go go!",
+    )
     return ConversationHandler.END
+
+
+def send_notification(context, due, chat_id, message):
+    def send_msg(context):
+        context.bot.send_message(
+            context.job.context, text=message, parse_mode=ParseMode.MARKDOWN,
+        )
+
+    context.job_queue.run_once(send_msg, due, context=chat_id)
 
 
 def cancel(update, context):
@@ -437,12 +455,6 @@ def cancel(update, context):
     query.answer()
     query.edit_message_text(text="cancelled :(")
     return ConversationHandler.END
-
-
-def alert_message(context, message):
-    """Alert used by bot jobs"""
-    job = context.job
-    context.bot.send_message(job.context, text=message, parse_mode=ParseMode.MARKDOWN)
 
 
 def main():
