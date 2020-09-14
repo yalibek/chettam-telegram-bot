@@ -48,6 +48,36 @@ EMOJI = {
     "collision": emojize(":collision:", use_aliases=True),
 }
 
+# CS:GO nicknames
+CSGO_NICKNAMES = {
+    "aman_utemuratov": "amanchik",
+    "rbektemirov": "iceman",
+    "DaurenMuratov": "Paradox",
+    "macaskar": "macaskar",
+    "JustLiveKZ": "JustLiveKZ",
+    "mrserzhan": "gPaKoH",
+    "madrobothere": "madrobot",
+    "sduwnik": "bekzattt",
+    "ideamod": "aim_morty",
+    "omniscient_otter": "snoepdoggo",
+    "sanzhar_satybaldiyev": "sanzhar_satybaldiyev",
+    "FreeUserName": "AWK",
+    "timazhum": "TimaZhumTTV",
+    "askhatish": "askhatish",
+    "datbayev": "megido",
+    "Raimundoo": "Raimundo",
+    "timuber": "xx",
+    "alibekxo": "uber eats",
+    "narikbi": "narikbi",
+    "kaskabayev": "kaskabayev",
+    "umriyaev": "kingler_s",
+    "rjlth": "Юрист",
+    "tabdulin": "tabdulin",
+    "dakzh": "dake2020",
+    "kushibayev": "kushibayev",
+    "msagimbekov", "Məké",
+}
+
 # Chettam mating calls
 INVITE = [
     "четтам?",

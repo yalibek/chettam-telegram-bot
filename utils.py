@@ -7,15 +7,15 @@ import pytz
 import requests
 
 from models import Game, Player, session
-from vars import EMOJI, TIMEZONE_CET, TIMEZONE_UTC
+from vars import EMOJI, TIMEZONE_CET, TIMEZONE_UTC, CSGO_NICKNAMES
 
 
 def sync_player_data(player: Player, user):
     """Updates player's data if it has changed"""
-    p_data = [player.username, player.first_name, player.last_name]
-    u_data = [user.username, user.first_name, user.last_name]
+    p_data = [player.username, player.first_name, player.last_name, player.csgo_nickname]
+    u_data = [user.username, user.first_name, user.last_name, user.csgo_nickname]
     if p_data != u_data:
-        player.username, player.first_name, player.last_name = u_data
+        player.username, player.first_name, player.last_name, player.csgo_nickname = u_data
         player.save()
 
 
@@ -31,6 +31,7 @@ def get_player(update) -> Player:
             username=user.username,
             first_name=user.first_name,
             last_name=user.last_name,
+            csgo_nickname=CSGO_NICKNAMES[user.username],
         )
         player.create()
     return player
