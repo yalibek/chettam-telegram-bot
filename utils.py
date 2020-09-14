@@ -12,10 +12,10 @@ from vars import EMOJI, TIMEZONE_CET, TIMEZONE_UTC, CSGO_NICKNAMES
 
 def sync_player_data(player: Player, user):
     """Updates player's data if it has changed"""
-    p_data = [player.username, player.first_name, player.last_name, player.csgo_nickname]
-    u_data = [user.username, user.first_name, user.last_name, user.csgo_nickname]
+    p_data = [player.username, player.first_name, player.last_name]
+    u_data = [user.username, user.first_name, user.last_name]
     if p_data != u_data:
-        player.username, player.first_name, player.last_name, player.csgo_nickname = u_data
+        player.username, player.first_name, player.last_name = u_data
         player.save()
 
 
