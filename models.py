@@ -55,10 +55,13 @@ class Player(Base, Generic):
     username = Column(String, nullable=True)
     first_name = Column(String)
     last_name = Column(String, nullable=True)
+    csgo_nickname = Column(String, nullable=True)
     games = relationship("Game", secondary="association", back_populates="players")
 
     def __str__(self) -> str:
-        if self.username:
+        if self.csgo_nickname:
+            return f"{self.csgo_nickname}"
+        elif self.username:
             return f"{self.username}"
         elif self.first_name and self.last_name:
             return f"{self.first_name} {self.last_name}"

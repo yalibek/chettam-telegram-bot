@@ -7,7 +7,7 @@ import pytz
 import requests
 
 from models import Game, Player, session
-from vars import EMOJI, TIMEZONE_CET, TIMEZONE_UTC
+from vars import EMOJI, TIMEZONE_CET, TIMEZONE_UTC, CSGO_NICKNAMES
 
 
 def sync_player_data(player: Player, user):
@@ -31,6 +31,7 @@ def get_player(update) -> Player:
             username=user.username,
             first_name=user.first_name,
             last_name=user.last_name,
+            csgo_nickname=CSGO_NICKNAMES[user.username],
         )
         player.create()
     return player
