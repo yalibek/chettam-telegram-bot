@@ -75,7 +75,7 @@ CSGO_NICKNAMES = {
     "tabdulin": "tabdulin",
     "dakzh": "dake2020",
     "kushibayev": "kushibayev",
-    "msagimbekov", "Məké",
+    "msagimbekov": "Məké",
 }
 
 # Chettam mating calls
