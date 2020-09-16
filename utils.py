@@ -11,12 +11,20 @@ from vars import EMOJI, TIMEZONE_CET, TIMEZONE_UTC, CSGO_NICKNAMES
 
 
 def sync_player_data(player: Player, user):
-    """Updates player's data if it has changed"""
+    """Updates player's data with Telegram user's data if it has changed"""
     p_data = [player.username, player.first_name, player.last_name]
     u_data = [user.username, user.first_name, user.last_name]
     if p_data != u_data:
         player.username, player.first_name, player.last_name = u_data
         player.save()
+
+
+def get_nickname(user):
+    """Get CG:GO nickname for given user if it exist"""
+    try:
+        return CSGO_NICKNAMES[user.username]
+    except:
+        pass
 
 
 def get_player(update) -> Player:
@@ -31,7 +39,7 @@ def get_player(update) -> Player:
             username=user.username,
             first_name=user.first_name,
             last_name=user.last_name,
-            csgo_nickname=CSGO_NICKNAMES[user.username],
+            csgo_nickname=get_nickname(user),
         )
         player.create()
     return player
