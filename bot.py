@@ -307,7 +307,8 @@ def new_edit_game(update, context):
     data = context.bot_data
 
     fire = EMOJI["fire"]
-    collision = EMOJI["collision"]
+    dumpling = EMOJI["dumpling"]
+    exclamation = EMOJI["exclamation"]
     invite = random.choice(INVITE)
 
     action = data["game_action"]
@@ -325,7 +326,7 @@ def new_edit_game(update, context):
             reply = "Game was edited"
             message = inspect.cleandoc(
                 f"""
-                {game.players_call} warning!\n
+                {exclamation} {game.players_call} warning!\n
                 Timeslot changed by {player.mention}:
                 Game #{num} {old_ts} -> *{new_ts}*
                 """
@@ -349,7 +350,7 @@ def new_edit_game(update, context):
         game = search_game(update, new_timeslot)
         if action == "new_game" and not game:
             game = create_game(update.effective_chat, new_timeslot)
-            reply = f"{collision} {invite}"
+            reply = f"{dumpling} {invite}"
             logger().info(
                 'User "%s" created new game "%s" for chat "%s"',
                 player,

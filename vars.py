@@ -46,6 +46,8 @@ EMOJI = {
     "angry": emojize(":angry_face:", use_aliases=True),
     "clock": emojize(":alarm_clock:", use_aliases=True),
     "collision": emojize(":collision:", use_aliases=True),
+    "exclamation": emojize(":exclamation:", use_aliases=True),
+    "dumpling": emojize(":dumpling:", use_aliases=True),
 }
 
 # CS:GO nicknames
