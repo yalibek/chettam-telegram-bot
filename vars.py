@@ -47,7 +47,7 @@ EMOJI = {
     "clock": emojize(":alarm_clock:", use_aliases=True),
     "collision": emojize(":collision:", use_aliases=True),
     "exclamation": emojize(":exclamation:", use_aliases=True),
-    "bangbang": emojize(":bangbang:", use_aliases=True),
+    "bangbang": emojize(":double_exclamation_mark:", use_aliases=True),
     "dumpling": emojize(":dumpling:", use_aliases=True),
 }
 
