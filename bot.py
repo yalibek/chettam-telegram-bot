@@ -308,7 +308,7 @@ def new_edit_game(update, context):
 
     fire = EMOJI["fire"]
     dumpling = EMOJI["dumpling"]
-    exclamation = EMOJI["exclamation"]
+    bangbang = EMOJI["bangbang"]
     invite = random.choice(INVITE)
 
     action = data["game_action"]
@@ -326,7 +326,7 @@ def new_edit_game(update, context):
             reply = "Game was edited"
             message = inspect.cleandoc(
                 f"""
-                {exclamation} {game.players_call} warning!\n
+                {bangbang} {game.players_call} warning!\n
                 Timeslot changed by {player.mention}:
                 Game #{num} {old_ts} -> *{new_ts}*
                 """
