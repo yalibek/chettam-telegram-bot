@@ -95,6 +95,7 @@ def gogo(update, context):
 # Inline keyboard actions
 def chettam(update, context):
     """Entry point for conversation"""
+    context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
     reply, keyboard = get_chettam_data(update)
     update.message.reply_markdown(
         reply, reply_markup=InlineKeyboardMarkup(keyboard),
