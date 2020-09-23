@@ -461,6 +461,7 @@ def cancel(update, context):
 def main():
     """Run bot"""
     updater = Updater(TOKEN, use_context=True)
+    updater.bot.set_my_commands(COMMANDS)
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher

@@ -1,4 +1,3 @@
-import functools
 import logging
 from datetime import datetime as dt, timedelta
 

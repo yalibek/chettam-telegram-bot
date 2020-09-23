@@ -122,16 +122,28 @@ INVITE = [
     "пирожки распечатал",
 ]
 
+
+# Commands
+COMMANDS = [
+    ("start", "help me pls"),
+    ("chettam", "create new game or join existing one"),
+    ("status", "get current status"),
+    ("gogo", "go go"),
+]
+
+# Commands string for START_MESSAGE
+COMMANDS_DESCR = "\n".join(
+    f"/{command} - {description}" for command, description in COMMANDS
+)
+
 # Reply to /start command
 START_MESSAGE = f"""
 Hi, this is a bot for chettam guys! {EMOJI['pistol']}
 Wednesday and Sunday are days off.
 
-/start - help me pls
-/chettam - create new game or join existing one
-/status - get current status
-/gogo - go go
+{COMMANDS_DESCR}
 """
+
 
 # Timezones
 TIMEZONE_CET = pytz.timezone("CET")
