@@ -65,6 +65,7 @@ def start(update, context):
 
 def dayoff(update, context):
     """Dayoff messages"""
+    context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
     try:
         quote, author = get_quote()
         reply = f"_{quote}_\n\n — {author}"
