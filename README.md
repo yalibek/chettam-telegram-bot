@@ -1,4 +1,4 @@
-# Telegram bot for Chettam guys
+# Telegram bot for Chettam guys 🔫
 
 Bot is used to book a time slot for a CS:GO game.
 
