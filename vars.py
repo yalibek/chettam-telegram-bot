@@ -127,8 +127,8 @@ INVITE = [
 COMMANDS = [
     ("start", "help me pls"),
     ("chettam", "create new game or join existing one"),
-    ("status", "get current status"),
-    ("gogo", "go go"),
+    ("status", "show current status"),
+    ("gogo", "say random invite"),
 ]
 
 # Commands string for START_MESSAGE
