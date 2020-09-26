@@ -121,21 +121,26 @@ def start_over(update, context):
 def get_chettam_data(update):
     """Reply message and keyboard for entry point"""
     games = get_all_games(update)
+    player = get_player(update)
     pistol = EMOJI["pistol"]
     cross = EMOJI["cross"]
     chart = EMOJI["chart"]
+    fire = EMOJI["fire"]
 
     if games:
         reply = f"{pluralize(len(games), 'game')} already exist:\n\n{slot_status_all(games)}"
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    f"Game #{i + 1} {game.timeslot_cet_time}",
-                    callback_data=f"GAME{game.id}.{i + 1}",
-                )
-            ]
-            for i, game in enumerate(games)
-        ]
+        keyboard = []
+        for i, game in enumerate(games):
+            button_text = f"Game #{i + 1} {game.timeslot_cet_time}"
+            if player in game.players:
+                button_text += f" [You joined]"
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        button_text, callback_data=f"GAME{game.id}.{i + 1}",
+                    )
+                ]
+            )
     else:
         keyboard = [[]]
         reply = "Game doesn't exist."
