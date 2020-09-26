@@ -328,7 +328,7 @@ def new_edit_game(update, context):
             reply = "Game was edited"
             message = inspect.cleandoc(
                 f"""
-                {exclamation} {game.players_call} warning!\n
+                {exclamation} {game.players_call_all} warning!\n
                 Timeslot changed by {player.mention}:
                 Game #{num} {old_ts} -> *{new_ts}*
                 """
@@ -438,7 +438,7 @@ def call_everyone(update, context):
         context=context,
         due=0,
         chat_id=update.effective_chat.id,
-        message=f"*{game.timeslot_cet_time}*: {game.players_call} go go!",
+        message=f"*{game.timeslot_cet_time}*: {game.players_call_active} go go!",
     )
     return ConversationHandler.END
 

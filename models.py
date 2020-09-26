@@ -117,7 +117,16 @@ class Game(Base, Generic):
         )
 
     @property
-    def players_call(self) -> str:
+    def players_call_active(self) -> str:
+        """Only mention players who are not in queue"""
+        if self.slots < 10:
+            active_players = self.players_sorted[:5]
+        else:
+            active_players = self.players_sorted[:10]
+        return ", ".join(player.mention for player in active_players)
+
+    @property
+    def players_call_all(self) -> str:
         return ", ".join(player.mention for player in self.players_sorted)
 
     @property
