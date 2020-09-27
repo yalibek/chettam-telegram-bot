@@ -125,15 +125,14 @@ def get_chettam_data(update):
     pistol = EMOJI["pistol"]
     cross = EMOJI["cross"]
     chart = EMOJI["chart"]
-    fire = EMOJI["fire"]
 
     if games:
         reply = f"{pluralize(len(games), 'game')} already exist:\n\n{slot_status_all(games)}"
         keyboard = []
         for i, game in enumerate(games):
-            button_text = f"Game #{i + 1} {game.timeslot_cet_time}"
+            button_text = f"Game {i + 1} @ {game.timeslot_cet_time}"
             if player in game.players:
-                button_text += f" [You joined]"
+                button_text += " [You joined]"
             keyboard.append(
                 [
                     InlineKeyboardButton(
