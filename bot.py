@@ -339,10 +339,7 @@ def new_edit_game(update, context):
                 """
             )
             send_notification(
-                context=context,
-                due=0,
-                chat_id=update.effective_chat.id,
-                message=message,
+                context=context, chat_id=update.effective_chat.id, message=message,
             )
             logger().info(
                 'User "%s" edited timeslot "%s" -> "%s" for chat "%s"',
@@ -444,14 +441,15 @@ def call_everyone(update, context):
     query.edit_message_text(text=slot_status(game), parse_mode=ParseMode.MARKDOWN)
     send_notification(
         context=context,
-        due=0,
         chat_id=update.effective_chat.id,
         message=f"*{game.timeslot_cet_time}*: {game.players_call_active} go go!",
     )
     return ConversationHandler.END
 
 
-def send_notification(context, due, chat_id, message):
+def send_notification(context, chat_id, message, due=0):
+    """Send a separate message"""
+
     def send_msg(context):
         context.bot.send_message(
             context.job.context, text=message, parse_mode=ParseMode.MARKDOWN,
@@ -461,12 +459,13 @@ def send_notification(context, due, chat_id, message):
 
 
 def is_last_slot(update, context, game):
-    if game.slots == 4 or game.slots == 9:
+    """Notify about last slot"""
+    tiger = EMOJI["tiger"]
+    if game.slots == 1 or game.slots == 9:
         send_notification(
             context=context,
-            due=0,
             chat_id=update.effective_chat.id,
-            message=f"*{game.timeslot_cet_time}*: last slot!",
+            message=f"*{game.timeslot_cet_time}*: last slot! go go! {tiger}",
         )
 
 

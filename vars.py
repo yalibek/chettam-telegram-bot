@@ -49,6 +49,7 @@ EMOJI = {
     "exclamation": emojize(":exclamation:", use_aliases=True),
     "bangbang": emojize(":double_exclamation_mark:", use_aliases=True),
     "dumpling": emojize(":dumpling:", use_aliases=True),
+    "tiger": emojize(":tiger2:", use_aliases=True),
 }
 
 # CS:GO nicknames
