@@ -376,6 +376,7 @@ def new_edit_game(update, context):
         text=f"{reply}\n\n{slot_status(game)}", parse_mode=ParseMode.MARKDOWN
     )
     context.bot_data.update()
+    is_last_slot(update, context, game)
     return ConversationHandler.END
 
 
@@ -398,6 +399,7 @@ def slot_in(update, context):
         game.timeslot,
         game.chat_id,
     )
+    is_last_slot(update, context, game)
     return ConversationHandler.END
 
 
@@ -421,6 +423,7 @@ def slot_out(update, context):
     logger().info(
         'User "%s" left a game "%s" for chat "%s"', player, game.timeslot, game.chat_id,
     )
+    is_last_slot(update, context, game)
     return ConversationHandler.END
 
 
@@ -455,6 +458,16 @@ def send_notification(context, due, chat_id, message):
         )
 
     context.job_queue.run_once(send_msg, due, context=chat_id)
+
+
+def is_last_slot(update, context, game):
+    if game.slots == 4 or game.slots == 9:
+        send_notification(
+            context=context,
+            due=0,
+            chat_id=update.effective_chat.id,
+            message=f"*{game.timeslot_cet_time}*: last slot!",
+        )
 
 
 def cancel(update, context):
