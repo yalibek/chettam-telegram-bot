@@ -461,7 +461,7 @@ def send_notification(context, chat_id, message, due=0):
 def is_last_slot(update, context, game):
     """Notify about last slot"""
     tiger = EMOJI["tiger"]
-    if game.slots == 1 or game.slots == 9:
+    if game.slots == 4 or game.slots == 9:
         send_notification(
             context=context,
             chat_id=update.effective_chat.id,
