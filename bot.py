@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
+Kostyli i Velosipedy™ BV presents
+
 Chettamm telegram bot for csgo guys.
 This bot let's players schedule their cs:go games and join them.
 
@@ -373,7 +375,7 @@ def new_edit_game(update, context):
         text=f"{reply}\n\n{slot_status(game)}", parse_mode=ParseMode.MARKDOWN
     )
     context.bot_data.update()
-    is_last_slot(update, context, game)
+    last_slot_notification(update, context, game)
     return ConversationHandler.END
 
 
@@ -396,7 +398,7 @@ def slot_in(update, context):
         game.timeslot,
         game.chat_id,
     )
-    is_last_slot(update, context, game)
+    last_slot_notification(update, context, game)
     return ConversationHandler.END
 
 
@@ -420,7 +422,7 @@ def slot_out(update, context):
     logger().info(
         'User "%s" left a game "%s" for chat "%s"', player, game.timeslot, game.chat_id,
     )
-    is_last_slot(update, context, game)
+    last_slot_notification(update, context, game)
     return ConversationHandler.END
 
 
@@ -447,6 +449,17 @@ def call_everyone(update, context):
     return ConversationHandler.END
 
 
+def last_slot_notification(update, context, game):
+    """Notify about last slot"""
+    tiger = EMOJI["tiger"]
+    if game.slots == 4 or game.slots == 9:
+        send_notification(
+            context=context,
+            chat_id=update.effective_chat.id,
+            message=f"*{game.timeslot_cet_time}*: last slot! go go! {tiger}",
+        )
+
+
 def send_notification(context, chat_id, message, due=0):
     """Send a separate message"""
 
@@ -456,17 +469,6 @@ def send_notification(context, chat_id, message, due=0):
         )
 
     context.job_queue.run_once(send_msg, due, context=chat_id)
-
-
-def is_last_slot(update, context, game):
-    """Notify about last slot"""
-    tiger = EMOJI["tiger"]
-    if game.slots == 4 or game.slots == 9:
-        send_notification(
-            context=context,
-            chat_id=update.effective_chat.id,
-            message=f"*{game.timeslot_cet_time}*: last slot! go go! {tiger}",
-        )
 
 
 def cancel(update, context):

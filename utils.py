@@ -18,7 +18,7 @@ def sync_player_data(player: Player, user):
         player.save()
 
 
-def get_nickname(user):
+def get_nickname(user) -> str:
     """Get CG:GO nickname for given user if it exist"""
     try:
         return CSGO_NICKNAMES[user.username]
