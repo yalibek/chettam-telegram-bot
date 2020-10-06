@@ -1,7 +1,7 @@
 import argparse
 import os
+import random
 
-import pytz
 from emoji import emojize
 
 
@@ -125,14 +125,16 @@ INVITE = [
 
 # Action triggers
 BCOM = [
+    f"Top party: Highly rated by recent gamers ({round(random.uniform(7, 10), 1)})!",
+    f"Good for gamers - they rate the party {round(random.uniform(7, 10), 1)} for five-person plays!",
     "Last booked 1 hour ago on our chat!",
     "Booked 4 times in the last 6 hours on our chat!",
-    "Top paty: Highly rated by recent gamers (8.1)!",
-    "Good for parties - they rate the facilities 9.3 for five-person plays!",
     "Limited-time deal!",
     "Only 1 slot left on our chat!",
     "2 other people looked for your slot in the last 10 minutes!",
     "FREE cancellation!",
+    "One of our bestsellers in CS:GO!",
+    "Gamers consistently rate the party as excellent!",
 ]
 
 # Commands

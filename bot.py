@@ -20,7 +20,6 @@ TODO: implement unique timeslot for a Game. Current implementation only adds pla
 """
 
 import inspect
-import random
 import re
 
 import sentry_sdk
