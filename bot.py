@@ -5,7 +5,7 @@
 Kostyli i Velosipedy™ BV presents
 
 Chettamm telegram bot for csgo guys.
-This bot let's players schedule their cs:go games and join them.
+It helps players to schedule their cs:go games and join them.
 
 Main functionality is run under chettam() function.
 It uses inline keyboard buttons inside conversation mode.
@@ -451,12 +451,12 @@ def call_everyone(update, context):
 
 def last_slot_notification(update, context, game):
     """Notify about last slot"""
-    tiger = EMOJI["tiger"]
     if game.slots == 4 or game.slots == 9:
+        random_call = random.choice(BCOM)
         send_notification(
             context=context,
             chat_id=update.effective_chat.id,
-            message=f"*{game.timeslot_cet_time}*: last slot! go go! {tiger}",
+            message=f"*{game.timeslot_cet_time}*: {random_call}",
         )
 
 
