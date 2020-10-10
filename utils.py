@@ -148,7 +148,7 @@ def slot_status(game) -> str:
             reply = f"5x5! gogo! {pistol}{pistol}"
         else:
             reply = ""
-        return f"*{timeslot} ({timeslot_london})*: {pluralize(slots, 'slot')}. {reply}\n{players}"
+        return f"*AMS: {timeslot} (GBT: {timeslot_london})*:\n {pluralize(slots, 'slot')}. {reply}\n{players}"
 
 
 def slot_status_all(games) -> str:
