@@ -134,6 +134,7 @@ def slot_status(game) -> str:
     """Returns slots data for game"""
     slots = game.slots
     timeslot = game.timeslot_cet_time
+    timeslot_london = game.timeslot_gbt_time
     players = game.players_list
     pistol = EMOJI["pistol"]
     dizzy = EMOJI["dizzy"]
@@ -147,7 +148,7 @@ def slot_status(game) -> str:
             reply = f"5x5! gogo! {pistol}{pistol}"
         else:
             reply = ""
-        return f"*{timeslot}*: {pluralize(slots, 'slot')}. {reply}\n{players}"
+        return f"*{timeslot} ({timeslot_london})*: {pluralize(slots, 'slot')}. {reply}\n{players}"
 
 
 def slot_status_all(games) -> str:

@@ -6,7 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, backref
 from telegram.utils.helpers import escape_markdown
 
-from vars import DB_URL, TIMEZONE_CET, TIMEZONE_UTC
+from vars import DB_URL, TIMEZONE_CET, TIMEZONE_UTC, TIMEZONE_GBT
 
 # Connect to DB
 Base = declarative_base()
@@ -144,6 +144,14 @@ class Game(Base, Generic):
     @property
     def timeslot_cet_time(self) -> str:
         return self.timeslot_cet.strftime("%H:%M")
+
+    @property
+    def timeslot_gbt(self) -> dt:
+        return self.timeslot_utc.astimezone(TIMEZONE_GBT)
+
+    @property
+    def timeslot_gbt_time(self) -> str:
+        return self.timeslot_gbt.strftime("%H:%M")
 
 
 # Create tables in DB
