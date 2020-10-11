@@ -53,6 +53,12 @@ EMOJI = {
     "tiger": emojize(":tiger2:", use_aliases=True),
 }
 
+USER_TIMEZONES = {
+    'timuber': 'Europe/London',
+    'sduwnik': 'Europe/London',
+    'anchik12345': 'Europe/London'
+}
+
 # CS:GO nicknames
 CSGO_NICKNAMES = {
     "aman_utemuratov": "amanchik",
