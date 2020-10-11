@@ -6,7 +6,7 @@ import pytz
 import requests
 
 from models import Game, Player, session
-from vars import EMOJI, TIMEZONE_CET, TIMEZONE_UTC, CSGO_NICKNAMES
+from vars import EMOJI, TIMEZONE_CET, TIMEZONE_UTC, CSGO_NICKNAMES, USER_TIMEZONES
 
 
 def sync_player_data(player: Player, user):
@@ -130,11 +130,27 @@ def get_all_games(update) -> list:
     return games_list
 
 
+def slot_time_header(game) -> str:
+    timeslot_cet = convert_utc_time_to_timezone(game.timeslot_utc, 'CET')
+    timeslot_gbt = convert_utc_time_to_timezone(game.timeslot_utc, 'Europe/London')
+    should_add_gbt_time = False
+    for player in game.players:
+        if player.username in USER_TIMEZONES:
+            should_add_gbt_time = True
+            break
+    result = timeslot_cet
+    if should_add_gbt_time:
+        result = f"AMS: {timeslot_cet} (GBT: {timeslot_gbt})"
+    return result
+
+def convert_utc_time_to_timezone(utc_time, timezone_str) -> str:
+    timezone = pytz.timezone(timezone_str)
+    return utc_time.astimezone(timezone).strftime("%H:%M")
+
 def slot_status(game) -> str:
     """Returns slots data for game"""
     slots = game.slots
-    timeslot = game.timeslot_cet_time
-    timeslot_london = game.timeslot_gbt_time
+    time_header = slot_time_header(game)
     players = game.players_list
     pistol = EMOJI["pistol"]
     dizzy = EMOJI["dizzy"]
@@ -148,7 +164,7 @@ def slot_status(game) -> str:
             reply = f"5x5! gogo! {pistol}{pistol}"
         else:
             reply = ""
-        return f"*AMS: {timeslot} (GBT: {timeslot_london})*:\n {pluralize(slots, 'slot')}. {reply}\n{players}"
+        return f"*{time_header}*:\n {pluralize(slots, 'slot')}. {reply}\n{players}"
 
 
 def slot_status_all(games) -> str:
