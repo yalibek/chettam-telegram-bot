@@ -140,7 +140,7 @@ def slot_time_header(game) -> str:
             break
     result = timeslot_cet
     if should_add_gbt_time:
-        result = f"{timeslot_cet} (UK: {timeslot_gbt})"
+        result = f"{timeslot_cet} (UK {timeslot_gbt})"
     return result
 
 
@@ -161,9 +161,9 @@ def slot_status(game) -> str:
         return f"{dizzy} _{time_header} expired_\n{players}"
     else:
         if 5 <= slots < 10:
-            reply = f"1 full party! {pistol}"
+            reply = f"Full party! {pistol}"
         elif slots >= 10:
-            reply = f"5x5! gogo! {pistol}{pistol}"
+            reply = f"5x5! {pistol}{pistol}"
         else:
             reply = ""
         return f"*{time_header}*: {reply}\n{players}"

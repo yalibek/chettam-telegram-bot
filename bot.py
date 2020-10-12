@@ -440,12 +440,13 @@ def call_everyone(update, context):
     """Mention all players about current game"""
     query = update.callback_query
     game = context.bot_data["game"]
+    time_header = slot_time_header(game)
     query.answer()
     query.edit_message_text(text=slot_status(game), parse_mode=ParseMode.MARKDOWN)
     send_notification(
         context=context,
         chat_id=update.effective_chat.id,
-        message=f"*{game.timeslot_cet_time}*: {game.players_call_active} go go!",
+        message=f"*{time_header}*: {game.players_call_active} go go!",
     )
     return ConversationHandler.END
 
