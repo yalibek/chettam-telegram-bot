@@ -355,7 +355,7 @@ def new_edit_game(update, context):
         game = search_game(update, new_timeslot)
         if action == "new_game" and not game:
             game = create_game(update.effective_chat, new_timeslot)
-            reply = f"{dumpling} {invite}"
+            reply = None
             logger().info(
                 'User "%s" created new game "%s" for chat "%s"',
                 player,
@@ -369,10 +369,12 @@ def new_edit_game(update, context):
             game.add_player(player, joined_at=dt.now(pytz.utc))
             game.save()
 
+    if reply:
+        t = f"{reply}\n\n{slot_status(game)}"
+    else:
+        t = slot_status(game)
     query.answer()
-    query.edit_message_text(
-        text=f"{reply}\n\n{slot_status(game)}", parse_mode=ParseMode.MARKDOWN
-    )
+    query.edit_message_text(text=t, parse_mode=ParseMode.MARKDOWN)
     context.bot_data.update()
     last_slot_notification(update, context, game)
     return ConversationHandler.END

@@ -54,9 +54,9 @@ EMOJI = {
 }
 
 USER_TIMEZONES = {
-    'timuber': 'Europe/London',
-    'sduwnik': 'Europe/London',
-    'anchik12345': 'Europe/London'
+    "timuber": "Europe/London",
+    "sduwnik": "Europe/London",
+    "anchik12345": "Europe/London",
 }
 
 # CS:GO nicknames

@@ -131,8 +131,8 @@ def get_all_games(update) -> list:
 
 
 def slot_time_header(game) -> str:
-    timeslot_cet = convert_utc_time_to_timezone(game.timeslot_utc, 'CET')
-    timeslot_gbt = convert_utc_time_to_timezone(game.timeslot_utc, 'Europe/London')
+    timeslot_cet = convert_utc_time_to_timezone(game.timeslot_utc, "CET")
+    timeslot_gbt = convert_utc_time_to_timezone(game.timeslot_utc, "Europe/London")
     should_add_gbt_time = False
     for player in game.players:
         if player.username in USER_TIMEZONES:
@@ -140,12 +140,14 @@ def slot_time_header(game) -> str:
             break
     result = timeslot_cet
     if should_add_gbt_time:
-        result = f"AMS: {timeslot_cet} (GBT: {timeslot_gbt})"
+        result = f"{timeslot_cet} (UK: {timeslot_gbt})"
     return result
+
 
 def convert_utc_time_to_timezone(utc_time, timezone_str) -> str:
     timezone = pytz.timezone(timezone_str)
     return utc_time.astimezone(timezone).strftime("%H:%M")
+
 
 def slot_status(game) -> str:
     """Returns slots data for game"""
@@ -156,7 +158,7 @@ def slot_status(game) -> str:
     dizzy = EMOJI["dizzy"]
 
     if game_timediff(game, minutes=30):
-        return f"{dizzy} _{timeslot} expired_\n{players}"
+        return f"{dizzy} _{time_header} expired_\n{players}"
     else:
         if 5 <= slots < 10:
             reply = f"1 full party! {pistol}"
@@ -164,7 +166,7 @@ def slot_status(game) -> str:
             reply = f"5x5! gogo! {pistol}{pistol}"
         else:
             reply = ""
-        return f"*{time_header}*:\n {pluralize(slots, 'slot')}. {reply}\n{players}"
+        return f"*{time_header}*: {reply}\n{players}"
 
 
 def slot_status_all(games) -> str:
