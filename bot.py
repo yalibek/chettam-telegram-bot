@@ -131,7 +131,8 @@ def get_chettam_data(update):
         reply = f"{pluralize(len(games), 'game')} already exist:\n\n{slot_status_all(games)}"
         keyboard = []
         for i, game in enumerate(games):
-            button_text = f"Game {i + 1} @ {game.timeslot_cet_time}"
+            time_header = slot_time_header(game)
+            button_text = f"{time_header}"
             if player in game.players:
                 button_text += " [You joined]"
             keyboard.append(
@@ -235,10 +236,10 @@ def pick_hour(update, context):
     cross = EMOJI["cross"]
     keyboard = [
         [
-            InlineKeyboardButton("20:xx", callback_data="20"),
-            InlineKeyboardButton("21:xx", callback_data="21"),
-            InlineKeyboardButton("22:xx", callback_data="22"),
-            InlineKeyboardButton("23:xx", callback_data="23"),
+            InlineKeyboardButton("20:00", callback_data="20:00"),
+            InlineKeyboardButton("21:00", callback_data="21:00"),
+            InlineKeyboardButton("22:00", callback_data="22:00"),
+            InlineKeyboardButton("23:00", callback_data="23:00"),
             InlineKeyboardButton("+", callback_data="more_hours"),
         ],
         [
@@ -260,15 +261,15 @@ def more_hours(update, context):
     cross = EMOJI["cross"]
     keyboard = [
         [
-            InlineKeyboardButton(f"{hour}:xx", callback_data=hour)
+            InlineKeyboardButton(f"{hour}:00", callback_data=f"{hour}:00")
             for hour in range(16, 20)
         ],
         [
-            InlineKeyboardButton(f"{hour}:xx", callback_data=hour)
+            InlineKeyboardButton(f"{hour}:00", callback_data=f"{hour}:00")
             for hour in range(20, 24)
         ],
         [
-            InlineKeyboardButton(f"{hour:02d}:xx", callback_data=f"{hour:02d}")
+            InlineKeyboardButton(f"{hour:02d}:00", callback_data=f"{hour:02d}:00")
             for hour in range(0, 4)
         ],
         [
@@ -510,7 +511,7 @@ def main():
                     CallbackQueryHandler(selected_game, pattern="^GAME[0-9]+\.[0-9]+$"),
                     CallbackQueryHandler(pick_hour, pattern="^back_to_hours$"),
                     CallbackQueryHandler(more_hours, pattern="^more_hours$"),
-                    CallbackQueryHandler(pick_minute, pattern=HOUR_PATTERN),
+                    # CallbackQueryHandler(pick_minute, pattern=HOUR_PATTERN),
                     CallbackQueryHandler(
                         new_edit_game,
                         pattern=HOUR_MINUTE_PATTERN,
