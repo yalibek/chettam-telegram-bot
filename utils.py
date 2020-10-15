@@ -23,8 +23,9 @@ def sync_player_data(player: Player, user):
     u_data = [user.username, user.first_name, user.last_name]
     if p_data != u_data:
         player.username, player.first_name, player.last_name = u_data
-        player.csgo_nickname = get_nickname(user)
         player.save()
+    if not player.csgo_nickname:
+        player.csgo_nickname = get_nickname(user)
 
 
 def get_player(update) -> Player:
