@@ -482,6 +482,154 @@ def cancel(update, context):
     return ConversationHandler.END
 
 
+# EXPERIMENTAL
+# EXPERIMENTAL
+# EXPERIMENTAL
+# EXPERIMENTAL
+# EXPERIMENTAL
+# EXPERIMENTAL
+# EXPERIMENTAL
+# EXPERIMENTAL
+# EXPERIMENTAL
+# EXPERIMENTAL
+
+
+def join_btn(update, context):
+    """Entry point for conversation"""
+    reply, keyboard = get_join_btn_data(update)
+    update.message.reply_markdown(
+        reply, reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+    return FIRST_STAGE
+
+
+def get_join_btn_data(update):
+    """Reply message and keyboard for entry point"""
+    games = get_all_games(update)
+    player = get_player(update)
+    pistol = EMOJI["pistol"]
+    cross = EMOJI["cross"]
+    chart = EMOJI["chart"]
+
+    kb = [
+        InlineKeyboardButton(f"{pistol} New", callback_data="new_game"),
+        InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
+    ]
+
+    if games:
+        kb.insert(
+            -1, InlineKeyboardButton(f"{chart} Status", callback_data="status_conv"),
+        )
+        reply = slot_status_all(games)
+        keyboard = []
+        for game in games:
+            time_header = slot_time_header(game)
+            if player in game.players:
+                btn_text = f"{time_header}: Leave"
+                btn_callback = f"leave_{game.id}"
+            else:
+                btn_text = f"{time_header}: Join"
+                btn_callback = f"join_{game.id}"
+            keyboard.append(
+                [InlineKeyboardButton(btn_text, callback_data=btn_callback,)]
+            )
+    else:
+        keyboard = [[]]
+        reply = "Game doesn't exist."
+
+    keyboard.append(kb)
+    return reply, keyboard
+
+
+def return_to_main(update, query):
+    reply, keyboard = get_join_btn_data(update)
+    query.answer()
+    query.edit_message_text(
+        reply,
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode=ParseMode.MARKDOWN,
+    )
+
+
+def join_slot_in(update, context):
+    """Join current game"""
+    query = update.callback_query
+    game_id = re.search("[0-9]+", query.data).group(0)
+    game = get_game(update, game_id)
+    player = get_player(update)
+
+    game.add_player(player, joined_at=dt.now(pytz.utc))
+    game.save()
+
+    fire = EMOJI["fire"]
+    reply = f"{fire} *{player}* joined! {fire}\n\n{slot_status(game)}"
+
+    return_to_main(update, query)
+    return FIRST_STAGE
+
+
+def join_slot_out(update, context):
+    """Leave current game"""
+    query = update.callback_query
+    game_id = re.search("[0-9]+", query.data).group(0)
+    game = get_game(update, game_id)
+    player = get_player(update)
+
+    game.players.remove(player)
+    game.save()
+
+    cry = EMOJI["cry"]
+    if game.players:
+        reply = f"{cry} *{player}* left {cry}\n\n{slot_status(game)}"
+    else:
+        game.delete()
+        reply = (
+            f"{cry} *{player}* left {cry}\n\nGame {game.timeslot_cet_time} was deleted."
+        )
+    return_to_main(update, query)
+    return FIRST_STAGE
+
+
+def join_pick_hour(update, context):
+    """Choice of hours"""
+    query = update.callback_query
+    cross = EMOJI["cross"]
+    keyboard = [
+        [
+            InlineKeyboardButton("20:00", callback_data="20:00"),
+            InlineKeyboardButton("21:00", callback_data="21:00"),
+            InlineKeyboardButton("22:00", callback_data="22:00"),
+            InlineKeyboardButton("23:00", callback_data="23:00"),
+            # InlineKeyboardButton("+", callback_data="more_hours"),
+        ],
+        [
+            # InlineKeyboardButton("« Back", callback_data=callback),
+            InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
+        ],
+    ]
+    reply = f"Choose time:"
+    query.answer()
+    query.edit_message_text(
+        text=reply, reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+    return FIRST_STAGE
+
+
+def join_new_game(update, context):
+    """Create new game or edit an existing game"""
+    query = update.callback_query
+    player = get_player(update)
+    new_timeslot = convert_to_dt(query.data)
+    game = search_game(update, new_timeslot)
+    if not game:
+        game = create_game(update.effective_chat, new_timeslot)
+        if player not in game.players:
+            game.add_player(player, joined_at=dt.now(pytz.utc))
+            game.save()
+    return_to_main(update, query)
+    return FIRST_STAGE
+
+
 def main():
     """Run bot"""
     updater = Updater(TOKEN, use_context=True)
@@ -533,8 +681,24 @@ def main():
             },
             fallbacks=[CommandHandler("chettam", chettam)],
         )
+        join_conversation = ConversationHandler(
+            entry_points=[CommandHandler("join_btn", join_btn)],
+            states={
+                FIRST_STAGE: [
+                    CallbackQueryHandler(join_slot_in, pattern="^join_[0-9]+$"),
+                    CallbackQueryHandler(join_slot_out, pattern="^leave_[0-9]+$"),
+                    CallbackQueryHandler(join_pick_hour, pattern="^new_game$"),
+                    CallbackQueryHandler(join_new_game, pattern=HOUR_MINUTE_PATTERN),
+                    # CallbackQueryHandler(pick_hour, pattern="^new_game$"),
+                    # CallbackQueryHandler(start_over, pattern="^start_over$"),
+                    CallbackQueryHandler(cancel, pattern="^cancel$"),
+                ],
+            },
+            fallbacks=[CommandHandler("join_btn", join_btn)],
+        )
 
         dp.add_handler(chettam_conversation)
+        dp.add_handler(join_conversation)
 
     # Start
     if DEBUG:
