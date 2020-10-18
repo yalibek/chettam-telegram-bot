@@ -12,8 +12,10 @@ It uses inline keyboard buttons inside conversation mode.
 
 In development run bot.py with --debug flag
 
-TODO: cleanup datetime stuff.
-TODO: implement players' queue tags with class properties.
+TODO: change "new_game" callback pattern to Datetime.
+TODO: organize "get_chettam_data" buttons.
+TODO: cleanup datetime/timeslot stuff.
+TODO: implement players' queue tags with class properties???
 """
 
 import re
@@ -137,6 +139,7 @@ def call(update, context):
 
 
 def refresh_main_page(update, context, query):
+    """Reload main page buttons"""
     reply, keyboard = get_chettam_data(update, context)
     query.answer()
     query.edit_message_text(
@@ -148,6 +151,7 @@ def refresh_main_page(update, context, query):
 
 
 def back(update, context):
+    """Back to main page"""
     query = update.callback_query
     return refresh_main_page(update, context, query)
 
@@ -239,6 +243,7 @@ def leave(update, context):
 
 
 def hours_keyboard(update):
+    """Returns keyboard with timeslots for new game"""
     main_hours = [18, 19, 20, 21, 22, 23, 0, 1]
     main_hours_dt = [convert_to_dt(f"{hour:02d}:00") for hour in main_hours]
     ts_games = get_all_games(update, ts_only=True)
@@ -301,13 +306,13 @@ def main():
     # Handlers
     dp.add_handler(CommandHandler("start", start))
 
-    if not is_dayoff():
+    if is_dayoff():
         dp.add_handler(MessageHandler(Filters.command, dayoff))
     else:
         dp.add_handler(CommandHandler("status", status))
         dp.add_handler(CommandHandler("gogo", gogo))
 
-        chettam_conversation = ConversationHandler(
+        main_conversation = ConversationHandler(
             entry_points=[CommandHandler("chettam", chettam)],
             states={
                 FIRST_STAGE: [
@@ -324,7 +329,7 @@ def main():
             fallbacks=[CommandHandler("chettam", chettam)],
         )
 
-        dp.add_handler(chettam_conversation)
+        dp.add_handler(main_conversation)
 
     # Start
     if DEBUG:

@@ -199,9 +199,3 @@ def get_quote() -> tuple:
     if not author:
         author = "Unknown"
     return quote, author
-
-
-def pluralize(quantity, noun) -> str:
-    """Return plural noun for given quantity"""
-    p = inflect.engine()
-    return p.inflect(f"num({quantity}) plural('{noun}')")
