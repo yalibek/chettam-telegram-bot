@@ -496,40 +496,39 @@ def cancel(update, context):
 
 def chettam_v2(update, context):
     """Entry point for conversation"""
-    reply, keyboard = get_chettam_v2_data(update)
+    context.bot_data["player"] = get_player(update)
+    reply, keyboard = get_chettam_v2_data(update, context)
     update.message.reply_markdown(
         reply, reply_markup=InlineKeyboardMarkup(keyboard),
     )
     return FIRST_STAGE
 
 
-def get_chettam_v2_data(update):
+def get_chettam_v2_data(update, context):
     """Reply message and keyboard for entry point"""
     games = get_all_games(update)
-    player = get_player(update)
+    player = context.bot_data["player"]
     pistol = EMOJI["pistol"]
     cross = EMOJI["cross"]
     chart = EMOJI["chart"]
     party = EMOJI["party"]
+    zzz = EMOJI["zzz"]
 
     kb = [
         InlineKeyboardButton(f"{pistol} New", callback_data="new_game"),
-        InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
     ]
 
     if games:
-        kb.insert(
-            -1, InlineKeyboardButton(f"{chart} Status", callback_data="status_conv"),
-        )
+        kb.append(InlineKeyboardButton(f"{chart} Status", callback_data="status_conv"))
         reply = slot_status_all(games)
         keyboard = []
         for game in games:
-            time_header = slot_time_header(game)
+            time_header = game.timeslot_cet_time
             if player in game.players:
-                btn_text = f"{time_header}: Leave"
+                btn_text = f"{time_header}: {zzz} Leave"
                 btn_callback = f"leave_{game.id}"
             else:
-                btn_text = f"{time_header}: Join"
+                btn_text = f"{time_header}: {pistol} Join"
                 btn_callback = f"join_{game.id}"
             btn1 = InlineKeyboardButton(btn_text, callback_data=btn_callback)
 
@@ -540,51 +539,35 @@ def get_chettam_v2_data(update):
             keyboard.append([btn1, btn2])
     else:
         keyboard = [[]]
+        kb.append(InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),)
         reply = "Game doesn't exist."
 
     keyboard.append(kb)
     return reply, keyboard
 
 
-def refresh_main_page(update, query):
-    reply, keyboard = get_chettam_v2_data(update)
-    query.answer()
-    query.edit_message_text(
-        reply,
-        reply_markup=InlineKeyboardMarkup(keyboard),
-        parse_mode=ParseMode.MARKDOWN,
-    )
-
-
 def chettam_v2_slot_in(update, context):
     """Join current game"""
     query = update.callback_query
+    player = context.bot_data["player"]
     game_id = re.search("[0-9]+", query.data).group(0)
     game = get_game(update, game_id)
-    player = get_player(update)
-
     game.add_player(player, joined_at=dt.now(pytz.utc))
     game.save()
-
-    fire = EMOJI["fire"]
-    reply = f"{fire} *{player}* joined! {fire}\n\n{slot_status(game)}"
-
-    refresh_main_page(update, query)
-    return FIRST_STAGE
+    return refresh_main_page(update, context, query)
 
 
 def chettam_v2_slot_out(update, context):
     """Leave current game"""
     query = update.callback_query
+    player = context.bot_data["player"]
     game_id = re.search("[0-9]+", query.data).group(0)
     game = get_game(update, game_id)
-    player = get_player(update)
     game.players.remove(player)
     game.save()
     if not game.players:
         game.delete()
-    refresh_main_page(update, query)
-    return FIRST_STAGE
+    return refresh_main_page(update, context, query)
 
 
 def hours_keyboard(update):
@@ -599,7 +582,7 @@ def hours_keyboard(update):
         )
         for ts_dt in ts_filtered
     ]
-    return list_chunks(kb)
+    return row_list_chunks(kb)
 
 
 def chettam_v2_pick_hour(update, context):
@@ -640,19 +623,28 @@ def chettam_v2_call_everyone(update, context):
 def chettam_v2_new_game(update, context):
     """Create new game or edit an existing game"""
     query = update.callback_query
-    player = get_player(update)
+    player = context.bot_data["player"]
     new_timeslot = convert_to_dt(query.data)
     game = create_game(update.effective_chat, new_timeslot)
     game.add_player(player, joined_at=dt.now(pytz.utc))
     game.save()
-    refresh_main_page(update, query)
+    return refresh_main_page(update, context, query)
+
+
+def refresh_main_page(update, context, query):
+    reply, keyboard = get_chettam_v2_data(update, context)
+    query.answer()
+    query.edit_message_text(
+        reply,
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode=ParseMode.MARKDOWN,
+    )
     return FIRST_STAGE
 
 
 def chettam_v2_back_to_main(update, context):
     query = update.callback_query
-    refresh_main_page(update, query)
-    return FIRST_STAGE
+    return refresh_main_page(update, context, query)
 
 
 def main():

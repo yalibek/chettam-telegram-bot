@@ -9,7 +9,7 @@ from models import Game, Player, session
 from vars import EMOJI, TIMEZONE_CET, TIMEZONE_UTC, CSGO_NICKNAMES, USER_TIMEZONES
 
 
-def list_chunks(lst):
+def row_list_chunks(lst):
     """
     Split given list into 2 n-sized chunks, with first part rounded to upper int
     example:
