@@ -149,9 +149,9 @@ BCOM = [
 COMMANDS = [
     ("start", "help me pls"),
     ("chettam", "create new game or join existing one"),
+    ("chettam_v2", "experimental chettam"),
     ("status", "show current status"),
     ("gogo", "say random invite"),
-    ("join_btn", "experimental chettam"),
 ]
 
 # Commands string for START_MESSAGE

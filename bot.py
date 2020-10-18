@@ -494,22 +494,23 @@ def cancel(update, context):
 # EXPERIMENTAL
 
 
-def join_btn(update, context):
+def chettam_v2(update, context):
     """Entry point for conversation"""
-    reply, keyboard = get_join_btn_data(update)
+    reply, keyboard = get_chettam_v2_data(update)
     update.message.reply_markdown(
         reply, reply_markup=InlineKeyboardMarkup(keyboard),
     )
     return FIRST_STAGE
 
 
-def get_join_btn_data(update):
+def get_chettam_v2_data(update):
     """Reply message and keyboard for entry point"""
     games = get_all_games(update)
     player = get_player(update)
     pistol = EMOJI["pistol"]
     cross = EMOJI["cross"]
     chart = EMOJI["chart"]
+    party = EMOJI["party"]
 
     kb = [
         InlineKeyboardButton(f"{pistol} New", callback_data="new_game"),
@@ -530,9 +531,13 @@ def get_join_btn_data(update):
             else:
                 btn_text = f"{time_header}: Join"
                 btn_callback = f"join_{game.id}"
-            keyboard.append(
-                [InlineKeyboardButton(btn_text, callback_data=btn_callback,)]
-            )
+            btn1 = InlineKeyboardButton(btn_text, callback_data=btn_callback)
+
+            if game.slots >= 1:
+                btn2 = InlineKeyboardButton(
+                    f"{party} Call", callback_data=f"call_{game.id}"
+                )
+            keyboard.append([btn1, btn2])
     else:
         keyboard = [[]]
         reply = "Game doesn't exist."
@@ -541,8 +546,8 @@ def get_join_btn_data(update):
     return reply, keyboard
 
 
-def return_to_main(update, query):
-    reply, keyboard = get_join_btn_data(update)
+def refresh_main_page(update, query):
+    reply, keyboard = get_chettam_v2_data(update)
     query.answer()
     query.edit_message_text(
         reply,
@@ -551,7 +556,7 @@ def return_to_main(update, query):
     )
 
 
-def join_slot_in(update, context):
+def chettam_v2_slot_in(update, context):
     """Join current game"""
     query = update.callback_query
     game_id = re.search("[0-9]+", query.data).group(0)
@@ -564,49 +569,50 @@ def join_slot_in(update, context):
     fire = EMOJI["fire"]
     reply = f"{fire} *{player}* joined! {fire}\n\n{slot_status(game)}"
 
-    return_to_main(update, query)
+    refresh_main_page(update, query)
     return FIRST_STAGE
 
 
-def join_slot_out(update, context):
+def chettam_v2_slot_out(update, context):
     """Leave current game"""
     query = update.callback_query
     game_id = re.search("[0-9]+", query.data).group(0)
     game = get_game(update, game_id)
     player = get_player(update)
-
     game.players.remove(player)
     game.save()
-
-    cry = EMOJI["cry"]
-    if game.players:
-        reply = f"{cry} *{player}* left {cry}\n\n{slot_status(game)}"
-    else:
+    if not game.players:
         game.delete()
-        reply = (
-            f"{cry} *{player}* left {cry}\n\nGame {game.timeslot_cet_time} was deleted."
-        )
-    return_to_main(update, query)
+    refresh_main_page(update, query)
     return FIRST_STAGE
 
 
-def join_pick_hour(update, context):
+def hours_keyboard(update):
+    main_hours = [18, 19, 20, 21, 22, 23, 0, 1]
+    main_hours_dt = [convert_to_dt(f"{hour:02d}:00") for hour in main_hours]
+    ts_games = get_all_games(update, ts_only=True)
+    ts_filtered = [ts for ts in main_hours_dt if ts not in ts_games]
+    kb = [
+        InlineKeyboardButton(
+            f"{ts_dt.astimezone(TIMEZONE_CET).strftime('%H:%M')}",
+            callback_data=f"{ts_dt.astimezone(TIMEZONE_CET).strftime('%H:%M')}",
+        )
+        for ts_dt in ts_filtered
+    ]
+    return list_chunks(kb)
+
+
+def chettam_v2_pick_hour(update, context):
     """Choice of hours"""
     query = update.callback_query
     cross = EMOJI["cross"]
-    keyboard = [
+    keyboard = hours_keyboard(update)
+    keyboard.append(
         [
-            InlineKeyboardButton("20:00", callback_data="20:00"),
-            InlineKeyboardButton("21:00", callback_data="21:00"),
-            InlineKeyboardButton("22:00", callback_data="22:00"),
-            InlineKeyboardButton("23:00", callback_data="23:00"),
-            # InlineKeyboardButton("+", callback_data="more_hours"),
-        ],
-        [
-            # InlineKeyboardButton("« Back", callback_data=callback),
+            InlineKeyboardButton("« Back", callback_data="back_to_main"),
             InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
         ],
-    ]
+    )
     reply = f"Choose time:"
     query.answer()
     query.edit_message_text(
@@ -615,18 +621,37 @@ def join_pick_hour(update, context):
     return FIRST_STAGE
 
 
-def join_new_game(update, context):
+def chettam_v2_call_everyone(update, context):
+    """Mention all players about current game"""
+    query = update.callback_query
+    game_id = re.search("[0-9]+", query.data).group(0)
+    game = get_game(update, game_id)
+    time_header = slot_time_header(game)
+    query.answer()
+    query.edit_message_text(text=slot_status(game), parse_mode=ParseMode.MARKDOWN)
+    send_notification(
+        context=context,
+        chat_id=update.effective_chat.id,
+        message=f"*{time_header}*: {game.players_call_active} go go!",
+    )
+    return ConversationHandler.END
+
+
+def chettam_v2_new_game(update, context):
     """Create new game or edit an existing game"""
     query = update.callback_query
     player = get_player(update)
     new_timeslot = convert_to_dt(query.data)
-    game = search_game(update, new_timeslot)
-    if not game:
-        game = create_game(update.effective_chat, new_timeslot)
-        if player not in game.players:
-            game.add_player(player, joined_at=dt.now(pytz.utc))
-            game.save()
-    return_to_main(update, query)
+    game = create_game(update.effective_chat, new_timeslot)
+    game.add_player(player, joined_at=dt.now(pytz.utc))
+    game.save()
+    refresh_main_page(update, query)
+    return FIRST_STAGE
+
+
+def chettam_v2_back_to_main(update, context):
+    query = update.callback_query
+    refresh_main_page(update, query)
     return FIRST_STAGE
 
 
@@ -644,7 +669,7 @@ def main():
     # Handlers
     dp.add_handler(CommandHandler("start", start))
 
-    if is_dayoff():
+    if not is_dayoff():
         dp.add_handler(MessageHandler(Filters.command, dayoff))
     else:
         dp.add_handler(CommandHandler("status", status))
@@ -682,19 +707,26 @@ def main():
             fallbacks=[CommandHandler("chettam", chettam)],
         )
         join_conversation = ConversationHandler(
-            entry_points=[CommandHandler("join_btn", join_btn)],
+            entry_points=[CommandHandler("chettam_v2", chettam_v2)],
             states={
                 FIRST_STAGE: [
-                    CallbackQueryHandler(join_slot_in, pattern="^join_[0-9]+$"),
-                    CallbackQueryHandler(join_slot_out, pattern="^leave_[0-9]+$"),
-                    CallbackQueryHandler(join_pick_hour, pattern="^new_game$"),
-                    CallbackQueryHandler(join_new_game, pattern=HOUR_MINUTE_PATTERN),
-                    # CallbackQueryHandler(pick_hour, pattern="^new_game$"),
-                    # CallbackQueryHandler(start_over, pattern="^start_over$"),
+                    CallbackQueryHandler(chettam_v2_slot_in, pattern="^join_[0-9]+$"),
+                    CallbackQueryHandler(chettam_v2_slot_out, pattern="^leave_[0-9]+$"),
+                    CallbackQueryHandler(
+                        chettam_v2_call_everyone, pattern="^call_[0-9]+$",
+                    ),
+                    CallbackQueryHandler(chettam_v2_pick_hour, pattern="^new_game$"),
+                    CallbackQueryHandler(
+                        chettam_v2_new_game, pattern=HOUR_MINUTE_PATTERN
+                    ),
+                    CallbackQueryHandler(
+                        chettam_v2_back_to_main, pattern="^back_to_main$"
+                    ),
+                    CallbackQueryHandler(status_conv, pattern="^status_conv$"),
                     CallbackQueryHandler(cancel, pattern="^cancel$"),
                 ],
             },
-            fallbacks=[CommandHandler("join_btn", join_btn)],
+            fallbacks=[CommandHandler("chettam_v2", chettam_v2)],
         )
 
         dp.add_handler(chettam_conversation)

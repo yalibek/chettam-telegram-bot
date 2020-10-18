@@ -9,6 +9,24 @@ from models import Game, Player, session
 from vars import EMOJI, TIMEZONE_CET, TIMEZONE_UTC, CSGO_NICKNAMES, USER_TIMEZONES
 
 
+def list_chunks(lst):
+    """
+    Split given list into 2 n-sized chunks, with first part rounded to upper int
+    example:
+        lst = [1,2,3,4,5,6,7] =>> result = [[1,2,3,4],[5,6,7]]
+    """
+    lst_size = len(lst)
+    one_row_size = 4
+    if lst_size <= one_row_size:
+        n = one_row_size
+    else:
+        n = (lst_size // 2) + (lst_size % 2)
+    result = []
+    for i in range(0, len(lst), n):
+        result.append(lst[i : i + n])
+    return result
+
+
 def get_nickname(user) -> str:
     """Get CG:GO nickname for given user if it exist"""
     try:
@@ -115,7 +133,7 @@ def get_game(update, game_id) -> Game:
     )
 
 
-def get_all_games(update) -> list:
+def get_all_games(update, ts_only=False) -> list:
     """Returns all Game models for current chat"""
     games = (
         session.query(Game)
@@ -129,7 +147,10 @@ def get_all_games(update) -> list:
             game.delete()
         else:
             games_list.append(game)
-    return games_list
+    if ts_only:
+        return [game.timeslot_utc for game in games_list]
+    else:
+        return games_list
 
 
 def slot_time_header(game) -> str:
