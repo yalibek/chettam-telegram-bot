@@ -12,11 +12,10 @@ It uses inline keyboard buttons inside conversation mode.
 
 In development run bot.py with --debug flag
 
+TODO: cleanup datetime stuff.
 TODO: implement players' queue tags with class properties.
-TODO: game.has_expired? add possibility to delete expired game; prevent from joining an expired game.
 """
 
-import inspect
 import re
 
 import sentry_sdk
@@ -62,20 +61,6 @@ def start(update, context):
     )
 
 
-def dayoff(update, context):
-    """Dayoff messages"""
-    context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
-    try:
-        quote, author = get_quote()
-        reply = f"_{quote}_\n\n — {author}"
-    except:
-        reply = "It's dayoff, fool!"
-        update.message.reply_sticker(
-            STICKERS["hahaclassic"], reply_to_message_id=None,
-        )
-    update.message.reply_markdown(reply, reply_to_message_id=None)
-
-
 def status(update, context):
     """Get games status for current chat"""
     games = get_all_games(update)
@@ -90,6 +75,20 @@ def gogo(update, context):
     pistol = EMOJI["pistol"]
     invite = random.choice(INVITE)
     update.message.reply_text(f"{invite} {pistol}", reply_to_message_id=None)
+
+
+def dayoff(update, context):
+    """Dayoff messages"""
+    context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+    try:
+        quote, author = get_quote()
+        reply = f"_{quote}_\n\n — {author}"
+    except:
+        reply = "It's dayoff, fool!"
+        update.message.reply_sticker(
+            STICKERS["hahaclassic"], reply_to_message_id=None,
+        )
+    update.message.reply_markdown(reply, reply_to_message_id=None)
 
 
 # Inline keyboard actions
@@ -163,35 +162,45 @@ def get_chettam_data(update, context):
     party = EMOJI["party"]
     zzz = EMOJI["zzz"]
 
-    kb = [
+    keyboard = []
+    kb_last_row = [
         InlineKeyboardButton(f"{pistol} New", callback_data="new_game"),
     ]
-
     if games:
-        kb.append(InlineKeyboardButton(f"{chart} Status", callback_data="status_conv"))
+        kb_last_row.append(
+            InlineKeyboardButton(f"{chart} Status", callback_data="status_conv")
+        )
         reply = slot_status_all(games)
-        keyboard = []
         for game in games:
+            row = []
             time_header = game.timeslot_cet_time
             if player in game.players:
                 btn_text = f"{time_header}: {zzz} Leave"
                 btn_callback = f"leave_{game.id}"
-            else:
+            elif not game.expired:
                 btn_text = f"{time_header}: {pistol} Join"
                 btn_callback = f"join_{game.id}"
             btn1 = InlineKeyboardButton(btn_text, callback_data=btn_callback)
+            row.append(btn1)
 
-            if game.slots >= 1:
+            if (
+                game.slots > 1
+                and game_timediff(game, minutes=-30)
+                and player in game.players
+            ):
                 btn2 = InlineKeyboardButton(
                     f"{party} Call", callback_data=f"call_{game.id}"
                 )
-            keyboard.append([btn1, btn2])
+                row.append(btn2)
+
+            keyboard.append(row)
     else:
-        keyboard = [[]]
-        kb.append(InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),)
+        kb_last_row.append(
+            InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
+        )
         reply = "Game doesn't exist."
 
-    keyboard.append(kb)
+    keyboard.append(kb_last_row)
     return reply, keyboard
 
 

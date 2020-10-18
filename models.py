@@ -1,6 +1,14 @@
 from datetime import datetime as dt
 
-from sqlalchemy import Column, Integer, BigInteger, String, ForeignKey, DateTime
+from sqlalchemy import (
+    Column,
+    Integer,
+    BigInteger,
+    String,
+    ForeignKey,
+    DateTime,
+    Boolean,
+)
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, backref
@@ -84,6 +92,7 @@ class Game(Base, Generic):
     chat_id = Column(BigInteger)
     chat_type = Column(String)
     timeslot = Column(DateTime)
+    expired = Column(Boolean, default=False)
     players = relationship("Player", secondary="association", back_populates="games")
 
     def add_player(self, player, joined_at):

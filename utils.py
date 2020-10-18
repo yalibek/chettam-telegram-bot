@@ -116,6 +116,9 @@ def get_all_games(update, ts_only=False) -> list:
     for game in games:
         if game_timediff(game, hours=2):
             game.delete()
+        elif game_timediff(game, minutes=30):
+            game.expired = True
+            game.save()
         else:
             games_list.append(game)
     if ts_only:
@@ -151,7 +154,7 @@ def slot_status(game) -> str:
     pistol = EMOJI["pistol"]
     dizzy = EMOJI["dizzy"]
 
-    if game_timediff(game, minutes=30):
+    if game.expired:
         return f"{dizzy} _{time_header} expired_\n{players}"
     else:
         if 5 <= slots < 10:
