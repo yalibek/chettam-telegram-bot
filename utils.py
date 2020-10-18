@@ -64,19 +64,6 @@ def get_player(update) -> Player:
     return player
 
 
-def get_reply_for_time_menu(context) -> str:
-    """Returns reply message when user picking a time slot"""
-    data = context.bot_data
-    pencil = EMOJI["pencil"]
-    clock = EMOJI["clock"]
-    if data["game_action"] == "edit_existing_game":
-        game = data["game"]
-        game_num = data["game_num"]
-        return f"{pencil} Editing game #{game_num} {game.timeslot_cet_time}:"
-    else:
-        return f"{clock} Choose time:"
-
-
 def convert_to_dt(timeslot) -> dt:
     """Converts time into datetime object in UTC timezone"""
     time = dt.strptime(timeslot, "%H:%M")
@@ -100,28 +87,12 @@ def create_game(chat, timeslot) -> Game:
     return game
 
 
-def update_game(game: Game, timeslot) -> Game:
-    """Updates existing game with new timeslot"""
-    game.timeslot = timeslot
-    game.save()
-    return game
-
-
 def game_timediff(game: Game, hours=0, minutes=0, seconds=0) -> bool:
     """Checks if game wasn't updated for given time frame"""
     now = dt.now(pytz.utc)
     played_at = game.timeslot_utc
     delta = timedelta(hours=hours, minutes=minutes, seconds=seconds)
     return now - played_at > delta
-
-
-def search_game(update, timeslot) -> Game:
-    """Search Game with given timeslot for current chat"""
-    return (
-        session.query(Game)
-        .filter_by(chat_id=update.effective_chat.id, timeslot=timeslot)
-        .first()
-    )
 
 
 def get_game(update, game_id) -> Game:
