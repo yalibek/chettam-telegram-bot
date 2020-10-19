@@ -1,7 +1,6 @@
 import logging
 from datetime import datetime as dt, timedelta
 
-import inflect
 import pytz
 import requests
 
@@ -9,7 +8,7 @@ from models import Game, Player, session
 from vars import EMOJI, TIMEZONE_CET, TIMEZONE_UTC, CSGO_NICKNAMES, USER_TIMEZONES
 
 
-def row_list_chunks(lst):
+def row_list_chunks(lst) -> list:
     """
     Split given list into 2 n-sized chunks, with first part rounded to upper int
     example:
@@ -22,7 +21,7 @@ def row_list_chunks(lst):
     else:
         n = (lst_size // 2) + (lst_size % 2)
     result = []
-    for i in range(0, len(lst), n):
+    for i in range(lst_size, n):
         result.append(lst[i : i + n])
     return result
 

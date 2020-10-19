@@ -6,6 +6,7 @@ Kostyli i Velosipedy™ BV presents
 
 Chettamm telegram bot for csgo guys.
 It helps players to schedule their cs:go games and join them.
+Version: 2.0
 
 Main functionality is run under chettam() function.
 It uses inline keyboard buttons inside conversation mode.
@@ -162,17 +163,17 @@ def get_chettam_data(update, context):
     player = context.bot_data["player"]
     pistol = EMOJI["pistol"]
     cross = EMOJI["cross"]
-    chart = EMOJI["chart"]
+    check = EMOJI["check"]
     party = EMOJI["party"]
     zzz = EMOJI["zzz"]
 
     keyboard = []
     kb_last_row = [
-        InlineKeyboardButton(f"{pistol} New", callback_data="new_game"),
+        InlineKeyboardButton(f"{pistol} New", callback_data="pick_hour"),
     ]
     if games:
         kb_last_row.append(
-            InlineKeyboardButton(f"{chart} Status", callback_data="status_conv")
+            InlineKeyboardButton(f"{check} Done", callback_data="status_conv")
         )
         reply = slot_status_all(games)
         for game in games:
@@ -314,19 +315,19 @@ def main():
 
         main_conversation = ConversationHandler(
             entry_points=[CommandHandler("chettam", chettam)],
+            fallbacks=[CommandHandler("chettam", chettam)],
             states={
                 FIRST_STAGE: [
                     CallbackQueryHandler(join, pattern="^join_[0-9]+$"),
                     CallbackQueryHandler(leave, pattern="^leave_[0-9]+$"),
                     CallbackQueryHandler(call, pattern="^call_[0-9]+$",),
-                    CallbackQueryHandler(pick_hour, pattern="^new_game$"),
+                    CallbackQueryHandler(pick_hour, pattern="^pick_hour$"),
                     CallbackQueryHandler(new_game, pattern=HOUR_MINUTE_PATTERN),
                     CallbackQueryHandler(back, pattern="^back_to_main$"),
                     CallbackQueryHandler(status_conv, pattern="^status_conv$"),
                     CallbackQueryHandler(cancel, pattern="^cancel$"),
                 ],
             },
-            fallbacks=[CommandHandler("chettam", chettam)],
         )
 
         dp.add_handler(main_conversation)
