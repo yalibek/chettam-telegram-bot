@@ -52,6 +52,7 @@ EMOJI = {
     "dumpling": emojize(":dumpling:", use_aliases=True),
     "tiger": emojize(":tiger2:", use_aliases=True),
     "check": emojize(":white_check_mark:", use_aliases=True),
+    "ok": emojize(":ok:", use_aliases=True),
 }
 
 USER_TIMEZONES = {

@@ -165,11 +165,12 @@ def get_chettam_data(update, context):
     cross = EMOJI["cross"]
     check = EMOJI["check"]
     party = EMOJI["party"]
+    fire = EMOJI["fire"]
     zzz = EMOJI["zzz"]
 
     keyboard = []
     kb_last_row = [
-        InlineKeyboardButton(f"{pistol} New", callback_data="pick_hour"),
+        InlineKeyboardButton(f"{fire} New", callback_data="pick_hour"),
     ]
     if games:
         kb_last_row.append(
