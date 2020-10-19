@@ -118,8 +118,7 @@ def get_all_games(update, ts_only=False) -> list:
         elif game_timediff(game, minutes=30):
             game.expired = True
             game.save()
-        else:
-            games_list.append(game)
+        games_list.append(game)
     if ts_only:
         return [game.timeslot_utc for game in games_list]
     else:
