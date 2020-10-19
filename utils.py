@@ -21,7 +21,7 @@ def row_list_chunks(lst) -> list:
     else:
         n = (lst_size // 2) + (lst_size % 2)
     result = []
-    for i in range(lst_size, n):
+    for i in range(0, lst_size, n):
         result.append(lst[i : i + n])
     return result
 
