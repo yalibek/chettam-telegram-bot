@@ -12,10 +12,6 @@ Main functionality is run under chettam() function.
 It uses inline keyboard buttons inside conversation mode.
 
 In development run bot.py with --debug flag
-
-TODO: change "new_game" callback pattern to Datetime.
-TODO: cleanup datetime/timeslot stuff.
-TODO: implement players' queue tags with class properties???
 """
 
 import re
@@ -238,18 +234,15 @@ def hours_keyboard(update):
     main_hours_dt = [convert_to_dt(f"{hour:02d}:00") for hour in main_hours]
     ts_games = get_all_games(update, ts_only=True)
     ts_filtered = [
-        timeslot
+        timeslot.astimezone(TIMEZONE_CET).strftime("%H:%M")
         for timeslot in main_hours_dt
         if timeslot not in ts_games and timeslot > dt.now(pytz.utc)
     ]
-    kb = [
-        InlineKeyboardButton(
-            f"{ts_dt.astimezone(TIMEZONE_CET).strftime('%H:%M')}",
-            callback_data=f"{ts_dt.astimezone(TIMEZONE_CET).strftime('%H:%M')}",
-        )
-        for ts_dt in ts_filtered
+    keyboard = [
+        InlineKeyboardButton(timeslot_time, callback_data=timeslot_time,)
+        for timeslot_time in ts_filtered
     ]
-    return row_list_chunks(kb)
+    return row_list_chunks(keyboard)
 
 
 def pick_hour(update, context):
@@ -275,8 +268,8 @@ def new_game(update, context):
     """Create new game"""
     query = update.callback_query
     player = context.bot_data["player"]
-    new_timeslot = convert_to_dt(query.data)
-    game = create_game(update.effective_chat, new_timeslot)
+    timeslot = convert_to_dt(query.data)
+    game = create_game(update.effective_chat, timeslot)
     game.add_player(player, joined_at=dt.now(pytz.utc))
     game.save()
     return refresh_main_page(update, context, query)
