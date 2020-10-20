@@ -168,6 +168,8 @@ Wednesday and Sunday are days off.
 {COMMANDS_DESCR}
 """
 
+# Status
+EMPTY_STATUS = "Start a game with /chettam"
 
 # Timezones
 TIMEZONE_CET = pytz.timezone("CET")

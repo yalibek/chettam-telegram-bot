@@ -115,6 +115,7 @@ def get_all_games(update, ts_only=False) -> list:
     for game in games:
         if game_timediff(game, hours=2):
             game.delete()
+            continue
         elif game_timediff(game, minutes=30):
             game.expired = True
             game.save()

@@ -14,7 +14,6 @@ It uses inline keyboard buttons inside conversation mode.
 In development run bot.py with --debug flag
 
 TODO: change "new_game" callback pattern to Datetime.
-TODO: organize "get_chettam_data" buttons.
 TODO: cleanup datetime/timeslot stuff.
 TODO: implement players' queue tags with class properties???
 """
@@ -70,7 +69,7 @@ def status(update, context):
     if games:
         update.message.reply_markdown(slot_status_all(games), reply_to_message_id=None)
     else:
-        update.message.reply_text("start a game with /chettam")
+        update.message.reply_text(EMPTY_STATUS)
 
 
 def gogo(update, context):
@@ -99,8 +98,12 @@ def status_conv(update, context):
     """Get games status for current chat"""
     query = update.callback_query
     games = get_all_games(update)
+    if games:
+        reply = slot_status_all(games)
+    else:
+        reply = EMPTY_STATUS
     query.answer()
-    query.edit_message_text(text=slot_status_all(games), parse_mode=ParseMode.MARKDOWN)
+    query.edit_message_text(text=reply, parse_mode=ParseMode.MARKDOWN)
     return ConversationHandler.END
 
 
@@ -113,14 +116,6 @@ def send_notification(context, chat_id, message, due=0):
         )
 
     context.job_queue.run_once(send_msg, due, context=chat_id)
-
-
-def cancel(update, context):
-    """End current conversation"""
-    query = update.callback_query
-    query.answer()
-    query.edit_message_text(text="cancelled :(")
-    return ConversationHandler.END
 
 
 def call(update, context):
@@ -162,51 +157,50 @@ def get_chettam_data(update, context):
     games = get_all_games(update)
     player = context.bot_data["player"]
     pistol = EMOJI["pistol"]
-    cross = EMOJI["cross"]
     check = EMOJI["check"]
     party = EMOJI["party"]
     fire = EMOJI["fire"]
     zzz = EMOJI["zzz"]
 
     keyboard = []
-    kb_last_row = [
-        InlineKeyboardButton(f"{fire} New", callback_data="pick_hour"),
-    ]
     if games:
-        kb_last_row.append(
-            InlineKeyboardButton(f"{check} Done", callback_data="status_conv")
-        )
         reply = slot_status_all(games)
         for game in games:
-            row = []
-            time_header = game.timeslot_cet_time
+            btn_row = []
+
             if player in game.players:
-                btn_text = f"{time_header}: {zzz} Leave"
+                btn_text = f"{zzz} Leave"
                 btn_callback = f"leave_{game.id}"
             elif not game.expired:
-                btn_text = f"{time_header}: {pistol} Join"
+                btn_text = f"{pistol} Join"
                 btn_callback = f"join_{game.id}"
-            btn1 = InlineKeyboardButton(btn_text, callback_data=btn_callback)
-            row.append(btn1)
+            btn_row.append(
+                InlineKeyboardButton(
+                    f"{game.timeslot_cet_time}: {btn_text}", callback_data=btn_callback
+                )
+            )
 
             if (
                 game.slots > 1
                 and game_timediff(game, minutes=-30)
                 and player in game.players
             ):
-                btn2 = InlineKeyboardButton(
-                    f"{party} Call", callback_data=f"call_{game.id}"
+                btn_row.append(
+                    InlineKeyboardButton(
+                        f"{party} Call", callback_data=f"call_{game.id}"
+                    )
                 )
-                row.append(btn2)
 
-            keyboard.append(row)
+            keyboard.append(btn_row)
     else:
-        kb_last_row.append(
-            InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
-        )
-        reply = "Game doesn't exist."
+        reply = "Create new game below."
 
-    keyboard.append(kb_last_row)
+    keyboard.append(
+        [
+            InlineKeyboardButton(f"{fire} New", callback_data="pick_hour"),
+            InlineKeyboardButton(f"{check} Done", callback_data="status_conv"),
+        ]
+    )
     return reply, keyboard
 
 
@@ -267,18 +261,18 @@ def hours_keyboard(update):
 def pick_hour(update, context):
     """Choice of hours"""
     query = update.callback_query
-    cross = EMOJI["cross"]
+    check = EMOJI["check"]
+    clock = EMOJI["clock"]
     keyboard = hours_keyboard(update)
     keyboard.append(
         [
             InlineKeyboardButton("« Back", callback_data="back_to_main"),
-            InlineKeyboardButton(f"{cross} Cancel", callback_data="cancel"),
+            InlineKeyboardButton(f"{check} Done", callback_data="status_conv"),
         ],
     )
-    reply = f"Choose time:"
     query.answer()
     query.edit_message_text(
-        text=reply, reply_markup=InlineKeyboardMarkup(keyboard),
+        text=f"{clock} Choose time:", reply_markup=InlineKeyboardMarkup(keyboard),
     )
     return FIRST_STAGE
 
@@ -326,7 +320,6 @@ def main():
                     CallbackQueryHandler(new_game, pattern=HOUR_MINUTE_PATTERN),
                     CallbackQueryHandler(back, pattern="^back_to_main$"),
                     CallbackQueryHandler(status_conv, pattern="^status_conv$"),
-                    CallbackQueryHandler(cancel, pattern="^cancel$"),
                 ],
             },
         )
