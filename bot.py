@@ -66,10 +66,7 @@ def start(update, context):
 def status(update, context):
     """Get games status for current chat"""
     games = get_all_games(update)
-    if games:
-        update.message.reply_markdown(slot_status_all(games), reply_to_message_id=None)
-    else:
-        update.message.reply_text(EMPTY_STATUS)
+    update.message.reply_markdown(slot_status_all(games))
 
 
 def gogo(update, context):
@@ -98,12 +95,8 @@ def status_conv(update, context):
     """Get games status for current chat"""
     query = update.callback_query
     games = get_all_games(update)
-    if games:
-        reply = slot_status_all(games)
-    else:
-        reply = EMPTY_STATUS
     query.answer()
-    query.edit_message_text(text=reply, parse_mode=ParseMode.MARKDOWN)
+    query.edit_message_text(text=slot_status_all(games), parse_mode=ParseMode.MARKDOWN)
     return ConversationHandler.END
 
 
@@ -174,9 +167,10 @@ def get_chettam_data(update, context):
             elif not game.expired:
                 btn_text = f"{pistol} Join"
                 btn_callback = f"join_{game.id}"
+            timeslot_cet = utc_to_tz_time(game, "CET")
             btn_row.append(
                 InlineKeyboardButton(
-                    f"{game.timeslot_cet_time}: {btn_text}", callback_data=btn_callback
+                    f"{timeslot_cet}: {btn_text}", callback_data=btn_callback
                 )
             )
 
@@ -193,7 +187,7 @@ def get_chettam_data(update, context):
 
             keyboard.append(btn_row)
     else:
-        reply = "Create new game below."
+        reply = "Create new game below:"
 
     keyboard.append(
         [

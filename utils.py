@@ -86,12 +86,12 @@ def create_game(chat, timeslot) -> Game:
     return game
 
 
-def game_timediff(game: Game, hours=0, minutes=0, seconds=0) -> bool:
-    """Checks if game wasn't updated for given time frame"""
+def game_timediff(game: Game, hours=0, minutes=0) -> bool:
+    """Checks if game is older than given time frame"""
     now = dt.now(pytz.utc)
-    played_at = game.timeslot_utc
-    delta = timedelta(hours=hours, minutes=minutes, seconds=seconds)
-    return now - played_at > delta
+    timeslot = game.timeslot_utc
+    delta = timedelta(hours=hours, minutes=minutes)
+    return now - timeslot > delta
 
 
 def get_game(update, game_id) -> Game:
@@ -108,7 +108,7 @@ def get_all_games(update, ts_only=False) -> list:
     games = (
         session.query(Game)
         .filter_by(chat_id=update.effective_chat.id)
-        .order_by(Game.timeslot)
+        .order_by(Game.timeslot_utc)
         .all()
     )
     games_list = []
@@ -127,8 +127,8 @@ def get_all_games(update, ts_only=False) -> list:
 
 
 def slot_time_header(game) -> str:
-    timeslot_cet = convert_utc_time_to_timezone(game.timeslot_utc, "CET")
-    timeslot_gbt = convert_utc_time_to_timezone(game.timeslot_utc, "Europe/London")
+    timeslot_cet = utc_to_tz_time(game, "CET")
+    timeslot_gbt = utc_to_tz_time(game, "Europe/London")
     should_add_gbt_time = False
     for player in game.players:
         if player.username in USER_TIMEZONES:
@@ -140,7 +140,8 @@ def slot_time_header(game) -> str:
     return result
 
 
-def convert_utc_time_to_timezone(utc_time, timezone_str) -> str:
+def utc_to_tz_time(game, timezone_str) -> str:
+    utc_time = game.timeslot_utc
     timezone = pytz.timezone(timezone_str)
     return utc_time.astimezone(timezone).strftime("%H:%M")
 
@@ -167,7 +168,10 @@ def slot_status(game) -> str:
 
 def slot_status_all(games) -> str:
     """Returns slots data for all games"""
-    return "\n\n".join(slot_status(game) for game in games)
+    if games:
+        return "\n\n".join(slot_status(game) for game in games)
+    else:
+        return "Start a game with /chettam"
 
 
 def is_dayoff() -> bool:

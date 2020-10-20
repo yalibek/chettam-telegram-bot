@@ -14,7 +14,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, backref
 from telegram.utils.helpers import escape_markdown
 
-from vars import DB_URL, TIMEZONE_CET, TIMEZONE_UTC, TIMEZONE_GBT
+from vars import DB_URL, TIMEZONE_UTC
 
 # Connect to DB
 Base = declarative_base()
@@ -68,13 +68,11 @@ class Player(Base, Generic):
 
     def __str__(self) -> str:
         if self.csgo_nickname:
-            return f"{self.csgo_nickname}"
+            return self.csgo_nickname
         elif self.username:
-            return f"{self.username}"
-        elif self.first_name and self.last_name:
-            return f"{self.first_name} {self.last_name}"
+            return self.username
         else:
-            return f"{self.first_name}"
+            return self.first_name
 
     @property
     def mention(self) -> str:
@@ -99,6 +97,17 @@ class Game(Base, Generic):
         self.player_game.append(
             Association(game=self, player=player, joined_at=joined_at)
         )
+
+    @property
+    def timeslot_utc(self) -> dt:
+        """'Game.timeslot' stores DateTime object without timezone info.
+        That's why we need to convert it back to timezone aware object.
+        Use this property instead of 'Game.timeslot' whenever possible."""
+        return TIMEZONE_UTC.localize(self.timeslot)
+
+    @property
+    def slots(self) -> int:
+        return len(self.players)
 
     @property
     def players_sorted(self) -> list:
@@ -133,34 +142,6 @@ class Game(Base, Generic):
         else:
             active_players = self.players_sorted[:10]
         return ", ".join(player.mention for player in active_players)
-
-    @property
-    def players_call_all(self) -> str:
-        return ", ".join(player.mention for player in self.players_sorted)
-
-    @property
-    def slots(self) -> int:
-        return len(self.players)
-
-    @property
-    def timeslot_utc(self) -> dt:
-        return TIMEZONE_UTC.localize(self.timeslot)
-
-    @property
-    def timeslot_cet(self) -> dt:
-        return self.timeslot_utc.astimezone(TIMEZONE_CET)
-
-    @property
-    def timeslot_cet_time(self) -> str:
-        return self.timeslot_cet.strftime("%H:%M")
-
-    @property
-    def timeslot_gbt(self) -> dt:
-        return self.timeslot_utc.astimezone(TIMEZONE_GBT)
-
-    @property
-    def timeslot_gbt_time(self) -> str:
-        return self.timeslot_gbt.strftime("%H:%M")
 
 
 # Create tables in DB
