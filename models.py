@@ -1,4 +1,4 @@
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta
 
 from sqlalchemy import (
     Column,
@@ -14,7 +14,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, backref
 from telegram.utils.helpers import escape_markdown
 
-from vars import DB_URL, TIMEZONE_UTC
+from vars import DB_URL, TIMEZONE_UTC, EMOJI
 
 # Connect to DB
 Base = declarative_base()
@@ -36,6 +36,13 @@ class Association(Base):
     game = relationship(
         "Game", backref=backref("player_game", cascade="all, delete-orphan")
     )
+
+    @property
+    def is_new(self):
+        if dt.utcnow() - self.joined_at < timedelta(minutes=5):
+            return EMOJI["fire"]
+        else:
+            return ""
 
 
 class Generic:
@@ -110,29 +117,37 @@ class Game(Base, Generic):
         return len(self.players)
 
     @property
+    def assoc_sorted(self) -> list:
+        """Sort players by joined_at and return list of associations"""
+        return sorted(self.player_game, key=lambda x: x.joined_at)
+
+    @property
     def players_sorted(self) -> list:
-        """Sort players by joined_at and return list of names"""
-        sorted_association = sorted(self.player_game, key=lambda x: x.joined_at)
-        return [association.player for association in sorted_association]
+        """Return sorted list of names"""
+        return [association.player for association in self.assoc_sorted]
 
     @property
     def players_list(self) -> str:
         """Return unnumbered list of players for 1 party with queue or splitted into 2 parties"""
-        players = [escape_markdown(str(uname)) for uname in self.players_sorted]
         if self.slots < 10:
             appendix1 = ""
             appendix2 = "\[_queue_] "
         else:
             appendix1 = "\[_1st_] "
             appendix2 = "\[_2nd_] "
-        return "\n".join(
-            f"- {appendix1}{player_name}"
-            if index < 5
-            else f"- {appendix2}{player_name}"
-            if 5 <= index < 10
-            else f"- \[_queue_] {player_name}"
-            for index, player_name in enumerate(players)
-        )
+
+        result = []
+        for index, assoc in enumerate(self.assoc_sorted):
+            if index < 5:
+                tag = appendix1
+            elif 5 <= index < 10:
+                tag = appendix2
+            else:
+                tag = "\[_queue_] "
+
+            result.append(f"- {tag}{escape_markdown(str(assoc.player))} {assoc.is_new}")
+
+        return "\n".join(result)
 
     @property
     def players_call_active(self) -> str:
