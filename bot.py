@@ -74,10 +74,8 @@ def gogo(update, context):
 
 def dayoff(update, context):
     """Dayoff messages"""
-    context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
     try:
-        quote, author = get_quote()
-        reply = f"_{quote}_\n\n — {author}"
+        reply = get_quote()
     except:
         reply = "It's dayoff, fool!"
         update.message.reply_sticker(
@@ -155,33 +153,34 @@ def get_chettam_data(update, context):
     if games:
         reply = slot_status_all(games)
         for game in games:
-            btn_row = []
+            if not game.expired:
+                btn_row = []
 
-            if player in game.players:
-                btn_text = f"{zzz} Leave"
-                btn_callback = f"leave_{game.id}"
-            elif not game.expired:
-                btn_text = f"{pistol} Join"
-                btn_callback = f"join_{game.id}"
-            timeslot_cet = utc_to_tz_time(game, "CET")
-            btn_row.append(
-                InlineKeyboardButton(
-                    f"{timeslot_cet}: {btn_text}", callback_data=btn_callback
-                )
-            )
-
-            if (
-                game.slots > 1
-                and game_timediff(game, minutes=-30)
-                and player in game.players
-            ):
+                if player in game.players:
+                    btn_text = f"{zzz} Leave"
+                    btn_callback = f"leave_{game.id}"
+                else:
+                    btn_text = f"{pistol} Join"
+                    btn_callback = f"join_{game.id}"
+                timeslot_cet = utc_to_tz_time(game, "CET")
                 btn_row.append(
                     InlineKeyboardButton(
-                        f"{party} Call", callback_data=f"call_{game.id}"
+                        f"{timeslot_cet}: {btn_text}", callback_data=btn_callback
                     )
                 )
 
-            keyboard.append(btn_row)
+                if (
+                    game.slots > 1
+                    and game_timediff(game, minutes=-30)
+                    and player in game.players
+                ):
+                    btn_row.append(
+                        InlineKeyboardButton(
+                            f"{party} Call", callback_data=f"call_{game.id}"
+                        )
+                    )
+
+                keyboard.append(btn_row)
     else:
         reply = "Create new game below:"
 

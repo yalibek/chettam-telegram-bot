@@ -4,7 +4,7 @@ from datetime import datetime as dt, timedelta
 import pytz
 import requests
 
-from models import Game, Player, session
+from models import Game, Player, session, Association
 from vars import EMOJI, TIMEZONE_CET, TIMEZONE_UTC, CSGO_NICKNAMES, USER_TIMEZONES
 
 
@@ -99,6 +99,15 @@ def get_game(update, game_id) -> Game:
     return (
         session.query(Game)
         .filter_by(chat_id=update.effective_chat.id, id=game_id)
+        .first()
+    )
+
+
+def get_assoc(game_id, player_id) -> Game:
+    """Returns Association model for given game and player"""
+    return (
+        session.query(Association)
+        .filter_by(game_id=game_id, player_id=player_id)
         .first()
     )
 
@@ -201,4 +210,4 @@ def get_quote() -> tuple:
     author = response.json().get("quoteAuthor")
     if not author:
         author = "Unknown"
-    return quote, author
+    return f"_{quote}_\n\n— {author}"
