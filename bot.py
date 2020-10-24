@@ -220,7 +220,7 @@ def leave(update, context):
     player = context.bot_data["player"]
     game_id = re.search("[0-9]+", query.data).group(0)
     game = get_game(update, game_id)
-    game.players.remove(player)
+    game.remove_player(player)
     game.save()
     if not game.players:
         game.delete()

@@ -23,13 +23,30 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 
-class Association(Base):
+class Generic:
+    """Class with generic methods used by all classes"""
+
+    def create(self):
+        session.add(self)
+        self.save()
+
+    def delete(self):
+        session.delete(self)
+        self.save()
+
+    @staticmethod
+    def save():
+        session.commit()
+
+
+class Association(Base, Generic):
     """Many-to-many association table"""
 
     __tablename__ = "association"
     game_id = Column(Integer, ForeignKey("game.id"), primary_key=True)
     player_id = Column(Integer, ForeignKey("player.id"), primary_key=True)
     joined_at = Column(DateTime)
+    queue_tag = Column(String, default="")
     player = relationship(
         "Player", backref=backref("player_game", cascade="all, delete-orphan")
     )
@@ -43,22 +60,6 @@ class Association(Base):
             return EMOJI["fire"]
         else:
             return ""
-
-
-class Generic:
-    """Class with generic methods used by both Player and Game classes"""
-
-    def create(self):
-        session.add(self)
-        self.save()
-
-    def delete(self):
-        session.delete(self)
-        self.save()
-
-    @staticmethod
-    def save():
-        session.commit()
 
 
 class Player(Base, Generic):
@@ -104,6 +105,30 @@ class Game(Base, Generic):
         self.player_game.append(
             Association(game=self, player=player, joined_at=joined_at)
         )
+        self.tag_everyone()
+
+    def remove_player(self, player):
+        self.players.remove(player)
+        self.tag_everyone()
+
+    def tag_everyone(self):
+        """Tag all players with queue tags"""
+        if self.slots < 10:
+            appendix1 = ""
+            appendix2 = "\[_queue_] "
+        else:
+            appendix1 = "\[_1st_] "
+            appendix2 = "\[_2nd_] "
+
+        for index, assoc in enumerate(self.assoc_sorted):
+            if index < 5:
+                tag = appendix1
+            elif 5 <= index < 10:
+                tag = appendix2
+            else:
+                tag = "\[_queue_] "
+            assoc.queue_tag = tag
+            assoc.save()
 
     @property
     def timeslot_utc(self) -> dt:
@@ -129,25 +154,10 @@ class Game(Base, Generic):
     @property
     def players_list(self) -> str:
         """Return unnumbered list of players for 1 party with queue or splitted into 2 parties"""
-        if self.slots < 10:
-            appendix1 = ""
-            appendix2 = "\[_queue_] "
-        else:
-            appendix1 = "\[_1st_] "
-            appendix2 = "\[_2nd_] "
-
-        result = []
-        for index, assoc in enumerate(self.assoc_sorted):
-            if index < 5:
-                tag = appendix1
-            elif 5 <= index < 10:
-                tag = appendix2
-            else:
-                tag = "\[_queue_] "
-
-            result.append(f"- {tag}{escape_markdown(str(assoc.player))} {assoc.is_new}")
-
-        return "\n".join(result)
+        return "\n".join(
+            f"- {assoc.queue_tag}{escape_markdown(str(assoc.player))} {assoc.is_new}"
+            for assoc in self.assoc_sorted
+        )
 
     @property
     def players_call_active(self) -> str:

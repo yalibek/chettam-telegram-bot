@@ -200,7 +200,7 @@ def logger() -> logging.Logger:
     return logging.getLogger(__name__)
 
 
-def get_quote() -> tuple:
+def get_quote() -> str:
     """Get random famous quote"""
     url = "https://api.forismatic.com/api/1.0/"
     response = requests.get(
