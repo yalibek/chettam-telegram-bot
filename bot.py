@@ -210,7 +210,6 @@ def join(update, context):
     game_id = re.search("[0-9]+", query.data).group(0)
     game = get_game(update, game_id)
     game.add_player(player, joined_at=dt.now(pytz.utc))
-    game.save()
     return refresh_main_page(update, context, query)
 
 
@@ -221,7 +220,6 @@ def leave(update, context):
     game_id = re.search("[0-9]+", query.data).group(0)
     game = get_game(update, game_id)
     game.remove_player(player)
-    game.save()
     if not game.players:
         game.delete()
     return refresh_main_page(update, context, query)
@@ -270,7 +268,6 @@ def new_game(update, context):
     timeslot = convert_to_dt(query.data)
     game = create_game(update.effective_chat, timeslot)
     game.add_player(player, joined_at=dt.now(pytz.utc))
-    game.save()
     return refresh_main_page(update, context, query)
 
 

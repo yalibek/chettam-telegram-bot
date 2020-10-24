@@ -103,15 +103,6 @@ def get_game(update, game_id) -> Game:
     )
 
 
-def get_assoc(game_id, player_id) -> Game:
-    """Returns Association model for given game and player"""
-    return (
-        session.query(Association)
-        .filter_by(game_id=game_id, player_id=player_id)
-        .first()
-    )
-
-
 def get_all_games(update, ts_only=False) -> list:
     """Returns all Game models for current chat"""
     games = (

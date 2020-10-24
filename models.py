@@ -63,8 +63,6 @@ class Association(Base, Generic):
 
 
 class Player(Base, Generic):
-    """Class for user"""
-
     __tablename__ = "player"
     id = Column(Integer, primary_key=True)
     user_id = Column(BigInteger, unique=True)
@@ -91,8 +89,6 @@ class Player(Base, Generic):
 
 
 class Game(Base, Generic):
-    """Class for unique game per chat"""
-
     __tablename__ = "game"
     id = Column(Integer, primary_key=True)
     chat_id = Column(BigInteger)
@@ -105,10 +101,12 @@ class Game(Base, Generic):
         self.player_game.append(
             Association(game=self, player=player, joined_at=joined_at)
         )
+        self.save()
         self.tag_everyone()
 
     def remove_player(self, player):
         self.players.remove(player)
+        self.save()
         self.tag_everyone()
 
     def tag_everyone(self):
