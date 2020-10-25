@@ -147,6 +147,8 @@ BCOM = [
     "Gamers consistently rate the party as excellent!",
 ]
 
+DAYS_OFF = ["Wednesday", "Sunday"]
+
 # Commands
 COMMANDS = [
     ("start", "help me pls"),
@@ -162,8 +164,8 @@ COMMANDS_DESCR = "\n".join(
 
 # Reply to /start command
 START_MESSAGE = f"""
-Hi, this is a bot for chettam guys! {EMOJI['pistol']}
-Wednesday and Sunday are days off.
+Hi, this is a bot for chettam guys! {EMOJI["pistol"]}
+{", ".join(DAYS_OFF)} are days off.
 
 {COMMANDS_DESCR}
 """

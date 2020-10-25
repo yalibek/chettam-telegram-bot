@@ -4,8 +4,15 @@ from datetime import datetime as dt, timedelta
 import pytz
 import requests
 
-from models import Game, Player, session, Association
-from vars import EMOJI, TIMEZONE_CET, TIMEZONE_UTC, CSGO_NICKNAMES, USER_TIMEZONES
+from models import Game, Player, session
+from vars import (
+    EMOJI,
+    TIMEZONE_CET,
+    TIMEZONE_UTC,
+    CSGO_NICKNAMES,
+    USER_TIMEZONES,
+    DAYS_OFF,
+)
 
 
 def row_list_chunks(lst) -> list:
@@ -178,8 +185,8 @@ def is_dayoff() -> bool:
     """Checks if today is cs:go dayoff"""
     now = dt.now(pytz.utc)
     is_not_night = now.hour >= 3
-    is_wed_sun = now.weekday() in [2, 6]
-    return is_not_night and is_wed_sun
+    is_off = now.strftime("%A") in DAYS_OFF
+    return is_not_night and is_off
 
 
 def logger() -> logging.Logger:
