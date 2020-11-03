@@ -31,12 +31,25 @@ from utils import *
 from vars import *
 
 
+def restricted(func):
+    """Restrict prod bot usage to allowed chats only"""
+
+    def wrapped(update, context, *args, **kwargs):
+        if DEBUG or update.effective_chat.id in ALLOWED_CHATS:
+            return func(update, context, *args, **kwargs)
+        else:
+            update.message.reply_text("You're not authorized to use this bot.")
+
+    return wrapped
+
+
 def error(update, context):
     """Log Errors caused by Updates."""
     logger().warning('Update "%s" caused error "%s"', update, context.error)
 
 
 # Command actions
+@restricted
 def start(update, context):
     """Bot start messages"""
     random_sticker = random.choice(
@@ -59,12 +72,14 @@ def start(update, context):
     )
 
 
+@restricted
 def status(update, context):
     """Get games status for current chat"""
     games = get_all_games(update)
     update.message.reply_markdown(slot_status_all(games))
 
 
+@restricted
 def gogo(update, context):
     """Reply with random quote from invite list just for fun"""
     pistol = EMOJI["pistol"]
@@ -130,7 +145,7 @@ def refresh_main_page(update, context, query):
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode=ParseMode.MARKDOWN,
     )
-    return FIRST_STAGE
+    return MAIN_STATE
 
 
 def back(update, context):
@@ -193,6 +208,7 @@ def get_chettam_data(update, context):
     return reply, keyboard
 
 
+@restricted
 def chettam(update, context):
     """Entry point for conversation"""
     context.bot_data["player"] = get_player(update)
@@ -200,7 +216,7 @@ def chettam(update, context):
     update.message.reply_markdown(
         reply, reply_markup=InlineKeyboardMarkup(keyboard),
     )
-    return FIRST_STAGE
+    return MAIN_STATE
 
 
 def join(update, context):
@@ -258,7 +274,7 @@ def pick_hour(update, context):
     query.edit_message_text(
         text=f"{clock} Choose time:", reply_markup=InlineKeyboardMarkup(keyboard),
     )
-    return FIRST_STAGE
+    return MAIN_STATE
 
 
 def new_game(update, context):
@@ -295,7 +311,7 @@ def main():
             entry_points=[CommandHandler("chettam", chettam)],
             fallbacks=[CommandHandler("chettam", chettam)],
             states={
-                FIRST_STAGE: [
+                MAIN_STATE: [
                     CallbackQueryHandler(join, pattern="^join_[0-9]+$"),
                     CallbackQueryHandler(leave, pattern="^leave_[0-9]+$"),
                     CallbackQueryHandler(call, pattern="^call_[0-9]+$",),

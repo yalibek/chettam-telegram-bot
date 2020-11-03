@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import random
 
@@ -174,8 +175,8 @@ Hi, this is a bot for chettam guys! {EMOJI["pistol"]}
 TIMEZONE_CET = pytz.timezone("CET")
 TIMEZONE_UTC = pytz.timezone("UTC")
 
-# Stages
-FIRST_STAGE, SECOND_STAGE = range(2)
+# Converstion states
+MAIN_STATE, SECONDARY_STATE = range(2)
 
 # Patterns
 HOUR_PATTERN = "^(0[0-9]|1[0-9]|2[0-3])$"
@@ -184,6 +185,8 @@ HOUR_MINUTE_PATTERN = "^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
 # App variables
 HEROKU_APP = "https://chettam-telegram-bot.herokuapp.com/"
 PORT = int(os.environ.get("PORT", "8443"))
+
+ALLOWED_CHATS = json.loads(os.getenv("ALLOWED_CHATS"))
 
 if arg_parse().debug:
     DEBUG = True
