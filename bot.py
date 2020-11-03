@@ -283,7 +283,7 @@ def main():
     dp.add_error_handler(error)
 
     # Handlers
-    dp.add_handler(CommandHandler("start", start))
+    # dp.add_handler(CommandHandler("start", start))
 
     if is_dayoff():
         dp.add_handler(MessageHandler(Filters.command, dayoff))

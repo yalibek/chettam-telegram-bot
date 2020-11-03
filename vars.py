@@ -151,7 +151,7 @@ DAYS_OFF = ["Wednesday", "Sunday"]
 
 # Commands
 COMMANDS = [
-    ("start", "help me pls"),
+    # ("start", "help me pls"),
     ("chettam", "create new game or join existing one"),
     ("status", "show current status"),
     ("gogo", "say random invite"),
