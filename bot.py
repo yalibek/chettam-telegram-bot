@@ -45,7 +45,7 @@ def restricted(func):
 
 def error(update, context):
     """Log Errors caused by Updates."""
-    logger().warning('Update "%s" caused error "%s"', update, context.error)
+    logger().error(f"\n\tupdate: {update}\n\terror: {context.error}\n")
 
 
 # Command actions

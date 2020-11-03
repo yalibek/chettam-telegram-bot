@@ -186,15 +186,16 @@ HOUR_MINUTE_PATTERN = "^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
 HEROKU_APP = "https://chettam-telegram-bot.herokuapp.com/"
 PORT = int(os.environ.get("PORT", "8443"))
 
-ALLOWED_CHATS = json.loads(os.getenv("ALLOWED_CHATS"))
-
 if arg_parse().debug:
+    # dev vars
     DEBUG = True
     TOKEN = os.getenv("TOKEN_DEBUG")
     DB_URL = os.getenv("HEROKU_POSTGRESQL_COPPER_URL")
     SENTRY_DSN = os.getenv("SENTRY_DSN_DEBUG")
 else:
+    # prod vars
     DEBUG = False
     TOKEN = os.getenv("TOKEN")
     DB_URL = os.getenv("DATABASE_URL")
     SENTRY_DSN = os.getenv("SENTRY_DSN")
+    ALLOWED_CHATS = json.loads(os.getenv("ALLOWED_CHATS"))
