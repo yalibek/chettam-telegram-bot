@@ -278,7 +278,7 @@ def main():
 
     # Handlers
     if is_dayoff():
-        dp.add_handler(CommandHandler(COMMAND_NAMES_ONLY, dayoff))
+        dp.add_handler(CommandHandler(COMMANDS_NAMES_ONLY, dayoff))
     else:
         dp.add_handler(CommandHandler("status", status))
         dp.add_handler(CommandHandler("gogo", gogo))

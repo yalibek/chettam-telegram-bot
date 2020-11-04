@@ -157,7 +157,7 @@ COMMANDS = [
     ("gogo", "say random invite"),
 ]
 
-COMMAND_NAMES_ONLY = [command[0] for command in COMMANDS]
+COMMANDS_NAMES_ONLY = [command[0] for command in COMMANDS]
 
 # Commands string for START_MESSAGE
 COMMANDS_DESCR = "\n".join(
