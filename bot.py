@@ -31,6 +31,18 @@ from utils import *
 from vars import *
 
 
+# Functions
+def send_notification(context, chat_id, message, due=0):
+    """Send a separate message"""
+
+    def send_msg(context):
+        context.bot.send_message(
+            context.job.context, text=message, parse_mode=ParseMode.MARKDOWN,
+        )
+
+    context.job_queue.run_once(send_msg, due, context=chat_id)
+
+
 def restricted(func):
     """Restrict prod bot usage to allowed chats only"""
 
@@ -87,6 +99,7 @@ def gogo(update, context):
     update.message.reply_text(f"{invite} {pistol}", reply_to_message_id=None)
 
 
+@restricted
 def dayoff(update, context):
     """Dayoff messages"""
     try:
@@ -99,25 +112,67 @@ def dayoff(update, context):
     update.message.reply_markdown(reply, reply_to_message_id=None)
 
 
-# Inline keyboard actions
-def status_conv(update, context):
-    """Get games status for current chat"""
+# Conversation actions
+@restricted
+def chettam(update, context):
+    """Entry point for conversation"""
+    context.bot_data["player"] = get_player(update)
+    reply, keyboard = get_chettam_data(update, context)
+    return MAIN_STATE
+    update.message.reply_markdown(
+        reply, reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+
+
+def pick_hour(update, context):
+    """Choice of hours"""
     query = update.callback_query
-    games = get_all_games(update)
+    check = EMOJI["check"]
+    clock = EMOJI["clock"]
+    keyboard = hours_keyboard(update)
+    keyboard.append(
+        [
+            InlineKeyboardButton("« Back", callback_data="back_to_main"),
+            InlineKeyboardButton(f"{check} Done", callback_data="status_conv"),
+        ],
+    )
     query.answer()
-    query.edit_message_text(text=slot_status_all(games), parse_mode=ParseMode.MARKDOWN)
-    return ConversationHandler.END
+    query.edit_message_text(
+        text=f"{clock} Choose time:", reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+    return MAIN_STATE
 
 
-def send_notification(context, chat_id, message, due=0):
-    """Send a separate message"""
+def new_game(update, context):
+    """Create new game"""
+    query = update.callback_query
+    player = context.bot_data["player"]
+    timeslot = convert_to_dt(query.data)
+    game = create_game(update.effective_chat, timeslot)
+    game.add_player(player, joined_at=dt.now(pytz.utc))
+    return refresh_main_page(update, context, query)
 
-    def send_msg(context):
-        context.bot.send_message(
-            context.job.context, text=message, parse_mode=ParseMode.MARKDOWN,
-        )
 
-    context.job_queue.run_once(send_msg, due, context=chat_id)
+def join(update, context):
+    """Join current game"""
+    query = update.callback_query
+    player = context.bot_data["player"]
+    game_id = re.search("[0-9]+", query.data).group(0)
+    game = get_game(update, game_id)
+    game.add_player(player, joined_at=dt.now(pytz.utc))
+    return refresh_main_page(update, context, query)
+
+
+def leave(update, context):
+    """Leave current game"""
+    query = update.callback_query
+    player = context.bot_data["player"]
+    game_id = re.search("[0-9]+", query.data).group(0)
+    game = get_game(update, game_id)
+    game.remove_player(player)
+    if not game.players:
+        game.delete()
+    return refresh_main_page(update, context, query)
 
 
 def call(update, context):
@@ -136,16 +191,13 @@ def call(update, context):
     return ConversationHandler.END
 
 
-def refresh_main_page(update, context, query):
-    """Reload main page buttons"""
-    reply, keyboard = get_chettam_data(update, context)
+def status_conv(update, context):
+    """Get games status for current chat"""
+    query = update.callback_query
+    games = get_all_games(update)
     query.answer()
-    query.edit_message_text(
-        reply,
-        reply_markup=InlineKeyboardMarkup(keyboard),
-        parse_mode=ParseMode.MARKDOWN,
-    )
-    return MAIN_STATE
+    query.edit_message_text(text=slot_status_all(games), parse_mode=ParseMode.MARKDOWN)
+    return ConversationHandler.END
 
 
 def back(update, context):
@@ -154,6 +206,7 @@ def back(update, context):
     return refresh_main_page(update, context, query)
 
 
+# Conversation helper functions
 def get_chettam_data(update, context):
     """Reply message and keyboard for entry point"""
     games = get_all_games(update)
@@ -208,37 +261,16 @@ def get_chettam_data(update, context):
     return reply, keyboard
 
 
-@restricted
-def chettam(update, context):
-    """Entry point for conversation"""
-    context.bot_data["player"] = get_player(update)
+def refresh_main_page(update, context, query):
+    """Reload main page buttons"""
     reply, keyboard = get_chettam_data(update, context)
-    update.message.reply_markdown(
-        reply, reply_markup=InlineKeyboardMarkup(keyboard),
+    query.answer()
+    query.edit_message_text(
+        reply,
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode=ParseMode.MARKDOWN,
     )
     return MAIN_STATE
-
-
-def join(update, context):
-    """Join current game"""
-    query = update.callback_query
-    player = context.bot_data["player"]
-    game_id = re.search("[0-9]+", query.data).group(0)
-    game = get_game(update, game_id)
-    game.add_player(player, joined_at=dt.now(pytz.utc))
-    return refresh_main_page(update, context, query)
-
-
-def leave(update, context):
-    """Leave current game"""
-    query = update.callback_query
-    player = context.bot_data["player"]
-    game_id = re.search("[0-9]+", query.data).group(0)
-    game = get_game(update, game_id)
-    game.remove_player(player)
-    if not game.players:
-        game.delete()
-    return refresh_main_page(update, context, query)
 
 
 def hours_keyboard(update):
@@ -256,35 +288,6 @@ def hours_keyboard(update):
         for timeslot_time in ts_filtered
     ]
     return row_list_chunks(keyboard)
-
-
-def pick_hour(update, context):
-    """Choice of hours"""
-    query = update.callback_query
-    check = EMOJI["check"]
-    clock = EMOJI["clock"]
-    keyboard = hours_keyboard(update)
-    keyboard.append(
-        [
-            InlineKeyboardButton("« Back", callback_data="back_to_main"),
-            InlineKeyboardButton(f"{check} Done", callback_data="status_conv"),
-        ],
-    )
-    query.answer()
-    query.edit_message_text(
-        text=f"{clock} Choose time:", reply_markup=InlineKeyboardMarkup(keyboard),
-    )
-    return MAIN_STATE
-
-
-def new_game(update, context):
-    """Create new game"""
-    query = update.callback_query
-    player = context.bot_data["player"]
-    timeslot = convert_to_dt(query.data)
-    game = create_game(update.effective_chat, timeslot)
-    game.add_player(player, joined_at=dt.now(pytz.utc))
-    return refresh_main_page(update, context, query)
 
 
 def main():
