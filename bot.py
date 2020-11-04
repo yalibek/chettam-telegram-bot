@@ -21,10 +21,8 @@ from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 from telegram.ext import (
     Updater,
     CommandHandler,
-    MessageHandler,
     ConversationHandler,
     CallbackQueryHandler,
-    Filters,
 )
 
 from utils import *
@@ -61,29 +59,6 @@ def error(update, context):
 
 
 # Command actions
-@restricted
-def start(update, context):
-    """Bot start messages"""
-    random_sticker = random.choice(
-        [
-            STICKERS["lenin"],
-            STICKERS["racoon"],
-            STICKERS["borat"],
-            STICKERS["harry"],
-            STICKERS["sheikh"],
-            STICKERS["pistol_parrot"],
-            STICKERS["pistol_duck_left"],
-            STICKERS["pistol_duck_right"],
-        ]
-    )
-    update.message.reply_text(
-        START_MESSAGE, reply_to_message_id=None,
-    )
-    update.message.reply_sticker(
-        random_sticker, reply_to_message_id=None,
-    )
-
-
 @restricted
 def status(update, context):
     """Get games status for current chat"""
@@ -302,10 +277,8 @@ def main():
     dp.add_error_handler(error)
 
     # Handlers
-    # dp.add_handler(CommandHandler("start", start))
-
     if is_dayoff():
-        dp.add_handler(MessageHandler(Filters.command, dayoff))
+        dp.add_handler(CommandHandler(COMMAND_NAMES_ONLY, dayoff))
     else:
         dp.add_handler(CommandHandler("status", status))
         dp.add_handler(CommandHandler("gogo", gogo))

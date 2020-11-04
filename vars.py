@@ -152,11 +152,12 @@ DAYS_OFF = ["Wednesday", "Sunday"]
 
 # Commands
 COMMANDS = [
-    # ("start", "help me pls"),
     ("chettam", "create new game or join existing one"),
     ("status", "show current status"),
     ("gogo", "say random invite"),
 ]
+
+COMMAND_NAMES_ONLY = [command[0] for command in COMMANDS]
 
 # Commands string for START_MESSAGE
 COMMANDS_DESCR = "\n".join(
