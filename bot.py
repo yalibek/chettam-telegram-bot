@@ -93,10 +93,10 @@ def chettam(update, context):
     """Entry point for conversation"""
     context.bot_data["player"] = get_player(update)
     reply, keyboard = get_chettam_data(update, context)
-    return MAIN_STATE
     update.message.reply_markdown(
         reply, reply_markup=InlineKeyboardMarkup(keyboard),
     )
+    return MAIN_STATE
 
 
 def pick_hour(update, context):
