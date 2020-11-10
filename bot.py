@@ -137,7 +137,9 @@ def new_game(update, context):
             context=context,
             chat_id=update.effective_chat.id,
             game_id=game.id,
-            message=f"*{time_header}*: {game.players_call_active} game starts in {minutes} mins!",
+            # TODO
+            # message=f"*{time_header}*: {game.players_call_active} game starts in {minutes} mins!",
+            message=f"*{time_header}*: game starts in {minutes} mins!",
             due=game.timeslot_utc - timedelta(minutes=minutes),
         )
     return refresh_main_page(update, context, query)
