@@ -30,13 +30,16 @@ from vars import *
 
 
 # Functions
-def send_notification(context, chat_id, message, due=0):
+def send_game_notification(context, chat_id, game_id, message, due=0):
     """Send a separate message"""
 
     def send_msg(context):
-        context.bot.send_message(
-            context.job.context, text=message, parse_mode=ParseMode.MARKDOWN,
-        )
+        if get_game(chat_id, game_id):
+            context.bot.send_message(
+                context.job.context,
+                text=message,
+                parse_mode=ParseMode.MARKDOWN,
+            )
 
     context.job_queue.run_once(send_msg, due, context=chat_id)
 
@@ -82,7 +85,8 @@ def dayoff(update, context):
     except:
         reply = "It's dayoff, fool!"
         update.message.reply_sticker(
-            STICKERS["hahaclassic"], reply_to_message_id=None,
+            STICKERS["hahaclassic"],
+            reply_to_message_id=None,
         )
     update.message.reply_markdown(reply, reply_to_message_id=None)
 
@@ -94,7 +98,8 @@ def chettam(update, context):
     context.bot_data["player"] = get_player(update)
     reply, keyboard = get_chettam_data(update, context)
     update.message.reply_markdown(
-        reply, reply_markup=InlineKeyboardMarkup(keyboard),
+        reply,
+        reply_markup=InlineKeyboardMarkup(keyboard),
     )
     return MAIN_STATE
 
@@ -113,7 +118,8 @@ def pick_hour(update, context):
     )
     query.answer()
     query.edit_message_text(
-        text=f"{clock} Choose time:", reply_markup=InlineKeyboardMarkup(keyboard),
+        text=f"{clock} Choose time:",
+        reply_markup=InlineKeyboardMarkup(keyboard),
     )
     return MAIN_STATE
 
@@ -125,6 +131,15 @@ def new_game(update, context):
     timeslot = convert_to_dt(query.data)
     game = create_game(update.effective_chat, timeslot)
     game.add_player(player, joined_at=dt.now(pytz.utc))
+    time_header = slot_time_header(game)
+    for minutes in [5, 15]:
+        send_game_notification(
+            context=context,
+            chat_id=update.effective_chat.id,
+            game_id=game.id,
+            message=f"*{time_header}*: {game.players_call_active} game starts in {minutes} mins!",
+            due=game.timeslot_utc - timedelta(minutes=minutes),
+        )
     return refresh_main_page(update, context, query)
 
 
@@ -133,7 +148,7 @@ def join(update, context):
     query = update.callback_query
     player = context.bot_data["player"]
     game_id = re.search("[0-9]+", query.data).group(0)
-    game = get_game(update, game_id)
+    game = get_game(update.effective_chat.id, game_id)
     game.add_player(player, joined_at=dt.now(pytz.utc))
     return refresh_main_page(update, context, query)
 
@@ -143,7 +158,7 @@ def leave(update, context):
     query = update.callback_query
     player = context.bot_data["player"]
     game_id = re.search("[0-9]+", query.data).group(0)
-    game = get_game(update, game_id)
+    game = get_game(update.effective_chat.id, game_id)
     game.remove_player(player)
     if not game.players:
         game.delete()
@@ -154,13 +169,14 @@ def call(update, context):
     """Mention all players about current game"""
     query = update.callback_query
     game_id = re.search("[0-9]+", query.data).group(0)
-    game = get_game(update, game_id)
-    time_header = slot_time_header(game)
+    game = get_game(update.effective_chat.id, game_id)
     query.answer()
     query.edit_message_text(text=slot_status(game), parse_mode=ParseMode.MARKDOWN)
-    send_notification(
+    time_header = slot_time_header(game)
+    send_game_notification(
         context=context,
         chat_id=update.effective_chat.id,
+        game_id=game.id,
         message=f"*{time_header}*: {game.players_call_active} go go!",
     )
     return ConversationHandler.END
@@ -259,7 +275,10 @@ def hours_keyboard(update):
         if timeslot not in ts_games and timeslot > dt.now(pytz.utc)
     ]
     keyboard = [
-        InlineKeyboardButton(timeslot_time, callback_data=timeslot_time,)
+        InlineKeyboardButton(
+            timeslot_time,
+            callback_data=timeslot_time,
+        )
         for timeslot_time in ts_filtered
     ]
     return row_list_chunks(keyboard)
@@ -290,7 +309,10 @@ def main():
                 MAIN_STATE: [
                     CallbackQueryHandler(join, pattern="^join_[0-9]+$"),
                     CallbackQueryHandler(leave, pattern="^leave_[0-9]+$"),
-                    CallbackQueryHandler(call, pattern="^call_[0-9]+$",),
+                    CallbackQueryHandler(
+                        call,
+                        pattern="^call_[0-9]+$",
+                    ),
                     CallbackQueryHandler(pick_hour, pattern="^pick_hour$"),
                     CallbackQueryHandler(new_game, pattern=HOUR_MINUTE_PATTERN),
                     CallbackQueryHandler(back, pattern="^back_to_main$"),

@@ -88,7 +88,11 @@ def convert_to_dt(timeslot) -> dt:
 
 def create_game(chat, timeslot) -> Game:
     """Creates new game"""
-    game = Game(timeslot=timeslot, chat_id=chat.id, chat_type=chat.type,)
+    game = Game(
+        timeslot=timeslot,
+        chat_id=chat.id,
+        chat_type=chat.type,
+    )
     game.create()
     return game
 
@@ -101,13 +105,9 @@ def game_timediff(game: Game, hours=0, minutes=0) -> bool:
     return now - timeslot > delta
 
 
-def get_game(update, game_id) -> Game:
+def get_game(chat_id, game_id) -> Game:
     """Returns Game model for current chat"""
-    return (
-        session.query(Game)
-        .filter_by(chat_id=update.effective_chat.id, id=game_id)
-        .first()
-    )
+    return session.query(Game).filter_by(chat_id=chat_id, id=game_id).first()
 
 
 def get_all_games(update, ts_only=False) -> list:
