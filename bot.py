@@ -34,10 +34,11 @@ def send_game_notification(context, chat_id, game_id, message, due=0):
     """Send a separate message"""
 
     def send_msg(context):
-        if get_game(chat_id, game_id):
+        game = get_game(chat_id, game_id)
+        if game:
             context.bot.send_message(
                 context.job.context,
-                text=message,
+                text=message.replace("ACTIVE_PLAYERS", game.players_call_active),
                 parse_mode=ParseMode.MARKDOWN,
             )
 
@@ -132,14 +133,12 @@ def new_game(update, context):
     game = create_game(update.effective_chat, timeslot)
     game.add_player(player, joined_at=dt.now(pytz.utc))
     time_header = slot_time_header(game)
-    for minutes in [5, 15]:
+    for minutes in range(50):
         send_game_notification(
             context=context,
             chat_id=update.effective_chat.id,
             game_id=game.id,
-            # TODO
-            # message=f"*{time_header}*: {game.players_call_active} game starts in {minutes} mins!",
-            message=f"*{time_header}*: game starts in {minutes} mins!",
+            message=f"*{time_header}*: ACTIVE_PLAYERS game starts in {minutes} mins!",
             due=game.timeslot_utc - timedelta(minutes=minutes),
         )
     return refresh_main_page(update, context, query)
@@ -179,7 +178,7 @@ def call(update, context):
         context=context,
         chat_id=update.effective_chat.id,
         game_id=game.id,
-        message=f"*{time_header}*: {game.players_call_active} go go!",
+        message=f"*{time_header}*: ACTIVE_PLAYERS go go!",
     )
     return ConversationHandler.END
 
