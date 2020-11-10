@@ -133,7 +133,7 @@ def new_game(update, context):
     game = create_game(update.effective_chat, timeslot)
     game.add_player(player, joined_at=dt.now(pytz.utc))
     time_header = slot_time_header(game)
-    for minutes in range(50):
+    for minutes in [5, 15]:
         send_game_notification(
             context=context,
             chat_id=update.effective_chat.id,
