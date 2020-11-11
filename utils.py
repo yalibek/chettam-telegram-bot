@@ -12,6 +12,7 @@ from vars import (
     CSGO_NICKNAMES,
     USER_TIMEZONES,
     DAYS_OFF,
+    DEBUG,
 )
 
 
@@ -183,10 +184,14 @@ def slot_status_all(games) -> str:
 
 def is_dayoff() -> bool:
     """Checks if today is cs:go dayoff"""
-    now = dt.now(pytz.utc)
-    is_not_night = now.hour >= 3
-    is_off = now.strftime("%A") in DAYS_OFF
-    return is_not_night and is_off
+    if DEBUG:
+        # it's never a day off in dev mode
+        return False
+    else:
+        now = dt.now(pytz.utc)
+        is_not_night = now.hour >= 3
+        is_off = now.strftime("%A") in DAYS_OFF
+        return is_not_night and is_off
 
 
 def logger() -> logging.Logger:

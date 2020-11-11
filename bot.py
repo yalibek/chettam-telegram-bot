@@ -38,7 +38,7 @@ def send_game_notification(context, chat_id, game_id, message, due=0):
         if game:
             context.bot.send_message(
                 context.job.context,
-                text=message.replace("ACTIVE_PLAYERS", game.players_call_active),
+                text=f"*{slot_time_header(game)}*: {game.players_call_active} {message}",
                 parse_mode=ParseMode.MARKDOWN,
             )
 
@@ -132,13 +132,12 @@ def new_game(update, context):
     timeslot = convert_to_dt(query.data)
     game = create_game(update.effective_chat, timeslot)
     game.add_player(player, joined_at=dt.now(pytz.utc))
-    time_header = slot_time_header(game)
     for minutes in [5, 15]:
         send_game_notification(
             context=context,
             chat_id=update.effective_chat.id,
             game_id=game.id,
-            message=f"*{time_header}*: ACTIVE_PLAYERS game starts in {minutes} mins!",
+            message=f"game starts in {minutes} mins!",
             due=game.timeslot_utc - timedelta(minutes=minutes),
         )
     return refresh_main_page(update, context, query)
@@ -173,12 +172,11 @@ def call(update, context):
     game = get_game(update.effective_chat.id, game_id)
     query.answer()
     query.edit_message_text(text=slot_status(game), parse_mode=ParseMode.MARKDOWN)
-    time_header = slot_time_header(game)
     send_game_notification(
         context=context,
         chat_id=update.effective_chat.id,
         game_id=game.id,
-        message=f"*{time_header}*: ACTIVE_PLAYERS go go!",
+        message="go go!",
     )
     return ConversationHandler.END
 
