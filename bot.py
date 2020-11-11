@@ -30,19 +30,19 @@ from vars import *
 
 
 # Functions
-def send_game_notification(context, chat_id, game_id, message, due=0):
+def send_game_notification(context, chat_id, game_id, message, when=0):
     """Send a separate message"""
 
-    def send_msg(context):
+    def send_msg(ctx):
         game = get_game(chat_id, game_id)
         if game:
-            context.bot.send_message(
-                context.job.context,
+            ctx.bot.send_message(
+                chat_id=chat_id,
                 text=f"*{slot_time_header(game)}*: {game.players_call_active} {message}",
                 parse_mode=ParseMode.MARKDOWN,
             )
 
-    context.job_queue.run_once(send_msg, due, context=chat_id)
+    context.job_queue.run_once(send_msg, when)
 
 
 def restricted(func):
@@ -138,7 +138,7 @@ def new_game(update, context):
             chat_id=update.effective_chat.id,
             game_id=game.id,
             message=f"game starts in {minutes} mins!",
-            due=game.timeslot_utc - timedelta(minutes=minutes),
+            when=game.timeslot_utc - timedelta(minutes=minutes),
         )
     return refresh_main_page(update, context, query)
 
