@@ -50,7 +50,10 @@ def restricted(func):
 
     def wrapped(update, context, *args, **kwargs):
         if DEBUG or update.effective_chat.id in ALLOWED_CHATS:
-            return func(update, context, *args, **kwargs)
+            if is_dayoff():
+                return dayoff(update, context)
+            else:
+                return func(update, context, *args, **kwargs)
         else:
             update.message.reply_text("You're not authorized to use this bot.")
 
@@ -78,7 +81,6 @@ def gogo(update, context):
     update.message.reply_text(f"{invite} {pistol}", reply_to_message_id=None)
 
 
-@restricted
 def dayoff(update, context):
     """Dayoff messages"""
     try:
@@ -295,32 +297,29 @@ def main():
     dp.add_error_handler(error)
 
     # Handlers
-    if is_dayoff():
-        dp.add_handler(CommandHandler(COMMANDS_NAMES_ONLY, dayoff))
-    else:
-        dp.add_handler(CommandHandler("status", status))
-        dp.add_handler(CommandHandler("gogo", gogo))
+    dp.add_handler(CommandHandler("status", status))
+    dp.add_handler(CommandHandler("gogo", gogo))
 
-        main_conversation = ConversationHandler(
-            entry_points=[CommandHandler("chettam", chettam)],
-            fallbacks=[CommandHandler("chettam", chettam)],
-            states={
-                MAIN_STATE: [
-                    CallbackQueryHandler(join, pattern="^join_[0-9]+$"),
-                    CallbackQueryHandler(leave, pattern="^leave_[0-9]+$"),
-                    CallbackQueryHandler(
-                        call,
-                        pattern="^call_[0-9]+$",
-                    ),
-                    CallbackQueryHandler(pick_hour, pattern="^pick_hour$"),
-                    CallbackQueryHandler(new_game, pattern=HOUR_MINUTE_PATTERN),
-                    CallbackQueryHandler(back, pattern="^back_to_main$"),
-                    CallbackQueryHandler(status_conv, pattern="^status_conv$"),
-                ],
-            },
-        )
+    main_conversation = ConversationHandler(
+        entry_points=[CommandHandler("chettam", chettam)],
+        fallbacks=[CommandHandler("chettam", chettam)],
+        states={
+            MAIN_STATE: [
+                CallbackQueryHandler(join, pattern="^join_[0-9]+$"),
+                CallbackQueryHandler(leave, pattern="^leave_[0-9]+$"),
+                CallbackQueryHandler(
+                    call,
+                    pattern="^call_[0-9]+$",
+                ),
+                CallbackQueryHandler(pick_hour, pattern="^pick_hour$"),
+                CallbackQueryHandler(new_game, pattern=HOUR_MINUTE_PATTERN),
+                CallbackQueryHandler(back, pattern="^back_to_main$"),
+                CallbackQueryHandler(status_conv, pattern="^status_conv$"),
+            ],
+        },
+    )
 
-        dp.add_handler(main_conversation)
+    dp.add_handler(main_conversation)
 
     # Start
     if DEBUG:
