@@ -56,7 +56,7 @@ class Association(Base, Generic):
 
     @property
     def is_new(self):
-        if dt.utcnow() - self.joined_at < timedelta(minutes=5):
+        if dt.utcnow() - self.joined_at < timedelta(minutes=2):
             return EMOJI["fire"]
         else:
             return ""
@@ -107,10 +107,7 @@ class Game(Base, Generic):
     def remove_player(self, player):
         self.players.remove(player)
         self.save()
-        if not self.players:
-            self.delete()
-        else:
-            self.tag_everyone()
+        self.tag_everyone()
 
     def tag_everyone(self):
         """Tag all players with queue tags"""

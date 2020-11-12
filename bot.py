@@ -45,11 +45,11 @@ def restricted(func):
     return wrapped
 
 
-def send_game_notification(context, chat_id, game_id, message, when=0):
+def schedule_game_notification(context, chat_id, game_id, message, when):
     """Send a separate message"""
 
     def send_msg(ctx):
-        game = get_game(chat_id, game_id)
+        game = get_game(chat_id, game_id=game_id)
         if game:
             ctx.bot.send_message(
                 chat_id=chat_id,
@@ -57,7 +57,7 @@ def send_game_notification(context, chat_id, game_id, message, when=0):
                 parse_mode=ParseMode.MARKDOWN,
             )
 
-    context.job_queue.run_once(send_msg, when)
+    context.job_queue.run_once(send_msg, when=when, name=f"{game_id}_{when}")
 
 
 def dayoff(update, context):
@@ -154,7 +154,7 @@ def join(update, context):
     query = update.callback_query
     player = context.bot_data["player"]
     game_id = re.search("[0-9]+", query.data).group(0)
-    game = get_game(update.effective_chat.id, game_id)
+    game = get_game(update.effective_chat.id, game_id=game_id)
     game.add_player(player, joined_at=dt.now(pytz.utc))
     return refresh_main_page(update, context, query)
 
@@ -164,8 +164,8 @@ def leave(update, context):
     query = update.callback_query
     player = context.bot_data["player"]
     game_id = re.search("[0-9]+", query.data).group(0)
-    game = get_game(update.effective_chat.id, game_id)
-    game.remove_player(player)
+    game = get_game(update.effective_chat.id, game_id=game_id)
+    remove_player_and_clean_game(update, context, game, player)
     return refresh_main_page(update, context, query)
 
 
@@ -173,14 +173,15 @@ def call(update, context):
     """Mention all players about current game"""
     query = update.callback_query
     game_id = re.search("[0-9]+", query.data).group(0)
-    game = get_game(update.effective_chat.id, game_id)
+    game = get_game(update.effective_chat.id, game_id=game_id)
     query.answer()
     query.edit_message_text(text=slot_status(game), parse_mode=ParseMode.MARKDOWN)
-    send_game_notification(
+    schedule_game_notification(
         context=context,
         chat_id=update.effective_chat.id,
         game_id=game.id,
         message="go go!",
+        when=0,
     )
     return ConversationHandler.END
 
@@ -291,7 +292,7 @@ def in_out(update, context, action):
         for argv in context.args:
             if argv.isdigit() and int(argv) in MAIN_HOURS:
                 timeslot = convert_to_dt(f"{int(argv):02d}:00")
-                game = get_game_by_ts(update.effective_chat.id, timeslot)
+                game = get_game(update.effective_chat.id, timeslot=timeslot)
                 player = get_player(update)
 
                 if action == "in":
@@ -302,22 +303,33 @@ def in_out(update, context, action):
 
                 elif action == "out":
                     if game and player in game.players:
-                        game.remove_player(player)
+                        remove_player_and_clean_game(update, context, game, player)
 
         status(update, context)
 
 
 def create_game_and_add_player(update, context, player, timeslot):
+    """Self-explanatory"""
     game = create_game(update.effective_chat, timeslot)
     game.add_player(player, joined_at=dt.now(pytz.utc))
     for minutes in [5, 15]:
-        send_game_notification(
+        schedule_game_notification(
             context=context,
             chat_id=update.effective_chat.id,
             game_id=game.id,
             message=f"game starts in {minutes} mins!",
             when=game.timeslot_utc - timedelta(minutes=minutes),
         )
+
+
+def remove_player_and_clean_game(update, context, game, player):
+    """Remove player and, if no players left, delete the game with the jobs"""
+    game.remove_player(player)
+    if not game.players:
+        game.delete()
+        for job in context.job_queue.jobs():
+            if job.name.startswith(f"{game.id}_"):
+                job.schedule_removal()
 
 
 def main():
