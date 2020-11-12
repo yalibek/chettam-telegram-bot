@@ -30,21 +30,6 @@ from vars import *
 
 
 # Functions
-def send_game_notification(context, chat_id, game_id, message, when=0):
-    """Send a separate message"""
-
-    def send_msg(ctx):
-        game = get_game(chat_id, game_id)
-        if game:
-            ctx.bot.send_message(
-                chat_id=chat_id,
-                text=f"*{slot_time_header(game)}*: {game.players_call_active} {message}",
-                parse_mode=ParseMode.MARKDOWN,
-            )
-
-    context.job_queue.run_once(send_msg, when)
-
-
 def restricted(func):
     """Restrict prod bot usage to allowed chats only"""
 
@@ -60,9 +45,37 @@ def restricted(func):
     return wrapped
 
 
+def send_game_notification(context, chat_id, game_id, message, when=0):
+    """Send a separate message"""
+
+    def send_msg(ctx):
+        game = get_game(chat_id, game_id)
+        if game:
+            ctx.bot.send_message(
+                chat_id=chat_id,
+                text=f"*{slot_time_header(game)}*: {game.players_call_active} {message}",
+                parse_mode=ParseMode.MARKDOWN,
+            )
+
+    context.job_queue.run_once(send_msg, when)
+
+
+def dayoff(update, context):
+    """Dayoff messages"""
+    try:
+        reply = get_quote()
+    except:
+        reply = "It's dayoff, fool!"
+        update.message.reply_sticker(
+            STICKERS["hahaclassic"],
+            reply_to_message_id=None,
+        )
+    update.message.reply_markdown(reply, reply_to_message_id=None)
+
+
 def error(update, context):
     """Log Errors caused by Updates."""
-    logger().error(f"\n\tupdate: {update}\n\terror: {context.error}\n")
+    logger().error(f"\nupdate: {update}\nerror: {context.error}\n")
 
 
 # Command actions
@@ -81,30 +94,31 @@ def gogo(update, context):
     update.message.reply_text(f"{invite} {pistol}", reply_to_message_id=None)
 
 
-def dayoff(update, context):
-    """Dayoff messages"""
-    try:
-        reply = get_quote()
-    except:
-        reply = "It's dayoff, fool!"
-        update.message.reply_sticker(
-            STICKERS["hahaclassic"],
-            reply_to_message_id=None,
-        )
-    update.message.reply_markdown(reply, reply_to_message_id=None)
-
-
 # Conversation actions
 @restricted
 def chettam(update, context):
     """Entry point for conversation"""
-    context.bot_data["player"] = get_player(update)
-    reply, keyboard = get_chettam_data(update, context)
-    update.message.reply_markdown(
-        reply,
-        reply_markup=InlineKeyboardMarkup(keyboard),
-    )
-    return MAIN_STATE
+    if (
+        context.args
+        and context.args[0].isdigit()
+        and int(context.args[0]) in MAIN_HOURS
+    ):
+        timeslot = convert_to_dt(f"{int(context.args[0]):02d}:00")
+        game = get_game_by_ts(update.effective_chat.id, timeslot)
+        player = get_player(update)
+        if not game:
+            create_new_game_and_add_player(update, context, player, timeslot)
+        elif player not in game.players:
+            game.add_player(player, joined_at=dt.now(pytz.utc))
+        status(update, context)
+    else:
+        context.bot_data["player"] = get_player(update)
+        reply, keyboard = get_chettam_data(update, context)
+        update.message.reply_markdown(
+            reply,
+            reply_markup=InlineKeyboardMarkup(keyboard),
+        )
+        return MAIN_STATE
 
 
 def pick_hour(update, context):
@@ -132,16 +146,7 @@ def new_game(update, context):
     query = update.callback_query
     player = context.bot_data["player"]
     timeslot = convert_to_dt(query.data)
-    game = create_game(update.effective_chat, timeslot)
-    game.add_player(player, joined_at=dt.now(pytz.utc))
-    for minutes in [5, 15]:
-        send_game_notification(
-            context=context,
-            chat_id=update.effective_chat.id,
-            game_id=game.id,
-            message=f"game starts in {minutes} mins!",
-            when=game.timeslot_utc - timedelta(minutes=minutes),
-        )
+    create_new_game_and_add_player(update, context, player, timeslot)
     return refresh_main_page(update, context, query)
 
 
@@ -267,8 +272,7 @@ def refresh_main_page(update, context, query):
 
 def hours_keyboard(update):
     """Returns keyboard with timeslots for new game"""
-    main_hours = [18, 19, 20, 21, 22, 23, 0, 1]
-    main_hours_dt = [convert_to_dt(f"{hour:02d}:00") for hour in main_hours]
+    main_hours_dt = [convert_to_dt(f"{hour:02d}:00") for hour in MAIN_HOURS]
     ts_games = get_all_games(update, ts_only=True)
     ts_filtered = [
         timeslot.astimezone(TIMEZONE_CET).strftime("%H:%M")
@@ -283,6 +287,19 @@ def hours_keyboard(update):
         for timeslot_time in ts_filtered
     ]
     return row_list_chunks(keyboard)
+
+
+def create_new_game_and_add_player(update, context, player, timeslot):
+    game = create_game(update.effective_chat, timeslot)
+    game.add_player(player, joined_at=dt.now(pytz.utc))
+    for minutes in [5, 15]:
+        send_game_notification(
+            context=context,
+            chat_id=update.effective_chat.id,
+            game_id=game.id,
+            message=f"game starts in {minutes} mins!",
+            when=game.timeslot_utc - timedelta(minutes=minutes),
+        )
 
 
 def main():
