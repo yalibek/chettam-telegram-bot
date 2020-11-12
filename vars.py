@@ -153,6 +153,8 @@ DAYS_OFF = ["Wednesday", "Sunday"]
 # Commands
 COMMANDS = [
     ("chettam", "create new game or join existing one"),
+    ("in", "join with argumnets"),
+    ("out", "leave with argumnets"),
     ("status", "show current status"),
     ("gogo", "say random invite"),
 ]

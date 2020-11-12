@@ -107,7 +107,10 @@ class Game(Base, Generic):
     def remove_player(self, player):
         self.players.remove(player)
         self.save()
-        self.tag_everyone()
+        if not self.players:
+            self.delete()
+        else:
+            self.tag_everyone()
 
     def tag_everyone(self):
         """Tag all players with queue tags"""

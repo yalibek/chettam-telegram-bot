@@ -94,23 +94,24 @@ def gogo(update, context):
     update.message.reply_text(f"{invite} {pistol}", reply_to_message_id=None)
 
 
+@restricted
+def slot_in(update, context):
+    in_out(update, context, action="in")
+
+
+@restricted
+def slot_out(update, context):
+    in_out(update, context, action="out")
+
+
 # Conversation actions
 @restricted
 def chettam(update, context):
     """Entry point for conversation"""
-    context.bot_data["player"] = get_player(update)
     if context.args:
-        for argv in context.args:
-            if argv.isdigit() and int(argv) in MAIN_HOURS:
-                timeslot = convert_to_dt(f"{int(argv):02d}:00")
-                game = get_game_by_ts(update.effective_chat.id, timeslot)
-                player = context.bot_data["player"]
-                if not game:
-                    create_new_game_and_add_player(update, context, player, timeslot)
-                elif player not in game.players:
-                    game.add_player(player, joined_at=dt.now(pytz.utc))
-        status(update, context)
+        slot_in(update, context)
     else:
+        context.bot_data["player"] = get_player(update)
         reply, keyboard = get_chettam_data(update, context)
         update.message.reply_markdown(
             reply,
@@ -144,7 +145,7 @@ def new_game(update, context):
     query = update.callback_query
     player = context.bot_data["player"]
     timeslot = convert_to_dt(query.data)
-    create_new_game_and_add_player(update, context, player, timeslot)
+    create_game_and_add_player(update, context, player, timeslot)
     return refresh_main_page(update, context, query)
 
 
@@ -165,8 +166,6 @@ def leave(update, context):
     game_id = re.search("[0-9]+", query.data).group(0)
     game = get_game(update.effective_chat.id, game_id)
     game.remove_player(player)
-    if not game.players:
-        game.delete()
     return refresh_main_page(update, context, query)
 
 
@@ -287,7 +286,28 @@ def hours_keyboard(update):
     return row_list_chunks(keyboard)
 
 
-def create_new_game_and_add_player(update, context, player, timeslot):
+def in_out(update, context, action):
+    if context.args:
+        for argv in context.args:
+            if argv.isdigit() and int(argv) in MAIN_HOURS:
+                timeslot = convert_to_dt(f"{int(argv):02d}:00")
+                game = get_game_by_ts(update.effective_chat.id, timeslot)
+                player = get_player(update)
+
+                if action == "in":
+                    if not game:
+                        create_game_and_add_player(update, context, player, timeslot)
+                    elif player not in game.players:
+                        game.add_player(player, joined_at=dt.now(pytz.utc))
+
+                elif action == "out":
+                    if game and player in game.players:
+                        game.remove_player(player)
+
+        status(update, context)
+
+
+def create_game_and_add_player(update, context, player, timeslot):
     game = create_game(update.effective_chat, timeslot)
     game.add_player(player, joined_at=dt.now(pytz.utc))
     for minutes in [5, 15]:
@@ -314,6 +334,8 @@ def main():
     # Handlers
     dp.add_handler(CommandHandler("status", status))
     dp.add_handler(CommandHandler("gogo", gogo))
+    dp.add_handler(CommandHandler(chop("in"), slot_in))
+    dp.add_handler(CommandHandler(chop("out"), slot_out))
 
     main_conversation = ConversationHandler(
         entry_points=[CommandHandler(chop("chettam"), chettam)],
