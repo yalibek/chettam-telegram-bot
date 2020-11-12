@@ -185,13 +185,14 @@ def slot_status_all(games) -> str:
 def is_dayoff() -> bool:
     """Checks if today is cs:go dayoff"""
     if DEBUG:
-        # it's never a day off in dev mode
+        # It's never a day off in dev mode
         return False
     else:
+        # Day off starts at 4am UTC
         now = dt.now(pytz.utc)
-        is_not_night = now.hour >= 3
         is_off = now.strftime("%A") in DAYS_OFF
-        return is_not_night and is_off
+        is_daytime = now.hour >= 4
+        return is_off and is_daytime
 
 
 def logger() -> logging.Logger:
