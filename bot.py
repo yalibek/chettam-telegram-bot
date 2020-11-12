@@ -316,8 +316,8 @@ def main():
     dp.add_handler(CommandHandler("gogo", gogo))
 
     main_conversation = ConversationHandler(
-        entry_points=[CommandHandler("chettam", chettam)],
-        fallbacks=[CommandHandler("chettam", chettam)],
+        entry_points=[CommandHandler(chop("chettam"), chettam)],
+        fallbacks=[CommandHandler(chop("chettam"), chettam)],
         states={
             MAIN_STATE: [
                 CallbackQueryHandler(join, pattern="^join_[0-9]+$"),

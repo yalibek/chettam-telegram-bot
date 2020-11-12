@@ -220,3 +220,12 @@ def get_quote() -> str:
     if not author:
         author = "Unknown"
     return f"_{quote}_\n\n— {author}"
+
+
+def chop(word):
+    """
+    Chops the word by letters
+    example:
+        "chettam" =>> ["c", "ch", "che", "chet", "chett", "chetta", "chettam"]
+    """
+    return [word[0 : idx + 1] for idx, i in enumerate(word)]
