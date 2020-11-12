@@ -98,21 +98,19 @@ def gogo(update, context):
 @restricted
 def chettam(update, context):
     """Entry point for conversation"""
-    if (
-        context.args
-        and context.args[0].isdigit()
-        and int(context.args[0]) in MAIN_HOURS
-    ):
-        timeslot = convert_to_dt(f"{int(context.args[0]):02d}:00")
-        game = get_game_by_ts(update.effective_chat.id, timeslot)
-        player = get_player(update)
-        if not game:
-            create_new_game_and_add_player(update, context, player, timeslot)
-        elif player not in game.players:
-            game.add_player(player, joined_at=dt.now(pytz.utc))
+    context.bot_data["player"] = get_player(update)
+    if context.args:
+        for argv in context.args:
+            if argv.isdigit() and int(argv) in MAIN_HOURS:
+                timeslot = convert_to_dt(f"{int(argv):02d}:00")
+                game = get_game_by_ts(update.effective_chat.id, timeslot)
+                player = context.bot_data["player"]
+                if not game:
+                    create_new_game_and_add_player(update, context, player, timeslot)
+                elif player not in game.players:
+                    game.add_player(player, joined_at=dt.now(pytz.utc))
         status(update, context)
     else:
-        context.bot_data["player"] = get_player(update)
         reply, keyboard = get_chettam_data(update, context)
         update.message.reply_markdown(
             reply,
