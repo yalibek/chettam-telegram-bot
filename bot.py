@@ -72,14 +72,6 @@ def status(update, context):
 
 
 @restricted
-def gogo(update, context):
-    """Reply with random quote from invite list just for fun"""
-    pistol = EMOJI["pistol"]
-    invite = random.choice(INVITE)
-    update.message.reply_text(f"{invite} {pistol}", reply_to_message_id=None)
-
-
-@restricted
 def slot_in(update, context):
     in_out(update, context, action="in")
 
@@ -343,7 +335,6 @@ def main():
 
     # Handlers
     dp.add_handler(CommandHandler("status", status))
-    dp.add_handler(CommandHandler("gogo", gogo))
     dp.add_handler(CommandHandler(chop("in"), slot_in))
     dp.add_handler(CommandHandler(chop("out"), slot_out))
     dp.add_handler(
