@@ -45,21 +45,6 @@ def restricted(func):
     return wrapped
 
 
-def schedule_game_notification(context, chat_id, game_id, message, when):
-    """Send a separate message"""
-
-    def send_msg(ctx):
-        game = get_game(chat_id, game_id=game_id)
-        if game:
-            ctx.bot.send_message(
-                chat_id=chat_id,
-                text=f"*{slot_time_header(game)}*: {game.players_call_active} {message}",
-                parse_mode=ParseMode.MARKDOWN,
-            )
-
-    context.job_queue.run_once(send_msg, when=when, name=f"{game_id}_{when}")
-
-
 def dayoff(update, context):
     """Dayoff messages"""
     try:
@@ -178,8 +163,8 @@ def call(update, context):
     query.edit_message_text(text=slot_status(game), parse_mode=ParseMode.MARKDOWN)
     schedule_game_notification(
         context=context,
-        chat_id=update.effective_chat.id,
-        game_id=game.id,
+        update=update,
+        game=game,
         message="go go!",
         when=0,
     )
@@ -308,6 +293,19 @@ def in_out(update, context, action):
         status(update, context)
 
 
+def schedule_game_notification(context, update, game, message, when):
+    """Send a separate message"""
+
+    def send_msg(ctx):
+        ctx.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f"*{slot_time_header(game)}*: {game.players_call_active} {message}",
+            parse_mode=ParseMode.MARKDOWN,
+        )
+
+    context.job_queue.run_once(send_msg, when=when, name=f"{game.id}_{when}")
+
+
 def create_game_and_add_player(update, context, player, timeslot):
     """Self-explanatory"""
     game = create_game(update.effective_chat, timeslot)
@@ -315,8 +313,8 @@ def create_game_and_add_player(update, context, player, timeslot):
     for minutes in [5, 15]:
         schedule_game_notification(
             context=context,
-            chat_id=update.effective_chat.id,
-            game_id=game.id,
+            update=update,
+            game=game,
             message=f"game starts in {minutes} mins!",
             when=game.timeslot_utc - timedelta(minutes=minutes),
         )
@@ -348,27 +346,26 @@ def main():
     dp.add_handler(CommandHandler("gogo", gogo))
     dp.add_handler(CommandHandler(chop("in"), slot_in))
     dp.add_handler(CommandHandler(chop("out"), slot_out))
-
-    main_conversation = ConversationHandler(
-        entry_points=[CommandHandler(chop("chettam"), chettam)],
-        fallbacks=[CommandHandler(chop("chettam"), chettam)],
-        states={
-            MAIN_STATE: [
-                CallbackQueryHandler(join, pattern="^join_[0-9]+$"),
-                CallbackQueryHandler(leave, pattern="^leave_[0-9]+$"),
-                CallbackQueryHandler(
-                    call,
-                    pattern="^call_[0-9]+$",
-                ),
-                CallbackQueryHandler(pick_hour, pattern="^pick_hour$"),
-                CallbackQueryHandler(new_game, pattern=HOUR_MINUTE_PATTERN),
-                CallbackQueryHandler(back, pattern="^back_to_main$"),
-                CallbackQueryHandler(status_conv, pattern="^status_conv$"),
-            ],
-        },
+    dp.add_handler(
+        ConversationHandler(
+            entry_points=[CommandHandler(chop("chettam"), chettam)],
+            fallbacks=[CommandHandler(chop("chettam"), chettam)],
+            states={
+                MAIN_STATE: [
+                    CallbackQueryHandler(join, pattern="^join_[0-9]+$"),
+                    CallbackQueryHandler(leave, pattern="^leave_[0-9]+$"),
+                    CallbackQueryHandler(
+                        call,
+                        pattern="^call_[0-9]+$",
+                    ),
+                    CallbackQueryHandler(pick_hour, pattern="^pick_hour$"),
+                    CallbackQueryHandler(new_game, pattern=HOUR_MINUTE_PATTERN),
+                    CallbackQueryHandler(back, pattern="^back_to_main$"),
+                    CallbackQueryHandler(status_conv, pattern="^status_conv$"),
+                ],
+            },
+        )
     )
-
-    dp.add_handler(main_conversation)
 
     # Start
     if DEBUG:
