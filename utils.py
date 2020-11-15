@@ -1,4 +1,6 @@
+import json
 import logging
+import random
 from datetime import datetime as dt, timedelta
 
 import pytz
@@ -13,6 +15,7 @@ from vars import (
     USER_TIMEZONES,
     DAYS_OFF,
     DEBUG,
+    LEETCODE_LEVELS,
 )
 
 
@@ -227,3 +230,22 @@ def chop(word):
         "chettam" =>> ["c", "ch", "che", "chet", "chett", "chetta", "chettam"]
     """
     return [word[0 : idx + 1] for idx, i in enumerate(word)]
+
+
+def get_leetcode_problem() -> str:
+    response = requests.get(
+        url="https://leetcode.com/api/problems/all/",
+        headers={"User-Agent": "Python", "Connection": "keep-alive"},
+        timeout=10,
+    )
+    data = json.loads(response.content.decode("utf-8"))
+    all_problems = [
+        problem
+        for problem in data["stat_status_pairs"]
+        if not problem["paid_only"] and not problem["stat"]["question__hide"]
+    ]
+    random_problem = random.choice(all_problems)
+    title_url = random_problem["stat"]["question__title_slug"]
+    level = LEETCODE_LEVELS[random_problem["difficulty"]["level"]]
+    url = f"https://leetcode.com/problems/{title_url}"
+    return f"It's day off, my friend.\nTry to solve this *{level}* problem instead:\n\n{url}"

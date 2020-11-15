@@ -49,7 +49,7 @@ def restricted(func):
 def dayoff(update, context):
     """Dayoff messages"""
     try:
-        reply = get_quote()
+        reply = get_leetcode_problem()
     except:
         reply = "It's dayoff, fool!"
         update.message.reply_sticker(

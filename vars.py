@@ -66,6 +66,13 @@ CSGO_NICKNAMES = {
     "anchik12345": "monster",
 }
 
+LEETCODE_LEVELS = {
+    1: "easy",
+    2: "medium",
+    3: "hard",
+}
+
+
 DAYS_OFF = ["Wednesday", "Sunday"]
 
 # Commands
