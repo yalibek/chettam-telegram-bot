@@ -227,3 +227,7 @@ def chop(word):
         "chettam" =>> ["c", "ch", "che", "chet", "chett", "chetta", "chettam"]
     """
     return [word[0 : idx + 1] for idx, i in enumerate(word)]
+
+
+def tag_brackets(word):
+    return f"\[_{word}_] "
