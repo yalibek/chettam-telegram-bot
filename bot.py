@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python3.9
 # -*- coding: utf-8 -*-
 
 """
@@ -15,6 +15,7 @@ In development run bot.py with --debug flag
 """
 
 import re
+import time
 
 import sentry_sdk
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
@@ -142,7 +143,7 @@ def leave(update, context):
     player = context.bot_data["player"]
     game_id = re.search("[0-9]+", query.data).group(0)
     game = get_game(update.effective_chat.id, game_id=game_id)
-    remove_player_and_clean_game(update, context, game, player)
+    remove_player_and_clean_game(context, game, player)
     return refresh_main_page(update, context, query)
 
 
@@ -158,8 +159,8 @@ def call(update, context):
         update=update,
         game=game,
         message="go go!",
-        when=0,
     )
+    remove_game_jobs(context, game, delay=0.1)
     return ConversationHandler.END
 
 
@@ -280,18 +281,22 @@ def in_out(update, context, action):
 
                 elif action == "out":
                     if game and player in game.players:
-                        remove_player_and_clean_game(update, context, game, player)
+                        remove_player_and_clean_game(context, game, player)
 
         status(update, context)
 
 
-def schedule_game_notification(context, update, game, message, when):
+def schedule_game_notification(context, update, game, message, when=0, auto=False):
     """Send a separate message"""
 
     def send_msg(ctx):
+        if auto:
+            prefix = "auto"
+        else:
+            prefix = ctx.bot_data["player"]
         ctx.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=f"*{slot_time_header(game)}*: {game.players_call_active} {message}",
+            text=f"\[_{prefix}_] *{slot_time_header(game)}*: {game.players_call_active} {message}",
             parse_mode=ParseMode.MARKDOWN,
         )
 
@@ -302,24 +307,31 @@ def create_game_and_add_player(update, context, player, timeslot):
     """Self-explanatory"""
     game = create_game(update.effective_chat, timeslot)
     game.add_player(player, joined_at=dt.now(pytz.utc))
-    for minutes in [5, 15]:
+    for minutes in [5]:
         schedule_game_notification(
             context=context,
             update=update,
             game=game,
             message=f"game starts in {minutes} mins!",
             when=game.timeslot_utc - timedelta(minutes=minutes),
+            auto=True,
         )
 
 
-def remove_player_and_clean_game(update, context, game, player):
+def remove_player_and_clean_game(context, game, player):
     """Remove player and, if no players left, delete the game with the jobs"""
     game.remove_player(player)
     if not game.players:
         game.delete()
-        for job in context.job_queue.jobs():
-            if job.name.startswith(f"{game.id}_"):
-                job.schedule_removal()
+        remove_game_jobs(context, game)
+
+
+def remove_game_jobs(context, game, delay=0):
+    """Remove all jobs for given game"""
+    time.sleep(delay)
+    for job in context.job_queue.jobs():
+        if job.name.startswith(f"{game.id}_"):
+            job.schedule_removal()
 
 
 def main():
