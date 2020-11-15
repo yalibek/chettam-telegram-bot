@@ -14,7 +14,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, backref
 from telegram.utils.helpers import escape_markdown
 
-from utils import tag_brackets
 from vars import DB_URL, TIMEZONE_UTC, EMOJI
 
 # Connect to DB
@@ -114,10 +113,10 @@ class Game(Base, Generic):
         """Tag all players with queue tags"""
         if self.slots < 10:
             appendix1 = ""
-            appendix2 = tag_brackets("queue")
+            appendix2 = "\[_queue_] "
         else:
-            appendix1 = tag_brackets("1st")
-            appendix2 = tag_brackets("2nd")
+            appendix1 = "\[_1st_] "
+            appendix2 = "\[_2nd_] "
 
         for index, assoc in enumerate(self.assoc_sorted):
             if index < 5:
@@ -125,7 +124,7 @@ class Game(Base, Generic):
             elif 5 <= index < 10:
                 tag = appendix2
             else:
-                tag = tag_brackets("queue")
+                tag = "\[_queue_] "
             assoc.queue_tag = tag
             assoc.save()
 
