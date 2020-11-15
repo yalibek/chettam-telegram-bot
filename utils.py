@@ -210,19 +210,6 @@ def logger() -> logging.Logger:
     return logging.getLogger(__name__)
 
 
-def get_quote() -> str:
-    """Get random famous quote"""
-    url = "https://api.forismatic.com/api/1.0/"
-    response = requests.get(
-        url, params={"method": "getQuote", "lang": "en", "format": "json"}
-    )
-    quote = response.json().get("quoteText")
-    author = response.json().get("quoteAuthor")
-    if not author:
-        author = "Unknown"
-    return f"_{quote}_\n\n— {author}"
-
-
 def chop(word):
     """
     Chops the word by letters
@@ -233,6 +220,7 @@ def chop(word):
 
 
 def get_leetcode_problem() -> str:
+    """Returns url to random leetcode problem"""
     response = requests.get(
         url="https://leetcode.com/api/problems/all/",
         headers={"User-Agent": "Python", "Connection": "keep-alive"},
@@ -245,7 +233,7 @@ def get_leetcode_problem() -> str:
         if not problem["paid_only"] and not problem["stat"]["question__hide"]
     ]
     random_problem = random.choice(all_problems)
-    title_url = random_problem["stat"]["question__title_slug"]
-    level = LEETCODE_LEVELS[random_problem["difficulty"]["level"]]
-    url = f"https://leetcode.com/problems/{title_url}"
-    return f"It's day off, my friend.\nTry to solve this *{level}* problem instead:\n\n{url}"
+    difficulty = LEETCODE_LEVELS[random_problem["difficulty"]["level"]]
+    title_slug = random_problem["stat"]["question__title_slug"]
+    url = f"https://leetcode.com/problems/{title_slug}"
+    return f"It's day off, my friend.\nTry to solve this *{difficulty}* problem instead:\n\n{url}"
