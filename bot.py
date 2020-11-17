@@ -292,7 +292,7 @@ def schedule_game_notification(context, update, game, message, when=0, auto=Fals
         if auto:
             prefix = "auto"
         else:
-            prefix = ctx.bot_data["player"]
+            prefix = get_player(update)
         ctx.bot.send_message(
             chat_id=update.effective_chat.id,
             text=f"\[_{prefix}_] *{slot_time_header(game)}*: {game.players_call_active} {message}",
@@ -375,7 +375,7 @@ def main():
         updater.start_polling()
     else:
         # Set Heroku handlers and start the Bot (webhook method)
-        updater.start_webhook(listen="0.0.0.0", port=PORT, url_path=TOKEN)
+        updater.start_webhook(listen=HOST, port=PORT, url_path=TOKEN)
         updater.bot.set_webhook(APP_URL + TOKEN)
 
     # Block until the user presses Ctrl-C or the process receives SIGINT,

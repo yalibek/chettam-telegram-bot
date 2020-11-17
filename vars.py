@@ -97,6 +97,7 @@ HOUR_MINUTE_PATTERN = "^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
 
 # App variables
 APP_URL = os.getenv("APP_URL")
+HOST = "0.0.0.0"
 PORT = int(os.environ.get("PORT", "8443"))
 
 if arg_parse().debug:
