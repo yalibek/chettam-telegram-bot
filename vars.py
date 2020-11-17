@@ -96,7 +96,7 @@ MAIN_STATE, SECONDARY_STATE = range(2)
 HOUR_MINUTE_PATTERN = "^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
 
 # App variables
-HEROKU_APP = "https://chettam-telegram-bot.herokuapp.com/"
+APP_URL = os.getenv("APP_URL")
 PORT = int(os.environ.get("PORT", "8443"))
 
 if arg_parse().debug:

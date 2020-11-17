@@ -376,7 +376,7 @@ def main():
     else:
         # Set Heroku handlers and start the Bot (webhook method)
         updater.start_webhook(listen="0.0.0.0", port=PORT, url_path=TOKEN)
-        updater.bot.set_webhook(HEROKU_APP + TOKEN)
+        updater.bot.set_webhook(APP_URL + TOKEN)
 
     # Block until the user presses Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
