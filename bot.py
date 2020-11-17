@@ -89,7 +89,6 @@ def chettam(update, context):
     if context.args:
         slot_in(update, context)
     else:
-        context.bot_data["player"] = get_player(update)
         reply, keyboard = get_chettam_data(update, context)
         update.message.reply_markdown(
             reply,
@@ -121,7 +120,7 @@ def pick_hour(update, context):
 def new_game(update, context):
     """Create new game"""
     query = update.callback_query
-    player = context.bot_data["player"]
+    player = get_player(update)
     timeslot = convert_to_dt(query.data)
     create_game_and_add_player(update, context, player, timeslot)
     return refresh_main_page(update, context, query)
@@ -130,7 +129,7 @@ def new_game(update, context):
 def join(update, context):
     """Join current game"""
     query = update.callback_query
-    player = context.bot_data["player"]
+    player = get_player(update)
     game_id = re.search("[0-9]+", query.data).group(0)
     game = get_game(update.effective_chat.id, game_id=game_id)
     game.add_player(player, joined_at=dt.now(pytz.utc))
@@ -140,7 +139,7 @@ def join(update, context):
 def leave(update, context):
     """Leave current game"""
     query = update.callback_query
-    player = context.bot_data["player"]
+    player = get_player(update)
     game_id = re.search("[0-9]+", query.data).group(0)
     game = get_game(update.effective_chat.id, game_id=game_id)
     remove_player_and_clean_game(context, game, player)
@@ -183,7 +182,7 @@ def back(update, context):
 def get_chettam_data(update, context):
     """Reply message and keyboard for entry point"""
     games = get_all_games(update)
-    player = context.bot_data["player"]
+    player = get_player(update)
     pistol = EMOJI["pistol"]
     check = EMOJI["check"]
     party = EMOJI["party"]
