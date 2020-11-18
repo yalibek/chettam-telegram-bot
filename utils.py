@@ -201,7 +201,7 @@ def is_dayoff() -> bool:
     """Checks if today is cs:go dayoff"""
     if DEBUG:
         # It's never a day off in dev mode
-        return False
+        return True
     else:
         # Day off starts at 4am UTC
         now = dt.now(pytz.utc)
@@ -245,4 +245,13 @@ def get_leetcode_problem() -> str:
     difficulty = LEETCODE_LEVELS[random_problem["difficulty"]["level"]]
     title_slug = random_problem["stat"]["question__title_slug"]
     url = f"https://leetcode.com/problems/{title_slug}"
-    return f"It's day off, my friend.\nTry to solve this *{difficulty}* problem instead:\n\n{url}"
+    submitted = random_problem["stat"]["total_submitted"]
+    accepted = random_problem["stat"]["total_acs"]
+    acceptance_rate = round(accepted / submitted * 100, 1)
+    if acceptance_rate < 40:
+        reaction = EMOJI["scream"]
+    elif acceptance_rate < 70:
+        reaction = EMOJI["suprise"]
+    else:
+        reaction = EMOJI["thumbsup"]
+    return f"{reaction} Only *{acceptance_rate}%* can solve this *{difficulty}* problem!\n\n{url}"
