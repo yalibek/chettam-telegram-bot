@@ -6,7 +6,7 @@ from datetime import datetime as dt, timedelta
 import pytz
 import requests
 
-from models import Game, Player, session
+from models import Game, Player, session, Association
 from vars import (
     EMOJI,
     TIMEZONE_CET,
@@ -115,6 +115,15 @@ def get_game(chat_id, game_id=None, timeslot=None) -> Game:
         return session.query(Game).filter_by(chat_id=chat_id, id=game_id).first()
     elif timeslot:
         return session.query(Game).filter_by(chat_id=chat_id, timeslot=timeslot).first()
+
+
+def get_assoc(game_id, player_id) -> Association:
+    """Returns Association model for current game/player pair"""
+    return (
+        session.query(Association)
+        .filter_by(game_id=game_id, player_id=player_id)
+        .first()
+    )
 
 
 def get_all_games(update, ts_only=False) -> list:

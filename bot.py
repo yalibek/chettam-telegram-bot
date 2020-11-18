@@ -16,7 +16,9 @@ In development run bot.py with --debug flag
 
 import re
 import time
+from datetime import datetime as dt, timedelta
 
+import pytz
 import sentry_sdk
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 from telegram.ext import (
@@ -26,8 +28,40 @@ from telegram.ext import (
     CallbackQueryHandler,
 )
 
-from utils import *
-from vars import *
+from utils import (
+    is_dayoff,
+    get_leetcode_problem,
+    logger,
+    get_all_games,
+    slot_status_all,
+    get_player,
+    convert_to_dt,
+    get_game,
+    slot_status,
+    utc_to_tz_time,
+    game_timediff,
+    row_list_chunks,
+    slot_time_header,
+    create_game,
+    chop,
+    get_assoc,
+)
+from vars import (
+    DEBUG,
+    ALLOWED_CHATS,
+    STICKERS,
+    MAIN_STATE,
+    EMOJI,
+    MAIN_HOURS,
+    TIMEZONE_CET,
+    TOKEN,
+    COMMANDS,
+    HOUR_MINUTE_PATTERN,
+    HOST,
+    PORT,
+    APP_URL,
+    SENTRY_DSN,
+)
 
 
 # Functions
@@ -213,6 +247,7 @@ def get_chettam_data(update, context):
                     game.slots > 1
                     and game_timediff(game, minutes=-30)
                     and player in game.players
+                    and not get_assoc(game.id, player.id).in_queue
                 ):
                     btn_row.append(
                         InlineKeyboardButton(

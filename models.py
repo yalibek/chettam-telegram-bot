@@ -46,6 +46,7 @@ class Association(Base, Generic):
     game_id = Column(Integer, ForeignKey("game.id"), primary_key=True)
     player_id = Column(Integer, ForeignKey("player.id"), primary_key=True)
     joined_at = Column(DateTime)
+    in_queue = Column(Boolean, default=False)
     queue_tag = Column(String, default="")
     player = relationship(
         "Player", backref=backref("player_game", cascade="all, delete-orphan")
@@ -111,21 +112,23 @@ class Game(Base, Generic):
 
     def tag_everyone(self):
         """Tag all players with queue tags"""
-        if self.slots < 10:
-            appendix1 = ""
-            appendix2 = "\[_queue_] "
-        else:
-            appendix1 = "\[_1st_] "
-            appendix2 = "\[_2nd_] "
-
         for index, assoc in enumerate(self.assoc_sorted):
-            if index < 5:
-                tag = appendix1
-            elif 5 <= index < 10:
-                tag = appendix2
+            tag = ""
+            in_queue = False
+            if self.slots < 10:
+                if index >= 5:
+                    tag = "\[_queue_] "
+                    in_queue = True
             else:
-                tag = "\[_queue_] "
+                if index < 5:
+                    tag = "\[_1st_] "
+                elif 5 <= index < 10:
+                    tag = "\[_2nd_] "
+                else:
+                    tag = "\[_queue_] "
+                    in_queue = True
             assoc.queue_tag = tag
+            assoc.in_queue = in_queue
             assoc.save()
 
     @property
@@ -150,6 +153,15 @@ class Game(Base, Generic):
         return [association.player for association in self.assoc_sorted]
 
     @property
+    def players_sorted_active(self) -> list:
+        """Return sorted list of names"""
+        return [
+            association.player
+            for association in self.assoc_sorted
+            if not association.in_queue
+        ]
+
+    @property
     def players_list(self) -> str:
         """Return unnumbered list of players for 1 party with queue or splitted into 2 parties"""
         return "\n".join(
@@ -160,11 +172,7 @@ class Game(Base, Generic):
     @property
     def players_call_active(self) -> str:
         """Only mention players who are not in queue"""
-        if self.slots < 10:
-            active_players = self.players_sorted[:5]
-        else:
-            active_players = self.players_sorted[:10]
-        return ", ".join(player.mention for player in active_players)
+        return ", ".join(player.mention for player in self.players_sorted_active)
 
 
 # Create tables in DB

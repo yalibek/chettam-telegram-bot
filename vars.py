@@ -106,6 +106,7 @@ if arg_parse().debug:
     TOKEN = os.getenv("TOKEN_DEBUG")
     DB_URL = os.getenv("HEROKU_POSTGRESQL_COPPER_URL")
     SENTRY_DSN = os.getenv("SENTRY_DSN_DEBUG")
+    ALLOWED_CHATS = ""
 else:
     # prod vars
     DEBUG = False
