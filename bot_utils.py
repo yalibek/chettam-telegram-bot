@@ -169,21 +169,23 @@ def in_out(update, context, action):
                 elif action == "out":
                     if player in game.players:
                         remove_player_and_clean_game(context, game, player)
+        else:
+            for argv in args:
+                if argv.isdigit() and int(argv) in MAIN_HOURS:
+                    timeslot = convert_to_dt(f"{int(argv):02d}:00")
+                    game = get_game(update.effective_chat.id, timeslot=timeslot)
 
-        for argv in args:
-            if argv.isdigit() and int(argv) in MAIN_HOURS:
-                timeslot = convert_to_dt(f"{int(argv):02d}:00")
-                game = get_game(update.effective_chat.id, timeslot=timeslot)
+                    if action == "in":
+                        if not game:
+                            create_game_and_add_player(
+                                update, context, player, timeslot
+                            )
+                        elif player not in game.players:
+                            game.add_player(player, joined_at=dt.now(pytz.utc))
 
-                if action == "in":
-                    if not game:
-                        create_game_and_add_player(update, context, player, timeslot)
-                    elif player not in game.players:
-                        game.add_player(player, joined_at=dt.now(pytz.utc))
-
-                elif action == "out":
-                    if game and player in game.players:
-                        remove_player_and_clean_game(context, game, player)
+                    elif action == "out":
+                        if game and player in game.players:
+                            remove_player_and_clean_game(context, game, player)
 
         reply = get_status_reply(update)
     else:
