@@ -163,7 +163,7 @@ def in_out(update, context, action):
             games = get_all_games(update)
             for game in games:
                 if action == "in":
-                    if player not in game.players:
+                    if player not in game.players and not game.expired:
                         game.add_player(player, joined_at=dt.now(pytz.utc))
 
                 elif action == "out":
