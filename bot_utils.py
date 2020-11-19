@@ -156,11 +156,24 @@ def hours_keyboard(update):
 
 def in_out(update, context, action):
     if context.args:
-        for argv in context.args:
+        args = context.args
+        player = get_player(update)
+
+        if len(args) == 1 and args[0].lower() == "all":
+            games = get_all_games(update)
+            for game in games:
+                if action == "in":
+                    if player not in game.players:
+                        game.add_player(player, joined_at=dt.now(pytz.utc))
+
+                elif action == "out":
+                    if player in game.players:
+                        remove_player_and_clean_game(context, game, player)
+
+        for argv in args:
             if argv.isdigit() and int(argv) in MAIN_HOURS:
                 timeslot = convert_to_dt(f"{int(argv):02d}:00")
                 game = get_game(update.effective_chat.id, timeslot=timeslot)
-                player = get_player(update)
 
                 if action == "in":
                     if not game:
@@ -173,9 +186,9 @@ def in_out(update, context, action):
                         remove_player_and_clean_game(context, game, player)
 
         reply = get_status_reply(update)
-        update.message.reply_markdown(reply)
     else:
-        update.message.reply_markdown(USAGE_TEXT)
+        reply = USAGE_TEXT
+    update.message.reply_markdown(reply)
 
 
 def schedule_game_notification(context, update, game, message, when=0, auto=False):
