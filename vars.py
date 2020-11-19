@@ -75,6 +75,20 @@ LEETCODE_LEVELS = {
     3: "hard",
 }
 
+USAGE_TEXT = """\
+```
+usage:
+\t\t/in <hour> [<hours>]
+\t\t/out <hour> [<hours>]
+
+examples:
+\t\t/in 21
+\t\t/i 22 20 0
+\t\t/out 23
+\t\t/ou 23 22
+\t\t/o 20 1
+```
+"""
 
 DAYS_OFF = ["Wednesday", "Sunday"]
 

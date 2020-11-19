@@ -191,17 +191,14 @@ def slot_status(game) -> str:
 
 def slot_status_all(games) -> str:
     """Returns slots data for all games"""
-    if games:
-        return "\n\n".join(slot_status(game) for game in games)
-    else:
-        return "Start a game with /chettam"
+    return "\n\n".join(slot_status(game) for game in games)
 
 
 def is_dayoff() -> bool:
     """Checks if today is cs:go dayoff"""
     if DEBUG:
         # It's never a day off in dev mode
-        return True
+        return False
     else:
         # Day off starts at 4am UTC
         now = dt.now(pytz.utc)

@@ -61,6 +61,7 @@ from vars import (
     PORT,
     APP_URL,
     SENTRY_DSN,
+    USAGE_TEXT,
 )
 
 
@@ -103,7 +104,10 @@ def error(update, context):
 def status(update, context):
     """Get games status for current chat"""
     games = get_all_games(update)
-    update.message.reply_markdown(slot_status_all(games))
+    if not games:
+        chettam(update, context)
+    else:
+        update.message.reply_markdown(slot_status_all(games))
 
 
 @restricted
@@ -202,7 +206,11 @@ def status_conv(update, context):
     query = update.callback_query
     games = get_all_games(update)
     query.answer()
-    query.edit_message_text(text=slot_status_all(games), parse_mode=ParseMode.MARKDOWN)
+    if games:
+        reply = slot_status_all(games)
+    else:
+        reply = "Create new game with /chettam"
+    query.edit_message_text(text=reply, parse_mode=ParseMode.MARKDOWN)
     return ConversationHandler.END
 
 
@@ -318,6 +326,8 @@ def in_out(update, context, action):
                         remove_player_and_clean_game(context, game, player)
 
         status(update, context)
+    else:
+        update.message.reply_markdown(USAGE_TEXT)
 
 
 def schedule_game_notification(context, update, game, message, when=0, auto=False):
