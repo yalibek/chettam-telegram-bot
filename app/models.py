@@ -14,7 +14,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, backref
 from telegram.utils.helpers import escape_markdown
 
-from vars import DB_URL, TIMEZONE_UTC, EMOJI
+from app.vars import DB_URL, TIMEZONE_UTC, EMOJI
 
 # Connect to DB
 Base = declarative_base()

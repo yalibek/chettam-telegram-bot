@@ -6,8 +6,8 @@ from datetime import datetime as dt, timedelta
 import pytz
 import requests
 
-from models import Game, Player, session, Association
-from vars import (
+from app.models import Game, Player, session, Association
+from app.vars import (
     EMOJI,
     TIMEZONE_CET,
     TIMEZONE_UTC,
@@ -112,9 +112,17 @@ def game_timediff(game: Game, hours=0, minutes=0) -> bool:
 def get_game(chat_id, game_id=None, timeslot=None) -> Game:
     """Returns Game model for current chat"""
     if game_id:
-        return session.query(Game).filter_by(chat_id=chat_id, id=game_id).first()
+        return (
+            session.query(Game)
+            .filter_by(id=game_id, chat_id=chat_id, expired=False)
+            .first()
+        )
     elif timeslot:
-        return session.query(Game).filter_by(chat_id=chat_id, timeslot=timeslot).first()
+        return (
+            session.query(Game)
+            .filter_by(timeslot=timeslot, chat_id=chat_id, expired=False)
+            .first()
+        )
 
 
 def get_assoc(game_id, player_id) -> Association:
@@ -130,19 +138,17 @@ def get_all_games(update, ts_only=False) -> list:
     """Returns all Game models for current chat"""
     games = (
         session.query(Game)
-        .filter_by(chat_id=update.effective_chat.id)
+        .filter_by(chat_id=update.effective_chat.id, expired=False)
         .order_by(Game.timeslot)
         .all()
     )
     games_list = []
     for game in games:
-        if game_timediff(game, hours=1, minutes=30):
-            game.delete()
-            continue
-        elif game_timediff(game, minutes=30):
+        if game_timediff(game, hours=1):
             game.expired = True
             game.save()
-        games_list.append(game)
+        else:
+            games_list.append(game)
     if ts_only:
         return [game.timeslot_utc for game in games_list]
     else:
@@ -175,18 +181,13 @@ def slot_status(game) -> str:
     time_header = slot_time_header(game)
     players = game.players_list
     pistol = EMOJI["pistol"]
-    dizzy = EMOJI["dizzy"]
-
-    if game.expired:
-        return f"{dizzy} _{time_header} expired_\n{players}"
+    if 5 <= slots < 10:
+        reply = f"Full party! {pistol}"
+    elif slots >= 10:
+        reply = f"5x5! {pistol}{pistol}"
     else:
-        if 5 <= slots < 10:
-            reply = f"Full party! {pistol}"
-        elif slots >= 10:
-            reply = f"5x5! {pistol}{pistol}"
-        else:
-            reply = ""
-        return f"*{time_header}*: {reply}\n{players}"
+        reply = ""
+    return f"*{time_header}*: {reply}\n{players}"
 
 
 def slot_status_all(games) -> str:

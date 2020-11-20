@@ -27,7 +27,7 @@ from telegram.ext import (
     CallbackQueryHandler,
 )
 
-from bot_utils import (
+from app.bot_utils import (
     get_status_reply,
     restricted,
     refresh_main_page,
@@ -39,7 +39,7 @@ from bot_utils import (
     get_chettam_data,
     hours_keyboard,
 )
-from utils import (
+from app.utils import (
     logger,
     get_player,
     convert_to_dt,
@@ -47,7 +47,7 @@ from utils import (
     slot_status,
     chop,
 )
-from vars import (
+from app.vars import (
     DEBUG,
     MAIN_STATE,
     EMOJI,

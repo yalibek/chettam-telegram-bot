@@ -4,7 +4,7 @@ from datetime import datetime as dt, timedelta
 import pytz
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 
-from utils import (
+from app.utils import (
     is_dayoff,
     get_leetcode_problem,
     get_all_games,
@@ -19,7 +19,7 @@ from utils import (
     create_game,
     get_assoc,
 )
-from vars import (
+from app.vars import (
     DEBUG,
     ALLOWED_CHATS,
     STICKERS,
@@ -82,35 +82,35 @@ def get_chettam_data(update, context):
     if games:
         reply = slot_status_all(games)
         for game in games:
-            if not game.expired:
-                btn_row = []
+            btn_row = []
 
-                if player in game.players:
-                    btn_text = f"{zzz} Leave"
-                    btn_callback = f"leave_{game.id}"
-                else:
-                    btn_text = f"{pistol} Join"
-                    btn_callback = f"join_{game.id}"
-                timeslot_cet = utc_to_tz_time(game, "CET")
+            if player in game.players:
+                btn_text = f"{zzz} Leave"
+                btn_callback = f"leave_{game.id}"
+            else:
+                btn_text = f"{pistol} Join"
+                btn_callback = f"join_{game.id}"
+            timeslot_cet = utc_to_tz_time(game, "CET")
+            btn_row.append(
+                InlineKeyboardButton(
+                    f"{timeslot_cet}: {btn_text}", callback_data=btn_callback
+                )
+            )
+
+            if (
+                game.slots > 1
+                and game_timediff(game, minutes=-30)
+                and player in game.players
+                and not get_assoc(game.id, player.id).in_queue
+            ):
                 btn_row.append(
                     InlineKeyboardButton(
-                        f"{timeslot_cet}: {btn_text}", callback_data=btn_callback
+                        f"{party} Call", callback_data=f"call_{game.id}"
                     )
                 )
 
-                if (
-                    game.slots > 1
-                    and game_timediff(game, minutes=-30)
-                    and player in game.players
-                    and not get_assoc(game.id, player.id).in_queue
-                ):
-                    btn_row.append(
-                        InlineKeyboardButton(
-                            f"{party} Call", callback_data=f"call_{game.id}"
-                        )
-                    )
+            keyboard.append(btn_row)
 
-                keyboard.append(btn_row)
     else:
         reply = "Create new game below:"
 
@@ -156,16 +156,13 @@ def hours_keyboard(update):
 
 def in_out(update, context, action):
     """Ugliest function of them all"""
-
-    if context.args:
-        args = context.args
+    args = context.args
+    if args:
         player = get_player(update)
-
         if len(args) == 1 and args[0].lower() == "all":
-            games = get_all_games(update)
-            for game in games:
+            for game in get_all_games(update):
                 if action == "in":
-                    if player not in game.players and not game.expired:
+                    if player not in game.players:
                         game.add_player(player, joined_at=dt.now(pytz.utc))
 
                 elif action == "out":
@@ -182,7 +179,7 @@ def in_out(update, context, action):
                             create_game_and_add_player(
                                 update, context, player, timeslot
                             )
-                        elif game and not game.expired and player not in game.players:
+                        elif game and player not in game.players:
                             game.add_player(player, joined_at=dt.now(pytz.utc))
 
                     elif action == "out":
@@ -231,7 +228,7 @@ def remove_player_and_clean_game(context, game, player):
     """Remove player and, if no players left, delete the game with the jobs"""
     game.remove_player(player)
     if not game.players:
-        game.delete()
+        game.expired = True
         remove_game_jobs(context, game)
 
 
