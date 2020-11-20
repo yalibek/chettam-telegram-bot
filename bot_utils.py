@@ -155,6 +155,8 @@ def hours_keyboard(update):
 
 
 def in_out(update, context, action):
+    """Ugliest function of them all"""
+
     if context.args:
         args = context.args
         player = get_player(update)
@@ -176,11 +178,11 @@ def in_out(update, context, action):
                     game = get_game(update.effective_chat.id, timeslot=timeslot)
 
                     if action == "in":
-                        if not game:
+                        if not game and timeslot > dt.now(pytz.utc):
                             create_game_and_add_player(
                                 update, context, player, timeslot
                             )
-                        elif player not in game.players:
+                        elif game and not game.expired and player not in game.players:
                             game.add_player(player, joined_at=dt.now(pytz.utc))
 
                     elif action == "out":
