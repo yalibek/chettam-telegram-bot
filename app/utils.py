@@ -75,14 +75,17 @@ def get_player(update) -> Player:
 
 
 def convert_to_dt(timeslot) -> dt:
-    """Converts time into datetime object in UTC timezone"""
+    """Converts CET time into datetime object in UTC timezone"""
     time = dt.strptime(timeslot, "%H:%M")
-    date_today = dt.now(pytz.utc).date()
+    now = dt.now(pytz.utc)
 
-    if time.hour in range(4):
-        day = date_today + timedelta(days=1)
+    is_daytime = now.hour >= 4
+    is_night_game = time.hour < 4
+
+    if is_daytime and is_night_game:
+        day = now.date() + timedelta(days=1)
     else:
-        day = date_today
+        day = now.date()
 
     date_time = f"{day} {time.hour}:{time.minute}"
     timeslot_obj = dt.strptime(date_time, "%Y-%m-%d %H:%M")
