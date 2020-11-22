@@ -102,6 +102,7 @@ COMMANDS = [
     ("status", "show current status"),
     ("in", "join with argumnets"),
     ("out", "leave with argumnets"),
+    ("data", "get all player data"),
 ]
 
 MAIN_HOURS = [18, 19, 20, 21, 22, 23, 0, 1]

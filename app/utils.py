@@ -3,6 +3,7 @@ import logging
 import random
 from datetime import datetime as dt, timedelta
 
+import pandas as pd
 import pytz
 import requests
 
@@ -56,6 +57,10 @@ def sync_player_data(player: Player, user):
         player.csgo_nickname = get_nickname(user)
 
 
+def player_query(player_id):
+    return session.query(Player).filter_by(id=player_id).first()
+
+
 def get_player(update) -> Player:
     """Returns Player model for current user"""
     user = update.effective_user
@@ -76,6 +81,13 @@ def get_player(update) -> Player:
 
 def convert_to_dt(timeslot) -> dt:
     """Converts CET time into datetime object in UTC timezone"""
+    # TODO: Total mess with timezones and time in general
+    # TODO: Total mess with timezones and time in general
+    # TODO: Total mess with timezones and time in general
+    # TODO: Total mess with timezones and time in general
+    # TODO: Total mess with timezones and time in general
+    # TODO: Total mess with timezones and time in general
+    # TODO: Total mess with timezones and time in general
     time = dt.strptime(timeslot, "%H:%M")
     now = dt.now(pytz.utc)
 
@@ -126,6 +138,18 @@ def get_game(chat_id, game_id=None, timeslot=None) -> Game:
             .filter_by(timeslot=timeslot, chat_id=chat_id, expired=False)
             .first()
         )
+
+
+def get_all_player_data(chat_id):
+    """Returns Association model"""
+    query = (
+        session.query(Association, Player, Game)
+        .join(Player)
+        .join(Game)
+        .filter(Game.chat_id == chat_id)
+        .statement
+    )
+    return pd.read_sql(query, session.bind)
 
 
 def get_assoc(game_id, player_id) -> Association:

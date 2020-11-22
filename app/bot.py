@@ -19,6 +19,7 @@ from datetime import datetime as dt
 
 import pytz
 import sentry_sdk
+from tabulate import tabulate
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 from telegram.ext import (
     Updater,
@@ -46,6 +47,8 @@ from app.utils import (
     get_game,
     slot_status,
     chop,
+    get_all_player_data,
+    player_query,
 )
 from app.vars import (
     DEBUG,
@@ -82,6 +85,19 @@ def slot_in(update, context):
 @restricted
 def slot_out(update, context):
     in_out(update, context, action="out")
+
+
+# @restricted
+def data(update, context):
+    df = get_all_player_data(chat_id=update.effective_chat.id)
+    uniq_players = df["player_id"].value_counts()
+    data_table = {
+        str(player_query(player_id)): count
+        for player_id, count in uniq_players.iteritems()
+    }
+    table_rows = [[player, games_played] for player, games_played in data_table.items()]
+    table = tabulate(table_rows, headers=["Player", "Games played"])
+    update.message.reply_markdown(f"```\n{table}```")
 
 
 # Conversation actions
@@ -193,6 +209,7 @@ def main():
 
     # Handlers
     dp.add_handler(CommandHandler("status", status))
+    dp.add_handler(CommandHandler("data", data))
     dp.add_handler(CommandHandler(chop("in"), slot_in))
     dp.add_handler(CommandHandler(chop("out"), slot_out))
     dp.add_handler(
