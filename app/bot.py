@@ -47,7 +47,7 @@ from app.utils import (
     get_game,
     slot_status,
     chop,
-    get_all_player_data,
+    get_all_data,
     player_query,
 )
 from app.vars import (
@@ -87,17 +87,29 @@ def slot_out(update, context):
     in_out(update, context, action="out")
 
 
-# @restricted
+@restricted
 def data(update, context):
-    df = get_all_player_data(chat_id=update.effective_chat.id)
-    uniq_players = df["player_id"].value_counts()
-    data_table = {
-        str(player_query(player_id)): count
-        for player_id, count in uniq_players.iteritems()
-    }
-    table_rows = [[player, games_played] for player, games_played in data_table.items()]
-    table = tabulate(table_rows, headers=["Player", "Games played"])
+    df = get_all_data(chat_id=update.effective_chat.id)
+    table = data_games_played(df)
     update.message.reply_markdown(f"```\n{table}```")
+
+
+def data_games_played(df):
+    df = df[df["in_queue"] == False]
+    df = df[df["expired"] == True]
+    uniq_players = df["player_id"].value_counts()
+    # TODO: queue
+    data_table = [
+        [str(player_query(player_id)), count]
+        for player_id, count in uniq_players.iteritems()
+    ]
+    return tabulate(tabular_data=data_table, headers=["Player", "Games played"])
+
+
+# def data_popular_timeslot(df):
+#     uniq_timeslot = df["timeslot"].value_counts()
+#     data_table = [[timeslot, count] for timeslot, count in uniq_timeslot.iteritems()]
+#     return tabulate(tabular_data=data_table, headers=["Timeslot", "Games played"])
 
 
 # Conversation actions

@@ -140,8 +140,8 @@ def get_game(chat_id, game_id=None, timeslot=None) -> Game:
         )
 
 
-def get_all_player_data(chat_id):
-    """Returns Association model"""
+def get_all_data(chat_id):
+    """Returns all data for current chat in form of Pandas DataFrame"""
     query = (
         session.query(Association, Player, Game)
         .join(Player)
