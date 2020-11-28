@@ -39,6 +39,7 @@ from app.bot_utils import (
     create_game_and_add_player,
     get_chettam_data,
     hours_keyboard,
+    sync_games,
 )
 from app.utils import (
     logger,
@@ -71,6 +72,7 @@ def error(update, context):
 
 # Command actions
 @restricted
+@sync_games
 def status(update, context):
     """Get games status for current chat"""
     reply = get_status_reply(update)
@@ -78,16 +80,19 @@ def status(update, context):
 
 
 @restricted
+@sync_games
 def slot_in(update, context):
     in_out(update, context, action="in")
 
 
 @restricted
+@sync_games
 def slot_out(update, context):
     in_out(update, context, action="out")
 
 
 @restricted
+@sync_games
 def data(update, context):
     df = get_all_data(chat_id=update.effective_chat.id)
     table = data_games_played(df)
@@ -114,6 +119,7 @@ def data_games_played(df):
 
 # Conversation actions
 @restricted
+@sync_games
 def chettam(update, context):
     """Entry point for conversation"""
     if context.args:
@@ -127,6 +133,7 @@ def chettam(update, context):
         return MAIN_STATE
 
 
+@sync_games
 def pick_hour(update, context):
     """Choice of hours"""
     query = update.callback_query

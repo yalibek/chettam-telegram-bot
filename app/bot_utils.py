@@ -46,6 +46,19 @@ def restricted(func):
     return wrapped
 
 
+def sync_games(func):
+    """Checks if games are expired"""
+
+    def wrapped(update, context, *args, **kwargs):
+        for game in get_all_games(update):
+            if game_timediff(game, hours=1):
+                game.expired = True
+                game.save()
+        return func(update, context, *args, **kwargs)
+
+    return wrapped
+
+
 def dayoff(update, context):
     """Dayoff messages"""
     try:
@@ -123,6 +136,7 @@ def get_chettam_data(update, context):
     return reply, keyboard
 
 
+@sync_games
 def refresh_main_page(update, context, query):
     """Reload main page buttons"""
     reply, keyboard = get_chettam_data(update, context)
@@ -159,7 +173,7 @@ def in_out(update, context, action):
     args = context.args
     if args:
         player = get_player(update)
-        if len(args) == 1 and args[0].lower() == "all":
+        if args[0].lower() == "all":
             for game in get_all_games(update):
                 if action == "in":
                     if player not in game.players:

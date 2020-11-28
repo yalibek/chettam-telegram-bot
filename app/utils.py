@@ -169,17 +169,10 @@ def get_all_games(update, ts_only=False) -> list:
         .order_by(Game.timeslot)
         .all()
     )
-    games_list = []
-    for game in games:
-        if game_timediff(game, hours=1):
-            game.expired = True
-            game.save()
-        else:
-            games_list.append(game)
     if ts_only:
-        return [game.timeslot_utc for game in games_list]
+        return [game.timeslot_utc for game in games]
     else:
-        return games_list
+        return games
 
 
 def slot_time_header(game) -> str:
