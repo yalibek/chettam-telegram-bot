@@ -94,9 +94,10 @@ def slot_out(update, context):
 @restricted
 @sync_games
 def all_in_out(update, context):
-    if context.args[0] == "in":
+    args = context.args
+    if args and args[0] == "in":
         in_out(update, context, action="in", hard_args=["all"])
-    elif context.args[0] == "out":
+    elif args and args[0] == "out":
         in_out(update, context, action="out", hard_args=["all"])
 
 
