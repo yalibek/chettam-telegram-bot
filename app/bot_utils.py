@@ -168,9 +168,12 @@ def hours_keyboard(update):
     return row_list_chunks(keyboard)
 
 
-def in_out(update, context, action):
+def in_out(update, context, action, hard_args=None):
     """Ugliest function of them all"""
-    args = context.args
+    if hard_args:
+        args = hard_args
+    else:
+        args = context.args
     if args:
         player = get_player(update)
         if args[0].lower() == "all":

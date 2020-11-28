@@ -93,6 +93,15 @@ def slot_out(update, context):
 
 @restricted
 @sync_games
+def all_in_out(update, context):
+    if context.args[0] == "in":
+        in_out(update, context, action="in", hard_args=["all"])
+    elif context.args[0] == "out":
+        in_out(update, context, action="out", hard_args=["all"])
+
+
+@restricted
+@sync_games
 def data(update, context):
     df = get_all_data(chat_id=update.effective_chat.id)
     table = data_games_played(df)
@@ -229,6 +238,7 @@ def main():
     # Handlers
     dp.add_handler(CommandHandler("status", status))
     dp.add_handler(CommandHandler("data", data))
+    dp.add_handler(CommandHandler("all", all_in_out))
     dp.add_handler(CommandHandler(chop("in"), slot_in))
     dp.add_handler(CommandHandler(chop("out"), slot_out))
     dp.add_handler(
