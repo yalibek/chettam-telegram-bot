@@ -129,11 +129,13 @@ if arg_parse().debug:
     TOKEN = os.getenv("TOKEN_DEBUG")
     DB_URL = os.getenv("HEROKU_POSTGRESQL_COPPER_URL")
     SENTRY_DSN = os.getenv("SENTRY_DSN_DEBUG")
-    ALLOWED_CHATS = ""
+    ALLOWED_CHATS_INTERNAL = ""
+    ALLOWED_CHATS_EXTERNAL = ""
 else:
     # prod vars
     DEBUG = False
     TOKEN = os.getenv("TOKEN")
     DB_URL = os.getenv("DATABASE_URL")
     SENTRY_DSN = os.getenv("SENTRY_DSN")
-    ALLOWED_CHATS = json.loads(os.getenv("ALLOWED_CHATS"))
+    ALLOWED_CHATS_INTERNAL = json.loads(os.getenv("ALLOWED_CHATS_INTERNAL"))
+    ALLOWED_CHATS_EXTERNAL = json.loads(os.getenv("ALLOWED_CHATS_EXTERNAL"))

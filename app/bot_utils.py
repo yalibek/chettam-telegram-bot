@@ -21,7 +21,8 @@ from app.utils import (
 )
 from app.vars import (
     DEBUG,
-    ALLOWED_CHATS,
+    ALLOWED_CHATS_INTERNAL,
+    ALLOWED_CHATS_EXTERNAL,
     STICKERS,
     MAIN_STATE,
     EMOJI,
@@ -35,11 +36,13 @@ def restricted(func):
     """Restrict prod bot usage to allowed chats only"""
 
     def wrapped(update, context, *args, **kwargs):
-        if DEBUG or update.effective_chat.id in ALLOWED_CHATS:
+        if DEBUG or update.effective_chat.id in ALLOWED_CHATS_INTERNAL:
             if is_dayoff():
                 return dayoff(update, context)
             else:
                 return func(update, context, *args, **kwargs)
+        elif update.effective_chat.id in ALLOWED_CHATS_EXTERNAL:
+            return func(update, context, *args, **kwargs)
         else:
             update.message.reply_text("You're not authorized to use this bot.")
 
