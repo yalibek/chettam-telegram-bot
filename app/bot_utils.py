@@ -12,7 +12,6 @@ from app.utils import (
     get_player,
     convert_to_dt,
     get_game,
-    utc_to_tz_time,
     game_timediff,
     row_list_chunks,
     slot_time_header,
@@ -77,8 +76,9 @@ def dayoff(update, context):
 
 def get_status_reply(update):
     games = get_all_games(update)
+    player = get_player(update)
     if games:
-        return slot_status_all(games)
+        return slot_status_all(games, timezone=player.timezone_pytz)
     else:
         return "Create new game with /chettam"
 
@@ -96,7 +96,7 @@ def get_chettam_data(update, context):
 
     keyboard = []
     if games:
-        reply = slot_status_all(games)
+        reply = slot_status_all(games, timezone=player.timezone_pytz)
         for game in games:
             btn_row = []
 
@@ -106,10 +106,10 @@ def get_chettam_data(update, context):
             else:
                 btn_text = f"{pistol} Join"
                 btn_callback = f"join_{game.id}"
-            timeslot_cet = utc_to_tz_time(game, "CET")
             btn_row.append(
                 InlineKeyboardButton(
-                    f"{timeslot_cet}: {btn_text}", callback_data=btn_callback
+                    f"{slot_time_header(game, player.timezone_pytz)}: {btn_text}",
+                    callback_data=btn_callback,
                 )
             )
 
@@ -154,7 +154,11 @@ def refresh_main_page(update, context, query):
 
 def hours_keyboard(update):
     """Returns keyboard with timeslots for new game"""
-    main_hours_dt = [convert_to_dt(f"{hour:02d}:00") for hour in MAIN_HOURS]
+    player = get_player(update)
+    main_hours_dt = [
+        convert_to_dt(timeslot=f"{hour:02d}:00", timezone=player.timezone_pytz)
+        for hour in MAIN_HOURS
+    ]
     ts_games = get_all_games(update, ts_only=True)
     ts_filtered = [
         timeslot.astimezone(TIMEZONE_CET).strftime("%H:%M")
@@ -191,7 +195,9 @@ def in_out(update, context, action, hard_args=None):
         else:
             for argv in args:
                 if argv.isdigit() and int(argv) in MAIN_HOURS:
-                    timeslot = convert_to_dt(f"{int(argv):02d}:00")
+                    timeslot = convert_to_dt(
+                        timeslot=f"{int(argv):02d}:00", timezone=player.timezone_pytz
+                    )
                     game = get_game(update.effective_chat.id, timeslot=timeslot)
 
                     if action == "in":
@@ -214,15 +220,17 @@ def in_out(update, context, action, hard_args=None):
 
 def schedule_game_notification(context, update, game, message, when=0, auto=False):
     """Send a separate message"""
+    player = get_player(update)
+    tz = player.timezone_pytz
 
     def send_msg(ctx):
         if auto:
             prefix = "auto"
         else:
-            prefix = get_player(update)
+            prefix = player
         ctx.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=f"\[_{prefix}_] *{slot_time_header(game)}*: {game.players_call_active} {message}",
+            text=f"\[_{prefix}_] *{slot_time_header(game, timezone=tz)}*: {game.players_call_active} {message}",
             parse_mode=ParseMode.MARKDOWN,
         )
 

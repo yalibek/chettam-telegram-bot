@@ -1,5 +1,6 @@
 from datetime import datetime as dt, timedelta
 
+import pytz
 from sqlalchemy import (
     Column,
     Integer,
@@ -71,6 +72,7 @@ class Player(Base, Generic):
     first_name = Column(String)
     last_name = Column(String, nullable=True)
     csgo_nickname = Column(String, nullable=True)
+    timezone = Column(String, default="Europe/Amsterdam")
     games = relationship("Game", secondary="association", back_populates="players")
 
     def __str__(self) -> str:
@@ -87,6 +89,10 @@ class Player(Base, Generic):
             return escape_markdown(f"@{self.username}")
         else:
             return f"[{self.first_name}](tg://user?id={self.user_id})"
+
+    @property
+    def timezone_pytz(self):
+        return pytz.timezone(self.timezone)
 
 
 class Game(Base, Generic):

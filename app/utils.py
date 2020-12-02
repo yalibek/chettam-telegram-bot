@@ -10,13 +10,12 @@ import requests
 from app.models import Game, Player, session, Association
 from app.vars import (
     EMOJI,
-    TIMEZONE_CET,
     TIMEZONE_UTC,
     CSGO_NICKNAMES,
-    USER_TIMEZONES,
     DAYS_OFF,
     DEBUG,
     LEETCODE_LEVELS,
+    COMMON_TIMEZONES,
 )
 
 
@@ -79,7 +78,7 @@ def get_player(update) -> Player:
     return player
 
 
-def convert_to_dt(timeslot) -> dt:
+def convert_to_dt(timeslot, timezone) -> dt:
     """Converts CET time into datetime object in UTC timezone"""
     # TODO: Total mess with timezones and time in general
     # TODO: Total mess with timezones and time in general
@@ -89,7 +88,7 @@ def convert_to_dt(timeslot) -> dt:
     # TODO: Total mess with timezones and time in general
     # TODO: Total mess with timezones and time in general
     time = dt.strptime(timeslot, "%H:%M")
-    now = dt.now(pytz.utc)
+    now = dt.now(tz=timezone)
 
     is_daytime = now.hour >= 4
     is_night_game = time.hour < 4
@@ -101,8 +100,8 @@ def convert_to_dt(timeslot) -> dt:
 
     date_time = f"{day} {time.hour}:{time.minute}"
     timeslot_obj = dt.strptime(date_time, "%Y-%m-%d %H:%M")
-    timeslot_cet = TIMEZONE_CET.localize(timeslot_obj)
-    return timeslot_cet.astimezone(TIMEZONE_UTC)
+    timeslot_localized = timezone.localize(timeslot_obj)
+    return timeslot_localized.astimezone(TIMEZONE_UTC)
 
 
 def create_game(chat, timeslot) -> Game:
@@ -175,31 +174,18 @@ def get_all_games(update, ts_only=False) -> list:
         return games
 
 
-def slot_time_header(game) -> str:
-    timeslot_cet = utc_to_tz_time(game, "CET")
-    timeslot_gbt = utc_to_tz_time(game, "Europe/London")
-    should_add_gbt_time = False
-    for player in game.players:
-        if player.username in USER_TIMEZONES:
-            should_add_gbt_time = True
-            break
-    result = timeslot_cet
-    if should_add_gbt_time:
-        result = f"{timeslot_cet} (UK {timeslot_gbt})"
-    return result
+def slot_time_header(game, timezone) -> str:
+    timeslot = game.timeslot_utc.astimezone(timezone)
+    time = timeslot.strftime("%H:%M")
+    tz_code = COMMON_TIMEZONES[str(timezone)]
+    return f"{time} {tz_code}"
 
 
-def utc_to_tz_time(game, timezone_str) -> str:
-    utc_time = game.timeslot_utc
-    timezone = pytz.timezone(timezone_str)
-    return utc_time.astimezone(timezone).strftime("%H:%M")
-
-
-def slot_status(game) -> str:
+def slot_status(game, timezone) -> str:
     """Returns slots data for game"""
     slots = game.slots
-    time_header = slot_time_header(game)
     players = game.players_list
+    time_header = slot_time_header(game, timezone)
     pistol = EMOJI["pistol"]
     if 5 <= slots < 10:
         reply = f"Full party! {pistol}"
@@ -210,9 +196,9 @@ def slot_status(game) -> str:
     return f"*{time_header}*: {reply}\n{players}"
 
 
-def slot_status_all(games) -> str:
+def slot_status_all(games, timezone) -> str:
     """Returns slots data for all games"""
-    return "\n\n".join(slot_status(game) for game in games)
+    return "\n\n".join(slot_status(game, timezone) for game in games)
 
 
 def is_dayoff() -> bool:

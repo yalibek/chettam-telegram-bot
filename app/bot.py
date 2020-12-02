@@ -62,6 +62,7 @@ from app.vars import (
     PORT,
     APP_URL,
     SENTRY_DSN,
+    COMMON_TIMEZONES,
 )
 
 
@@ -103,10 +104,57 @@ def all_in_out(update, context):
 
 @restricted
 @sync_games
+def menu(update, context):
+    keyboard = [
+        [
+            InlineKeyboardButton("Set user's timezone", callback_data="user_timezone"),
+        ],
+        [
+            InlineKeyboardButton("Data", callback_data="data"),
+        ],
+    ]
+    update.message.reply_markdown(
+        text=f"Menu",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+    return MAIN_STATE
+
+
+def user_timezone(update, context):
+    """Set current user's timezone"""
+    query = update.callback_query
+    player = get_player(update)
+    keyboard = [
+        [InlineKeyboardButton(tz, callback_data=f"TZ_{tz}")] for tz in COMMON_TIMEZONES
+    ]
+    query.answer()
+    query.edit_message_text(
+        text=f"Your timezone is {player.timezone}\nSet new timezone:",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+    return MAIN_STATE
+
+
+def set_user_timezone(update, context):
+    query = update.callback_query
+    new_tz = re.search("TZ_(.*)", query.data).group(1)
+    player = get_player(update)
+    player.timezone = new_tz
+    player.save()
+    query.answer()
+    query.edit_message_text(
+        text=f"Your TZ was set to {new_tz}",
+    )
+    return MAIN_STATE
+
+
 def data(update, context):
+    query = update.callback_query
     df = get_all_data(chat_id=update.effective_chat.id)
     table = data_games_played(df)
-    update.message.reply_markdown(f"```\n{table}```")
+    query.answer()
+    query.edit_message_text(text=f"```\n{table}```", parse_mode=ParseMode.MARKDOWN)
+    return ConversationHandler.END
 
 
 def data_games_played(df):
@@ -168,7 +216,7 @@ def new_game(update, context):
     """Create new game"""
     query = update.callback_query
     player = get_player(update)
-    timeslot = convert_to_dt(query.data)
+    timeslot = convert_to_dt(timeslot=query.data, timezone=player.timezone_pytz)
     create_game_and_add_player(update, context, player, timeslot)
     return refresh_main_page(update, context, query)
 
@@ -227,7 +275,10 @@ def back(update, context):
 
 def main():
     """Run bot"""
-    updater = Updater(TOKEN, use_context=True)
+    updater = Updater(
+        TOKEN,
+        use_context=True,
+    )
     updater.bot.set_my_commands(COMMANDS)
 
     # Get the dispatcher to register handlers
@@ -238,7 +289,6 @@ def main():
 
     # Handlers
     dp.add_handler(CommandHandler("status", status))
-    dp.add_handler(CommandHandler("data", data))
     dp.add_handler(CommandHandler("all", all_in_out))
     dp.add_handler(CommandHandler(chop("in"), slot_in))
     dp.add_handler(CommandHandler(chop("out"), slot_out))
@@ -262,7 +312,19 @@ def main():
             },
         )
     )
-
+    dp.add_handler(
+        ConversationHandler(
+            entry_points=[CommandHandler("menu", menu)],
+            fallbacks=[CommandHandler("menu", menu)],
+            states={
+                MAIN_STATE: [
+                    CallbackQueryHandler(data, pattern="^data$"),
+                    CallbackQueryHandler(user_timezone, pattern="^user_timezone$"),
+                    CallbackQueryHandler(set_user_timezone, pattern="^TZ_[a-zA-Z\/]+$"),
+                ],
+            },
+        )
+    )
     # Start
     if DEBUG:
         # Start the Bot (polling method)

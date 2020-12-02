@@ -32,11 +32,6 @@ EMOJI = {
     "thumbsup": emojize(":thumbsup:", use_aliases=True),
 }
 
-USER_TIMEZONES = {
-    "timuber": "Europe/London",
-    "sduwnik": "Europe/London",
-    "anchik12345": "Europe/London",
-}
 
 # CS:GO nicknames
 CSGO_NICKNAMES = {
@@ -100,10 +95,9 @@ DAYS_OFF = ["Wednesday", "Sunday"]
 COMMANDS = [
     ("chettam", "create new game or join existing one"),
     ("status", "show current status"),
+    ("menu", "bot and user settings"),
     ("in", "join with argumnets"),
     ("out", "leave with argumnets"),
-    ("data", "get all player data"),
-    ("all", "in or out"),
 ]
 
 MAIN_HOURS = [18, 19, 20, 21, 22, 23, 0, 1]
@@ -111,6 +105,13 @@ MAIN_HOURS = [18, 19, 20, 21, 22, 23, 0, 1]
 # Timezones
 TIMEZONE_CET = pytz.timezone("CET")
 TIMEZONE_UTC = pytz.timezone("UTC")
+COMMON_TIMEZONES = {
+    "Europe/Amsterdam": "EU",
+    "Europe/London": "UK",
+    "Europe/Zurich": "EU",
+    "Asia/Almaty": "KZ",
+    "Asia/Atyrau": "KZ+1",
+}
 
 # Converstion states
 MAIN_STATE, SECONDARY_STATE = range(2)
