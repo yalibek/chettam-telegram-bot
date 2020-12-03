@@ -175,12 +175,14 @@ def get_all_games(update, ts_only=False) -> list:
 
 
 def get_time_header(game, timezone):
+    """Returns timeslot in given timezone"""
     time = game.timeslot_utc.astimezone(timezone).strftime("%H:%M")
     tz_code = COMMON_TIMEZONES[str(timezone)]
     return f"{time} {tz_code}"
 
 
 def slot_time_header(game, timezone) -> str:
+    """Returns timeslots with timezones for all players in the game"""
     main_tz = timezone
     main_tz_header = get_time_header(game, main_tz)
     secondary_tz = set(player.timezone_pytz for player in game.players_sorted)
