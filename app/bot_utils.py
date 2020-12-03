@@ -17,6 +17,7 @@ from app.utils import (
     slot_time_header,
     create_game,
     get_assoc,
+    get_time_header,
 )
 from app.vars import (
     DEBUG,
@@ -108,7 +109,7 @@ def get_chettam_data(update, context):
                 btn_callback = f"join_{game.id}"
             btn_row.append(
                 InlineKeyboardButton(
-                    f"{slot_time_header(game, player.timezone_pytz)}: {btn_text}",
+                    f"{get_time_header(game, player.timezone_pytz)}: {btn_text}",
                     callback_data=btn_callback,
                 )
             )
@@ -230,7 +231,7 @@ def schedule_game_notification(context, update, game, message, when=0, auto=Fals
             prefix = player
         ctx.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=f"\[_{prefix}_] *{slot_time_header(game, timezone=tz)}*: {game.players_call_active} {message}",
+            text=f"\[_{prefix}_] *{get_time_header(game, timezone=tz)}*: {game.players_call_active} {message}",
             parse_mode=ParseMode.MARKDOWN,
         )
 

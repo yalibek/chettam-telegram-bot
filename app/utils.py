@@ -174,11 +174,25 @@ def get_all_games(update, ts_only=False) -> list:
         return games
 
 
-def slot_time_header(game, timezone) -> str:
+def get_time_header(game, timezone):
     timeslot = game.timeslot_utc.astimezone(timezone)
     time = timeslot.strftime("%H:%M")
     tz_code = COMMON_TIMEZONES[str(timezone)]
     return f"{time} {tz_code}"
+
+
+def slot_time_header(game, timezone) -> str:
+    main_tz = timezone
+    main_tz_header = get_time_header(game, main_tz)
+    all_tz = set(player.timezone for player in game.players_sorted)
+    secondary_tz = all_tz.discard(main_tz)
+    if secondary_tz:
+        secondary_tz_header = ", ".join(
+            get_time_header(game, tz) for tz in secondary_tz
+        )
+        return f"{main_tz_header} ({secondary_tz_header})"
+    else:
+        return main_tz_header
 
 
 def slot_status(game, timezone) -> str:
