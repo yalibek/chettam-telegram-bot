@@ -78,14 +78,7 @@ def get_player(update) -> Player:
 
 
 def convert_to_dt(timeslot, timezone) -> dt:
-    """Converts CET time into datetime object in UTC timezone"""
-    # TODO: Total mess with timezones and time in general
-    # TODO: Total mess with timezones and time in general
-    # TODO: Total mess with timezones and time in general
-    # TODO: Total mess with timezones and time in general
-    # TODO: Total mess with timezones and time in general
-    # TODO: Total mess with timezones and time in general
-    # TODO: Total mess with timezones and time in general
+    """Converts time into datetime object in UTC timezone"""
     time = dt.strptime(timeslot, "%H:%M")
     now = dt.now(tz=timezone)
 

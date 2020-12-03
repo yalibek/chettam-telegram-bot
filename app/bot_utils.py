@@ -158,15 +158,16 @@ def refresh_main_page(update, context, query):
 def hours_keyboard(update):
     """Returns keyboard with timeslots for new game"""
     player = get_player(update)
+    timezone = player.timezone_pytz
     main_hours_dt = [
-        convert_to_dt(timeslot=f"{hour:02d}:00", timezone=player.timezone_pytz)
+        convert_to_dt(timeslot=f"{hour:02d}:00", timezone=timezone)
         for hour in MAIN_HOURS
     ]
     ts_games = get_all_games(update, ts_only=True)
     ts_filtered = [
-        timeslot.astimezone(player.timezone_pytz).strftime("%H:%M")
+        timeslot.astimezone(timezone).strftime("%H:%M")
         for timeslot in main_hours_dt
-        if timeslot not in ts_games and timeslot > dt.now(pytz.utc)
+        if timeslot not in ts_games and timeslot > dt.now(timezone)
     ]
     keyboard = [
         InlineKeyboardButton(
