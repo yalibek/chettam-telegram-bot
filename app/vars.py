@@ -2,7 +2,6 @@ import argparse
 import json
 import os
 
-import pytz
 from emoji import emojize
 
 
@@ -103,8 +102,6 @@ COMMANDS = [
 MAIN_HOURS = [18, 19, 20, 21, 22, 23, 0, 1]
 
 # Timezones
-TIMEZONE_CET = pytz.timezone("CET")
-TIMEZONE_UTC = pytz.timezone("UTC")
 COMMON_TIMEZONES = {
     "Europe/Amsterdam": "EU",
     "Europe/London": "UK",

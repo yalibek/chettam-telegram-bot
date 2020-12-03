@@ -15,7 +15,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, backref
 from telegram.utils.helpers import escape_markdown
 
-from app.vars import DB_URL, TIMEZONE_UTC, EMOJI
+from app.vars import DB_URL, EMOJI
 
 # Connect to DB
 Base = declarative_base()
@@ -142,7 +142,7 @@ class Game(Base, Generic):
         """'Game.timeslot' stores DateTime object without timezone info.
         That's why we need to convert it back to timezone aware object.
         Use this property instead of 'Game.timeslot' whenever possible."""
-        return TIMEZONE_UTC.localize(self.timeslot)
+        return pytz.utc.localize(self.timeslot)
 
     @property
     def slots(self) -> int:

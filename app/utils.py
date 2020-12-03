@@ -10,7 +10,6 @@ import requests
 from app.models import Game, Player, session, Association
 from app.vars import (
     EMOJI,
-    TIMEZONE_UTC,
     CSGO_NICKNAMES,
     DAYS_OFF,
     DEBUG,
@@ -101,7 +100,7 @@ def convert_to_dt(timeslot, timezone) -> dt:
     date_time = f"{day} {time.hour}:{time.minute}"
     timeslot_obj = dt.strptime(date_time, "%Y-%m-%d %H:%M")
     timeslot_localized = timezone.localize(timeslot_obj)
-    return timeslot_localized.astimezone(TIMEZONE_UTC)
+    return timeslot_localized.astimezone(pytz.utc)
 
 
 def create_game(chat, timeslot) -> Game:

@@ -27,7 +27,6 @@ from app.vars import (
     MAIN_STATE,
     EMOJI,
     MAIN_HOURS,
-    TIMEZONE_CET,
     USAGE_TEXT,
 )
 
@@ -165,7 +164,7 @@ def hours_keyboard(update):
     ]
     ts_games = get_all_games(update, ts_only=True)
     ts_filtered = [
-        timeslot.astimezone(TIMEZONE_CET).strftime("%H:%M")
+        timeslot.astimezone(player.timezone_pytz).strftime("%H:%M")
         for timeslot in main_hours_dt
         if timeslot not in ts_games and timeslot > dt.now(pytz.utc)
     ]
@@ -234,7 +233,7 @@ def schedule_game_notification(context, update, game, message, when=0, auto=Fals
             prefix = player
         ctx.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=f"\[_{prefix}_] *{get_time_header(game, timezone=tz)}*: {game.players_call_active} {message}",
+            text=f"\[_{prefix}_] *{slot_time_header(game, timezone=tz)}*: {game.players_call_active} {message}",
             parse_mode=ParseMode.MARKDOWN,
         )
 
