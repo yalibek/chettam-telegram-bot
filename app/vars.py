@@ -108,7 +108,6 @@ TIMEZONE_UTC = pytz.timezone("UTC")
 COMMON_TIMEZONES = {
     "Europe/Amsterdam": "EU",
     "Europe/London": "UK",
-    "Europe/Zurich": "EU",
     "Asia/Almaty": "KZ",
     "Asia/Atyrau": "KZ+1",
 }

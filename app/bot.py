@@ -125,7 +125,8 @@ def user_timezone(update, context):
     query = update.callback_query
     player = get_player(update)
     keyboard = [
-        [InlineKeyboardButton(tz, callback_data=f"TZ_{tz}")] for tz in COMMON_TIMEZONES
+        [InlineKeyboardButton(f"{tz}, {code}", callback_data=f"TZ_{tz}")]
+        for tz, code in COMMON_TIMEZONES.items()
     ]
     query.answer()
     query.edit_message_text(
