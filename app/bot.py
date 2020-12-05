@@ -26,6 +26,7 @@ from telegram.ext import (
     CommandHandler,
     ConversationHandler,
     CallbackQueryHandler,
+    PollAnswerHandler,
 )
 
 from app.bot_utils import (
@@ -50,6 +51,7 @@ from app.utils import (
     chop,
     get_all_data,
     player_query,
+    get_all_games,
 )
 from app.vars import (
     DEBUG,
@@ -274,6 +276,60 @@ def back(update, context):
     return refresh_main_page(update, context, query)
 
 
+def poll(update, context) -> None:
+    """Sends a predefined poll"""
+    games = get_all_games(update)
+    p = [game.players_sorted for game in games]
+    options = list(set(str(i) for x in p for i in x))
+    message = context.bot.send_poll(
+        update.effective_chat.id,
+        question="Who to kick?",
+        options=options,
+        is_anonymous=False,
+        allows_multiple_answers=False,
+    )
+    # Save some info about the poll the bot_data for later use in receive_poll_answer
+    payload = {
+        message.poll.id: {
+            "questions": options,
+            "message_id": message.message_id,
+            "chat_id": update.effective_chat.id,
+            "answers": 0,
+            "answers_per_option": {option: 0 for option in options},
+        }
+    }
+    context.bot_data.update(payload)
+
+
+def receive_poll_answer(update, context) -> None:
+    """Summarize a users poll vote"""
+    answer = update.poll_answer
+    poll_id = answer.poll_id
+    try:
+        questions = context.bot_data[poll_id]["questions"]
+        answers_dict = context.bot_data[poll_id]["answers_per_option"]
+    # this means this poll answer update is from an old poll, we can't do our answering then
+    except KeyError:
+        return
+    selected_options = answer.option_ids
+
+    answers_dict[selected_options] += 1
+    if max(answers_dict.values()) == 3:
+        most_voted = max(answers_dict.iterkeys(), key=(lambda key: answers_dict[key]))
+        context.bot.stop_poll(
+            context.bot_data[poll_id]["chat_id"],
+            context.bot_data[poll_id]["message_id"],
+        )
+        context.bot.send_message(
+            chat_id=context.bot_data[poll_id]["chat_id"],
+            text=f"{most_voted} will be kicked!",
+            parse_mode=ParseMode.HTML,
+        )
+        # for game in get_all_games(update):
+        #     player_query()
+        #     game.remove_player()
+
+
 def main():
     """Run bot"""
     updater = Updater(
@@ -289,6 +345,10 @@ def main():
     dp.add_error_handler(error)
 
     # Handlers
+
+    dp.add_handler(CommandHandler("poll", poll))
+    dp.add_handler(PollAnswerHandler(receive_poll_answer))
+
     dp.add_handler(CommandHandler("status", status))
     dp.add_handler(CommandHandler("all", all_in_out))
     dp.add_handler(CommandHandler(chop("in"), slot_in))

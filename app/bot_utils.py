@@ -159,6 +159,10 @@ def hours_keyboard(update):
     """Returns keyboard with timeslots for new game"""
     player = get_player(update)
     timezone = player.timezone_pytz
+    # TODO WTF IS THIS
+    # TODO WTF IS THIS
+    # TODO WTF IS THIS
+    # TODO WTF IS THIS
     main_hours_dt = [
         convert_to_dt(timeslot=f"{hour:02d}:00", timezone=timezone)
         for hour in MAIN_HOURS
