@@ -19,13 +19,13 @@ STICKERS = {
 
 # Emoji
 EMOJI = {
-    "zzz": emojize(":zzz:", use_aliases=True),
+    "pistol": emojize(":pistol:", use_aliases=True),
     "fire": emojize(":fire:", use_aliases=True),
+    "zzz": emojize(":zzz:", use_aliases=True),
     "party": emojize(":party_popper:", use_aliases=True),
     "dizzy": emojize(":dizzy_face:", use_aliases=True),
     "clock": emojize(":alarm_clock:", use_aliases=True),
     "check": emojize(":white_check_mark:", use_aliases=True),
-    "pistol": emojize(":pistol:", use_aliases=True),
     "scream": emojize(":scream:", use_aliases=True),
     "suprise": emojize(":open_mouth:", use_aliases=True),
     "thumbsup": emojize(":thumbsup:", use_aliases=True),
