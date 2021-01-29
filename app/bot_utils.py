@@ -27,7 +27,6 @@ from app.vars import (
     MAIN_STATE,
     EMOJI,
     MAIN_HOURS,
-    USAGE_TEXT,
 )
 
 
@@ -215,11 +214,6 @@ def in_out(update, context, action, hard_args=None):
                     elif action == "out":
                         if game and player in game.players:
                             remove_player_and_clean_game(context, game, player)
-
-        reply = get_status_reply(update)
-    else:
-        reply = USAGE_TEXT
-    update.message.reply_markdown(reply)
 
 
 def schedule_game_notification(context, update, game, message, when=0, auto=False):

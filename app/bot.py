@@ -63,6 +63,7 @@ from app.vars import (
     APP_URL,
     SENTRY_DSN,
     COMMON_TIMEZONES,
+    USAGE_TEXT,
 )
 
 
@@ -82,14 +83,19 @@ def status(update, context):
 
 @restricted
 @sync_games
-def slot_in(update, context):
-    in_out(update, context, action="in")
-
-
-@restricted
-@sync_games
-def slot_out(update, context):
-    in_out(update, context, action="out")
+def slot_in_out(update, context):
+    for line in update.message.text.splitlines():
+        command = line.split()[0][1:]
+        args = line.split()[1:]
+        if args:
+            if command in chop("in"):
+                in_out(update, context, action="in", hard_args=args)
+            elif command in chop("out"):
+                in_out(update, context, action="out", hard_args=args)
+        else:
+            update.message.reply_markdown(USAGE_TEXT)
+            return
+    update.message.reply_markdown(get_status_reply(update))
 
 
 @restricted
@@ -100,6 +106,7 @@ def all_in_out(update, context):
         in_out(update, context, action="in", hard_args=["all"])
     elif args and args[0] == "out":
         in_out(update, context, action="out", hard_args=["all"])
+    update.message.reply_markdown(get_status_reply(update))
 
 
 @restricted
@@ -181,15 +188,12 @@ def data_games_played(df):
 @sync_games
 def chettam(update, context):
     """Entry point for conversation"""
-    if context.args:
-        slot_in(update, context)
-    else:
-        reply, keyboard = get_chettam_data(update, context)
-        update.message.reply_markdown(
-            reply,
-            reply_markup=InlineKeyboardMarkup(keyboard),
-        )
-        return MAIN_STATE
+    reply, keyboard = get_chettam_data(update, context)
+    update.message.reply_markdown(
+        reply,
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+    return MAIN_STATE
 
 
 @sync_games
@@ -291,8 +295,7 @@ def main():
     # Handlers
     dp.add_handler(CommandHandler("status", status))
     dp.add_handler(CommandHandler("all", all_in_out))
-    dp.add_handler(CommandHandler(chop("in"), slot_in))
-    dp.add_handler(CommandHandler(chop("out"), slot_out))
+    dp.add_handler(CommandHandler(chop("in") + chop("out"), slot_in_out))
     dp.add_handler(
         ConversationHandler(
             entry_points=[CommandHandler(chop("chettam"), chettam)],
