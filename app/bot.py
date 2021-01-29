@@ -84,8 +84,9 @@ def status(update, context):
 @restricted
 @sync_games
 def slot_in_out(update, context):
-    for line in update.message.text.splitlines():
-        command = line.split()[0][1:]
+    lines = [line for line in update.message.text.split("/") if line != ""]
+    for line in lines:
+        command = line.split()[0]
         args = line.split()[1:]
         if args:
             if command in chop("in"):
