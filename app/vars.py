@@ -76,11 +76,12 @@ usage:
 \t\t/out <hour> [<hours>]
 
 examples:
-\t\t/in 21 22
-\t\t/i 22 20 0
+\t\t/in 18-21 23
+\t\t/i 22 20-0
 \t\t/out 23
 \t\t/ou 23 22
-\t\t/o 20 1
+\t\t/o 20-1 18
+\t\t/in 19 /out 21
 
 all existing games:
 \t\t/in all
