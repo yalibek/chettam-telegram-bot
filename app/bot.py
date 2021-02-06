@@ -114,15 +114,11 @@ def all_in_out(update, context):
 @sync_games
 def menu(update, context):
     keyboard = [
-        [
-            InlineKeyboardButton("Set user's timezone", callback_data="user_timezone"),
-        ],
-        [
-            InlineKeyboardButton("Data", callback_data="data"),
-        ],
+        [InlineKeyboardButton("Set user's timezone", callback_data="user_timezone")],
+        [InlineKeyboardButton("Data", callback_data="data")],
     ]
     update.message.reply_markdown(
-        text=f"Menu",
+        text="Menu",
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
     return MAIN_STATE
@@ -151,9 +147,7 @@ def set_user_timezone(update, context):
     player.timezone = new_tz
     player.save()
     query.answer()
-    query.edit_message_text(
-        text=f"Your TZ was set to {new_tz}",
-    )
+    query.edit_message_text(text=f"Your TZ was set to {new_tz}")
     return MAIN_STATE
 
 
@@ -190,10 +184,7 @@ def data_games_played(df):
 def chettam(update, context):
     """Entry point for conversation"""
     reply, keyboard = get_chettam_data(update, context)
-    update.message.reply_markdown(
-        reply,
-        reply_markup=InlineKeyboardMarkup(keyboard),
-    )
+    update.message.reply_markdown(reply, reply_markup=InlineKeyboardMarkup(keyboard))
     return MAIN_STATE
 
 
@@ -208,7 +199,7 @@ def pick_hour(update, context):
         [
             InlineKeyboardButton("« Back", callback_data="back_to_main"),
             InlineKeyboardButton(f"{check} Done", callback_data="status_conv"),
-        ],
+        ]
     )
     query.answer()
     query.edit_message_text(
@@ -281,10 +272,7 @@ def back(update, context):
 
 def main():
     """Run bot"""
-    updater = Updater(
-        TOKEN,
-        use_context=True,
-    )
+    updater = Updater(TOKEN, use_context=True)
     updater.bot.set_my_commands(COMMANDS)
 
     # Get the dispatcher to register handlers
@@ -305,10 +293,7 @@ def main():
                 MAIN_STATE: [
                     CallbackQueryHandler(join, pattern="^join_[0-9]+$"),
                     CallbackQueryHandler(leave, pattern="^leave_[0-9]+$"),
-                    CallbackQueryHandler(
-                        call,
-                        pattern="^call_[0-9]+$",
-                    ),
+                    CallbackQueryHandler(call, pattern="^call_[0-9]+$"),
                     CallbackQueryHandler(pick_hour, pattern="^pick_hour$"),
                     CallbackQueryHandler(new_game, pattern=HOUR_MINUTE_PATTERN),
                     CallbackQueryHandler(back, pattern="^back_to_main$"),

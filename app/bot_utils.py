@@ -2,6 +2,7 @@ import time
 from datetime import datetime as dt, timedelta
 
 import pytz
+import re
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 
 from app.utils import (
@@ -169,10 +170,7 @@ def hours_keyboard(update):
         if timeslot not in ts_games and timeslot > dt.now(timezone)
     ]
     keyboard = [
-        InlineKeyboardButton(
-            timeslot_time,
-            callback_data=timeslot_time,
-        )
+        InlineKeyboardButton(timeslot_time, callback_data=timeslot_time)
         for timeslot_time in ts_filtered
     ]
     return row_list_chunks(keyboard)
@@ -180,40 +178,61 @@ def hours_keyboard(update):
 
 def in_out(update, context, action, hard_args=None):
     """Ugliest function of them all"""
-    if hard_args:
-        args = hard_args
-    else:
-        args = context.args
+    args = hard_args if hard_args else context.args
     if args:
         player = get_player(update)
         if args[0].lower() == "all":
             for game in get_all_games(update):
+                if action == "in" and player not in game.players:
+                    game.add_player(player, joined_at=dt.now(pytz.utc))
+
+                elif action == "out" and player in game.players:
+                    remove_player_and_clean_game(context, game, player)
+        else:
+            filtered_args = expand_hours(
+                argv
+                for argv in args
+                if re.search("^[0-9]+-[0-9]+$", argv) or re.search("^[0-9]+$", argv)
+            )
+            for argv in filtered_args:
+                timeslot = convert_to_dt(
+                    timeslot=f"{int(argv):02d}:00",
+                    timezone=player.timezone_pytz,
+                )
+                game = get_game(update.effective_chat.id, timeslot=timeslot)
+
                 if action == "in":
-                    if player not in game.players:
+                    if not game and timeslot > dt.now(pytz.utc):
+                        create_game_and_add_player(update, context, player, timeslot)
+                    elif game and player not in game.players:
                         game.add_player(player, joined_at=dt.now(pytz.utc))
 
                 elif action == "out":
-                    if player in game.players:
+                    if game and player in game.players:
                         remove_player_and_clean_game(context, game, player)
+
+
+def expand_hours(hours_list):
+    """18-21 -> [18, 19, 20, 21]"""
+    result = []
+    for hour in hours_list:
+        if re.search("^[0-9]+-[0-9]+$", hour):
+            hour_pair = hour.split("-")
+            hours_indexes = {hour: idx for idx, hour in enumerate(MAIN_HOURS)}
+            first_hour = int(hour_pair[0])
+            first_hour_index = hours_indexes.get(first_hour)
+            last_hour = int(hour_pair[1])
+            last_hour_index = hours_indexes.get(last_hour)
+            if (
+                first_hour in MAIN_HOURS
+                and last_hour in MAIN_HOURS
+                and first_hour_index < last_hour_index
+            ):
+                result.extend(MAIN_HOURS[first_hour_index : last_hour_index + 1])
         else:
-            for argv in args:
-                if argv.isdigit() and int(argv) in MAIN_HOURS:
-                    timeslot = convert_to_dt(
-                        timeslot=f"{int(argv):02d}:00", timezone=player.timezone_pytz
-                    )
-                    game = get_game(update.effective_chat.id, timeslot=timeslot)
-
-                    if action == "in":
-                        if not game and timeslot > dt.now(pytz.utc):
-                            create_game_and_add_player(
-                                update, context, player, timeslot
-                            )
-                        elif game and player not in game.players:
-                            game.add_player(player, joined_at=dt.now(pytz.utc))
-
-                    elif action == "out":
-                        if game and player in game.players:
-                            remove_player_and_clean_game(context, game, player)
+            if int(hour) in MAIN_HOURS:
+                result.append(int(hour))
+    return set(result)
 
 
 def schedule_game_notification(context, update, game, message, when=0, auto=False):
