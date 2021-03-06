@@ -13,12 +13,17 @@ It uses inline keyboard buttons inside conversation mode.
 
 In development run bot.py with --debug flag
 """
-
+import os
+import random
 import re
+import textwrap
 from datetime import datetime as dt
 
 import pytz
 import sentry_sdk
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
 from tabulate import tabulate
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 from telegram.ext import (
@@ -26,6 +31,8 @@ from telegram.ext import (
     CommandHandler,
     ConversationHandler,
     CallbackQueryHandler,
+    MessageHandler,
+    Filters,
 )
 
 from app.bot_utils import (
@@ -64,6 +71,8 @@ from app.vars import (
     SENTRY_DSN,
     COMMON_TIMEZONES,
     USAGE_TEXT,
+    USERNAME_COLORS,
+    COLORS,
 )
 
 
@@ -270,47 +279,123 @@ def back(update, context):
     return refresh_main_page(update, context, query)
 
 
+def get_sticker(update, context):
+    """Replies with an image of the forwarded message"""
+    msg = update.message
+    target_user = msg.forward_from
+    if target_user:
+        photos = target_user.get_profile_photos().photos
+        if photos:
+            profile_photo = photos[0][0]
+        else:
+            profile_photo = None
+
+        font_size = 16
+        img_w = 460
+        img_h = 80
+        padding_l = 120
+
+        wrapped_text = textwrap.fill(text=msg.text, width=35)
+
+        for _ in wrapped_text.split("\n"):
+            img_h += font_size + 2
+
+        if img_h > 512:
+            msg.reply_text(text="max height reached (512px")
+            return
+
+        bg_params = {
+            "mode": "RGBA",
+            "size": (img_w, img_h),
+            "color": COLORS["white"],
+        }
+
+        # Create the image
+        img = Image.new(**bg_params)
+        font_family = "./.fonts/LucidaGrande.ttc"
+        font = ImageFont.truetype(font=font_family, size=font_size, index=0)
+        font_bold = ImageFont.truetype(font=font_family, size=font_size, index=1)
+        draw = ImageDraw.Draw(img)
+
+        # img.paste(im=profile_photo, box=(0, 0))
+        x = 75
+        y = 45
+        r = 25
+        leftUpPoint = (x - r, y - r)
+        rightDownPoint = (x + r, y + r)
+
+        user_color = random.choice(list(USERNAME_COLORS.values()))
+        draw.ellipse([leftUpPoint, rightDownPoint], fill=user_color)
+        draw.text(
+            xy=(padding_l, 20),
+            text=target_user.full_name,
+            fill=user_color,
+            font=font_bold,
+        )
+        draw.text(
+            xy=(padding_l, 50),
+            text=wrapped_text,
+            fill=COLORS["black"],
+            font=font,
+        )
+
+        temp_file = "./temp.png"
+        img.save(temp_file, dpi=(300, 300), quality=95)
+        msg.reply_photo(photo=open(temp_file, "rb"))
+        os.remove(temp_file)
+    return
+
+
 def main():
     """Run bot"""
-    updater = Updater(TOKEN, use_context=True)
-    updater.bot.set_my_commands(COMMANDS)
+    updater = Updater(token=TOKEN, use_context=True)
+    updater.bot.set_my_commands(commands=COMMANDS)
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
 
     # Log all errors
-    dp.add_error_handler(error)
+    dp.add_error_handler(callback=error)
 
     # Handlers
-    dp.add_handler(CommandHandler("status", status))
-    dp.add_handler(CommandHandler("all", all_in_out))
-    dp.add_handler(CommandHandler(chop("in") + chop("out"), slot_in_out))
+    dp.add_handler(MessageHandler(filters=Filters.text, callback=get_sticker))
+    dp.add_handler(CommandHandler(command="status", callback=status))
+    dp.add_handler(CommandHandler(command="all", callback=all_in_out))
+    dp.add_handler(
+        CommandHandler(command=chop("in") + chop("out"), callback=slot_in_out)
+    )
     dp.add_handler(
         ConversationHandler(
-            entry_points=[CommandHandler(chop("chettam"), chettam)],
-            fallbacks=[CommandHandler(chop("chettam"), chettam)],
+            entry_points=[CommandHandler(command=chop("chettam"), callback=chettam)],
+            fallbacks=[CommandHandler(command=chop("chettam"), callback=chettam)],
             states={
                 MAIN_STATE: [
-                    CallbackQueryHandler(join, pattern="^join_[0-9]+$"),
-                    CallbackQueryHandler(leave, pattern="^leave_[0-9]+$"),
-                    CallbackQueryHandler(call, pattern="^call_[0-9]+$"),
-                    CallbackQueryHandler(pick_hour, pattern="^pick_hour$"),
-                    CallbackQueryHandler(new_game, pattern=HOUR_MINUTE_PATTERN),
-                    CallbackQueryHandler(back, pattern="^back_to_main$"),
-                    CallbackQueryHandler(status_conv, pattern="^status_conv$"),
+                    CallbackQueryHandler(callback=join, pattern="^join_[0-9]+$"),
+                    CallbackQueryHandler(callback=leave, pattern="^leave_[0-9]+$"),
+                    CallbackQueryHandler(callback=call, pattern="^call_[0-9]+$"),
+                    CallbackQueryHandler(callback=pick_hour, pattern="^pick_hour$"),
+                    CallbackQueryHandler(
+                        callback=new_game, pattern=HOUR_MINUTE_PATTERN
+                    ),
+                    CallbackQueryHandler(callback=back, pattern="^back_to_main$"),
+                    CallbackQueryHandler(callback=status_conv, pattern="^status_conv$"),
                 ],
             },
         )
     )
     dp.add_handler(
         ConversationHandler(
-            entry_points=[CommandHandler("menu", menu)],
-            fallbacks=[CommandHandler("menu", menu)],
+            entry_points=[CommandHandler(command="menu", callback=menu)],
+            fallbacks=[CommandHandler(command="menu", callback=menu)],
             states={
                 MAIN_STATE: [
-                    CallbackQueryHandler(data, pattern="^data$"),
-                    CallbackQueryHandler(user_timezone, pattern="^user_timezone$"),
-                    CallbackQueryHandler(set_user_timezone, pattern="^TZ_[a-zA-Z\/]+$"),
+                    CallbackQueryHandler(callback=data, pattern="^data$"),
+                    CallbackQueryHandler(
+                        callback=user_timezone, pattern="^user_timezone$"
+                    ),
+                    CallbackQueryHandler(
+                        callback=set_user_timezone, pattern="^TZ_[a-zA-Z\/]+$"
+                    ),
                 ],
             },
         )
@@ -322,7 +407,7 @@ def main():
     else:
         # Set Heroku handlers and start the Bot (webhook method)
         updater.start_webhook(listen=HOST, port=PORT, url_path=TOKEN)
-        updater.bot.set_webhook(APP_URL + TOKEN)
+        updater.bot.set_webhook(url=APP_URL + TOKEN)
 
     # Block until the user presses Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since

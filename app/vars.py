@@ -12,6 +12,16 @@ def arg_parse():
     return parser.parse_args()
 
 
+COLORS = {
+    "black": (0, 0, 0, 255),
+    "white": (255, 255, 255, 255),
+}
+
+USERNAME_COLORS = {
+    "red": (255, 0, 0, 255),
+    "purple": (100, 0, 200, 255),
+}
+
 # Stickers
 STICKERS = {
     "hahaclassic": "CAACAgIAAxkBAAL1al7t3M55gfj6YTVuJuETd2ZttQY0AAL6AANWnb0KR976l3F0cQEaBA",
@@ -120,6 +130,8 @@ HOUR_MINUTE_PATTERN = "^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
 APP_URL = os.getenv("APP_URL")
 HOST = "0.0.0.0"
 PORT = int(os.environ.get("PORT", "8443"))
+ALLOWED_CHATS_INTERNAL = json.loads(os.getenv("ALLOWED_CHATS_INTERNAL"))
+ALLOWED_CHATS_EXTERNAL = json.loads(os.getenv("ALLOWED_CHATS_EXTERNAL"))
 
 if arg_parse().debug:
     # dev vars
@@ -127,13 +139,9 @@ if arg_parse().debug:
     TOKEN = os.getenv("TOKEN_DEBUG")
     DB_URL = os.getenv("HEROKU_POSTGRESQL_COPPER_URL")
     SENTRY_DSN = os.getenv("SENTRY_DSN_DEBUG")
-    ALLOWED_CHATS_INTERNAL = ""
-    ALLOWED_CHATS_EXTERNAL = ""
 else:
     # prod vars
     DEBUG = False
     TOKEN = os.getenv("TOKEN")
     DB_URL = os.getenv("DATABASE_URL")
     SENTRY_DSN = os.getenv("SENTRY_DSN")
-    ALLOWED_CHATS_INTERNAL = json.loads(os.getenv("ALLOWED_CHATS_INTERNAL"))
-    ALLOWED_CHATS_EXTERNAL = json.loads(os.getenv("ALLOWED_CHATS_EXTERNAL"))

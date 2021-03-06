@@ -33,3 +33,4 @@ tzlocal==3.0b1
 urllib3==1.25.11
 wrapt==1.12.1
 zipp==3.3.1
+Pillow==8.1.2
