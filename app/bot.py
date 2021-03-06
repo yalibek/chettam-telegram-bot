@@ -343,7 +343,6 @@ def get_sticker(update, context):
         img.save(temp_file, dpi=(300, 300), quality=95)
         msg.reply_photo(photo=open(temp_file, "rb"))
         os.remove(temp_file)
-    return
 
 
 def main():
@@ -358,7 +357,6 @@ def main():
     dp.add_error_handler(callback=error)
 
     # Handlers
-    dp.add_handler(MessageHandler(filters=Filters.text, callback=get_sticker))
     dp.add_handler(CommandHandler(command="status", callback=status))
     dp.add_handler(CommandHandler(command="all", callback=all_in_out))
     dp.add_handler(
@@ -400,6 +398,7 @@ def main():
             },
         )
     )
+    dp.add_handler(MessageHandler(filters=Filters.text, callback=get_sticker))
     # Start
     if DEBUG:
         # Start the Bot (polling method)
