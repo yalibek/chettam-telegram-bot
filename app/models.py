@@ -42,8 +42,6 @@ class Generic:
         except:
             session.rollback()
             raise
-        finally:
-            session.close()
 
 
 class Association(Base, Generic):
