@@ -37,7 +37,13 @@ class Generic:
 
     @staticmethod
     def save():
-        session.commit()
+        try:
+            session.commit()
+        except:
+            session.rollback()
+            raise
+        finally:
+            session.close()
 
 
 class Association(Base, Generic):
