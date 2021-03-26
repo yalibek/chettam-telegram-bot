@@ -166,16 +166,24 @@ def set_user_timezone(update, context):
 
 def user_nickname(update, context):
     query = update.callback_query
-    query.edit_message_text(text="Reply to this message with your preferred nickname")
+    player = get_player(update)
+    reply = ""
+    if player.csgo_nickname:
+        reply += f"Your nickname is {player.csgo_nickname}.\n"
+    else:
+        reply += f"You don't have nickname configured.\n"
+    reply += "Reply to this message with your preferred nickname"
+    query.edit_message_text(text=reply)
     return SECONDARY_STATE
 
 
 def set_user_nickname(update, context):
     nickname = update.message.text
+    sanitized_nickname = nickname.strip().replace("\n", " ")[:30]
     player = get_player(update)
-    player.csgo_nickname = nickname
+    player.csgo_nickname = sanitized_nickname
     player.save()
-    update.message.reply_text(f'Your nickname was set to "{nickname}"')
+    update.message.reply_text(text=f'Your nickname was set to "{sanitized_nickname}"')
     return ConversationHandler.END
 
 
