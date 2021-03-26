@@ -15,9 +15,9 @@ Bot is used to book a time slot for a CS:GO game.
 1. Dev Sentry (optional):
     - Get `SENTRY_DSN_DEBUG` token from [Heroku app settings](https://dashboard.heroku.com/apps/chettam-telegram-bot/settings).
     - Store it as env var.
-1. Test your code with debug mode:
+1. Set DEBUG env var to "True" for debug mode and run the code:
     ```bash
-    python3.7 bot.py --debug
+    python3.7 bot.py
     ```
 1. Push your changes, create MR and wait for MR approval.
 

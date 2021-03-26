@@ -1,16 +1,7 @@
-import argparse
 import json
 import os
 
 from emoji import emojize
-
-
-def arg_parse():
-    """Parses command line arguments"""
-    parser = argparse.ArgumentParser(description="args")
-    parser.add_argument("--debug", action="store_true")
-    return parser.parse_args()
-
 
 COLORS = {
     "black": (0, 0, 0, 255),
@@ -98,18 +89,9 @@ HOUR_MINUTE_PATTERN = "^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
 APP_URL = os.getenv("APP_URL")
 HOST = "0.0.0.0"
 PORT = int(os.environ.get("PORT", "8443"))
+TOKEN = os.getenv("TOKEN")
+DB_URL = os.getenv("DATABASE_URL").replace("postgres://", "postgresql://")
+SENTRY_DSN = os.getenv("SENTRY_DSN")
 ALLOWED_CHATS_INTERNAL = json.loads(os.getenv("ALLOWED_CHATS_INTERNAL"))
 ALLOWED_CHATS_EXTERNAL = json.loads(os.getenv("ALLOWED_CHATS_EXTERNAL"))
-
-if arg_parse().debug:
-    # dev vars
-    DEBUG = True
-    TOKEN = os.getenv("TOKEN_DEBUG")
-    DB_URL = os.getenv("HEROKU_POSTGRESQL_COPPER_URL")
-    SENTRY_DSN = os.getenv("SENTRY_DSN_DEBUG")
-else:
-    # prod vars
-    DEBUG = False
-    TOKEN = os.getenv("TOKEN")
-    DB_URL = os.getenv("DATABASE_URL")
-    SENTRY_DSN = os.getenv("SENTRY_DSN")
+DEBUG = os.getenv("DEBUG")
