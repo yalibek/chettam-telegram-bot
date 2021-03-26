@@ -169,10 +169,10 @@ def user_nickname(update, context):
     player = get_player(update)
     reply = ""
     if player.csgo_nickname:
-        reply += f"Your nickname is {player.csgo_nickname}.\n"
+        reply += f'Your nickname is "{player.csgo_nickname}"'
     else:
-        reply += f"You don't have nickname configured.\n"
-    reply += "Reply to this message with your preferred nickname"
+        reply += f"You don't have nickname configured"
+    reply += "\nReply to this message with your new nickname (30 chars)"
     query.edit_message_text(text=reply)
     return SECONDARY_STATE
 
@@ -435,7 +435,10 @@ def main():
                     ),
                 ],
                 SECONDARY_STATE: [
-                    MessageHandler(filters=Filters.text, callback=set_user_nickname)
+                    MessageHandler(
+                        filters=Filters.reply & Filters.text & ~Filters.command,
+                        callback=set_user_nickname,
+                    )
                 ],
             },
         )
