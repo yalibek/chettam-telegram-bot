@@ -91,7 +91,7 @@ def get_chettam_data(update, context):
     """Reply message and keyboard for entry point"""
     games = get_all_games(update)
     player = get_player(update)
-    pistol = EMOJI["pistol"]
+    gun = EMOJI["gun"]
     check = EMOJI["check"]
     party = EMOJI["party"]
     fire = EMOJI["fire"]
@@ -107,7 +107,7 @@ def get_chettam_data(update, context):
                 btn_text = f"{zzz} Leave"
                 btn_callback = f"leave_{game.id}"
             else:
-                btn_text = f"{pistol} Join"
+                btn_text = f"{gun} Join"
                 btn_callback = f"join_{game.id}"
             btn_row.append(
                 InlineKeyboardButton(

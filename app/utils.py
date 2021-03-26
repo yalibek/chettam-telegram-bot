@@ -178,11 +178,11 @@ def slot_status(game, timezone) -> str:
     slots = game.slots
     players = game.players_list
     time_header = slot_time_header(game, timezone)
-    pistol = EMOJI["pistol"]
+    gun = EMOJI["gun"]
     if 5 <= slots < 10:
-        reply = f"Full party! {pistol}"
+        reply = f"Full party! {gun}"
     elif slots >= 10:
-        reply = f"5x5! {pistol}{pistol}"
+        reply = f"5x5! {gun}{gun}"
     else:
         reply = ""
     return f"*{time_header}*: {reply}\n{players}"

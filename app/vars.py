@@ -20,7 +20,7 @@ STICKERS = {
 
 # Emoji
 EMOJI = {
-    "pistol": emojize(":pistol:", use_aliases=True),
+    "gun": emojize(":gun:", use_aliases=True),
     "fire": emojize(":fire:", use_aliases=True),
     "zzz": emojize(":zzz:", use_aliases=True),
     "party": emojize(":party_popper:", use_aliases=True),
