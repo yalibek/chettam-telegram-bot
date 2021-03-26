@@ -10,7 +10,6 @@ import requests
 from app.models import Game, Player, session, Association
 from app.vars import (
     EMOJI,
-    CSGO_NICKNAMES,
     DAYS_OFF,
     DEBUG,
     LEETCODE_LEVELS,
@@ -18,30 +17,19 @@ from app.vars import (
 )
 
 
-def row_list_chunks(lst) -> list:
+def row_list_chunks(lst, min_row_size=4, row_amount=2) -> list:
     """
-    Split given list into 2 n-sized chunks, with first part rounded to upper int
+    Split given list into {row_amount} of chunks, with first part rounded to upper int.
     example:
         lst = [1,2,3,4,5,6,7] =>> result = [[1,2,3,4],[5,6,7]]
     """
+    lst = list(lst)
     lst_size = len(lst)
-    one_row_size = 4
-    if lst_size <= one_row_size:
-        n = one_row_size
+    if lst_size <= min_row_size:
+        return [lst]
     else:
-        n = (lst_size // 2) + (lst_size % 2)
-    result = []
-    for i in range(0, lst_size, n):
-        result.append(lst[i : i + n])
-    return result
-
-
-def get_nickname(user) -> str:
-    """Get CG:GO nickname for given user if it exist"""
-    try:
-        return CSGO_NICKNAMES[user.username]
-    except:
-        pass
+        step = (lst_size // row_amount) + (lst_size % row_amount)
+        return [lst[item : item + step] for item in range(0, lst_size, step)]
 
 
 def sync_player_data(player: Player, user):
@@ -51,8 +39,6 @@ def sync_player_data(player: Player, user):
     if p_data != u_data:
         player.username, player.first_name, player.last_name = u_data
         player.save()
-    if not player.csgo_nickname:
-        player.csgo_nickname = get_nickname(user)
 
 
 def player_query(player_id):
@@ -71,7 +57,6 @@ def get_player(update) -> Player:
             username=user.username,
             first_name=user.first_name,
             last_name=user.last_name,
-            csgo_nickname=get_nickname(user),
         )
         player.create()
     return player

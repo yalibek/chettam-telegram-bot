@@ -17,6 +17,7 @@ import os
 import random
 import re
 import textwrap
+import uuid
 from datetime import datetime as dt
 
 import pytz
@@ -24,6 +25,7 @@ import sentry_sdk
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
+from emoji import UNICODE_EMOJI, demojize
 from tabulate import tabulate
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 from telegram.ext import (
@@ -73,6 +75,7 @@ from app.vars import (
     USAGE_TEXT,
     USERNAME_COLORS,
     COLORS,
+    SECONDARY_STATE,
 )
 
 
@@ -123,6 +126,7 @@ def all_in_out(update, context):
 @sync_games
 def menu(update, context):
     keyboard = [
+        [InlineKeyboardButton("Set user's nickname", callback_data="user_nickname")],
         [InlineKeyboardButton("Set user's timezone", callback_data="user_timezone")],
         [InlineKeyboardButton("Data", callback_data="data")],
     ]
@@ -160,11 +164,25 @@ def set_user_timezone(update, context):
     return MAIN_STATE
 
 
+def user_nickname(update, context):
+    query = update.callback_query
+    query.edit_message_text(text="Reply to this message with your preferred nickname")
+    return SECONDARY_STATE
+
+
+def set_user_nickname(update, context):
+    nickname = update.message.text
+    player = get_player(update)
+    player.csgo_nickname = nickname
+    player.save()
+    update.message.reply_text(f'Your nickname was set to "{nickname}"')
+    return ConversationHandler.END
+
+
 def data(update, context):
     query = update.callback_query
     df = get_all_data(chat_id=update.effective_chat.id)
     table = data_games_played(df)
-    query.answer()
     query.edit_message_text(text=f"```\n{table}```", parse_mode=ParseMode.MARKDOWN)
     return ConversationHandler.END
 
@@ -290,12 +308,18 @@ def get_sticker(update, context):
         else:
             profile_photo = None
 
-        font_size = 16
-        img_w = 460
+        font_size = 20
+        img_w = 450
         img_h = 80
-        padding_l = 120
+        padding_l = 30
 
-        wrapped_text = textwrap.fill(text=msg.text, width=35)
+        wrapped_text = textwrap.fill(text=msg.text, width=25)
+        print(wrapped_text)
+        for char in wrapped_text:
+            if char in UNICODE_EMOJI:
+                print(char)
+                font_family = "./.fonts/Apple Color Emoji.ttc"
+                # wrapped_text = char
 
         for _ in wrapped_text.split("\n"):
             img_h += font_size + 2
@@ -315,31 +339,35 @@ def get_sticker(update, context):
         font_family = "./.fonts/LucidaGrande.ttc"
         font = ImageFont.truetype(font=font_family, size=font_size, index=0)
         font_bold = ImageFont.truetype(font=font_family, size=font_size, index=1)
-        draw = ImageDraw.Draw(img)
 
         # img.paste(im=profile_photo, box=(0, 0))
-        x = 75
-        y = 45
         r = 25
+        x = padding_l + r
+        y = 45
         leftUpPoint = (x - r, y - r)
         rightDownPoint = (x + r, y + r)
-
         user_color = random.choice(list(USERNAME_COLORS.values()))
-        draw.ellipse([leftUpPoint, rightDownPoint], fill=user_color)
+
+        draw = ImageDraw.Draw(img)
+        draw.ellipse(xy=(leftUpPoint, rightDownPoint), fill=user_color)
         draw.text(
-            xy=(padding_l, 20),
+            xy=(padding_l + 2 * r + 20, 20),
             text=target_user.full_name,
             fill=user_color,
             font=font_bold,
+            embedded_color=True,
         )
         draw.text(
-            xy=(padding_l, 50),
+            xy=(padding_l + 2 * r + 20, 50),
             text=wrapped_text,
             fill=COLORS["black"],
             font=font,
+            # font=ImageFont.truetype(font="./.fonts/Apple Color Emoji.ttc", size=20, index=0),
+            embedded_color=True,
         )
 
-        temp_file = "./temp.png"
+        # Save an image and send it
+        temp_file = f"./temp_{uuid.uuid4().hex}.png"
         img.save(temp_file, dpi=(300, 300), quality=95)
         msg.reply_photo(photo=open(temp_file, "rb"))
         os.remove(temp_file)
@@ -394,6 +422,12 @@ def main():
                     CallbackQueryHandler(
                         callback=set_user_timezone, pattern="^TZ_[a-zA-Z\/]+$"
                     ),
+                    CallbackQueryHandler(
+                        callback=user_nickname, pattern="^user_nickname$"
+                    ),
+                ],
+                SECONDARY_STATE: [
+                    MessageHandler(filters=Filters.text, callback=set_user_nickname)
                 ],
             },
         )
@@ -405,8 +439,12 @@ def main():
         updater.start_polling()
     else:
         # Set Heroku handlers and start the Bot (webhook method)
-        updater.start_webhook(listen=HOST, port=PORT, url_path=TOKEN)
-        updater.bot.set_webhook(url=APP_URL + TOKEN)
+        updater.start_webhook(
+            listen=HOST,
+            port=PORT,
+            url_path=TOKEN,
+            webhook_url=APP_URL + TOKEN,
+        )
 
     # Block until the user presses Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
