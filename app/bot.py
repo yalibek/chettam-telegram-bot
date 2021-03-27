@@ -219,6 +219,7 @@ def data_games_played(df):
         title="Games per day",
         figsize=(15, 6),
         rot=45,
+        kind="bar",
     )
     graph = f"./temp_{uuid.uuid4().hex}.png"
     plt.tight_layout()
