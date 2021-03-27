@@ -210,20 +210,14 @@ def data_games_played(df):
         [str(player_query(player_id)), count]
         for player_id, count in uniq_players.iteritems()
     ]
-    df.groupby("game_id")
-
     # per date
-    uniq_timeslot = df["timeslot"].dt.date.value_counts()
-    data_table_timeslot = [
-        [timeslot, count] for timeslot, count in uniq_timeslot.iteritems()
-    ]
-
-    games_per_date = pd.DataFrame(data_table_timeslot, columns=["Date", "Games played"])
-    games_per_date.plot(
-        x="Date",
+    df["timeslot"] = df["timeslot"].dt.date
+    df = df.groupby("timeslot").nunique()
+    df["game_id"].plot(
+        x="game_id",
         y="Games played",
         title="Games per day",
-        figsize=(10, 6),
+        figsize=(15, 6),
         rot=45,
     )
     graph = f"./temp_{uuid.uuid4().hex}.png"
