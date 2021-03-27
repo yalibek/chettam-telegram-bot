@@ -187,11 +187,17 @@ def set_user_nickname(update, context):
     return ConversationHandler.END
 
 
+import matplotlib.pyplot as plt
+import pandas as pd
+
+
 def data(update, context):
     query = update.callback_query
     df = get_all_data(chat_id=update.effective_chat.id)
-    table = data_games_played(df)
+    table, graph = data_games_played(df)
     query.edit_message_text(text=f"```\n{table}```", parse_mode=ParseMode.MARKDOWN)
+    context.bot.send_photo(chat_id=update.effective_chat.id, photo=open(graph, "rb"))
+    os.remove(graph)
     return ConversationHandler.END
 
 
@@ -204,7 +210,20 @@ def data_games_played(df):
         [str(player_query(player_id)), count]
         for player_id, count in uniq_players.iteritems()
     ]
-    return tabulate(tabular_data=data_table, headers=["Player", "Games played"])
+    df["timeslot"] = pd.to_datetime(df["timeslot"], format="%Y-%m-%d")
+    # per date
+    uniq_timeslot = df["timeslot"].dt.date.value_counts()
+    data_table_timeslot = [
+        [timeslot, count] for timeslot, count in uniq_timeslot.iteritems()
+    ]
+
+    games_per_date = pd.DataFrame(data_table_timeslot, columns=["Date", "Games played"])
+    games_per_date.plot(x="Date", y="Games played", kind="line")
+
+    graph = f"./temp_{uuid.uuid4().hex}.png"
+    plt.savefig(graph)
+    table = tabulate(tabular_data=data_table, headers=["Player", "Games played"])
+    return table, graph
 
 
 # def data_popular_timeslot(df):
@@ -443,7 +462,9 @@ def main():
             },
         )
     )
-    dp.add_handler(MessageHandler(filters=Filters.text, callback=get_sticker))
+    dp.add_handler(
+        MessageHandler(filters=Filters.text & Filters.forwarded, callback=get_sticker)
+    )
     # Start
     if DEBUG:
         # Start the Bot (polling method)
