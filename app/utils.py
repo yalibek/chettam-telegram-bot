@@ -138,7 +138,7 @@ def get_assoc(game_id, player_id) -> Association:
 
 
 def get_all_games(update, ts_only=False) -> list:
-    """Returns all Game models for current chat"""
+    """Returns all Game objects for current chat"""
     games = (
         session.query(Game)
         .filter_by(chat_id=update.effective_chat.id, expired=False)
@@ -149,6 +149,15 @@ def get_all_games(update, ts_only=False) -> list:
         return [game.timeslot_utc for game in games]
     else:
         return games
+
+
+def get_all_players_in_games(update) -> list:
+    """Returns all Player objects for games in the current chat"""
+    games = get_all_games(update)
+    players = []
+    for game in games:
+        players.extend(game.players)
+    return sorted(set(players), key=lambda player: str(player))
 
 
 def get_time_header(game, timezone):

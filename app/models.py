@@ -88,6 +88,13 @@ class Player(Base, Generic):
             return self.first_name
 
     @property
+    def uname_first(self) -> str:
+        if self.username:
+            return f"{self.username} ({self.first_name})"
+        else:
+            return self.first_name
+
+    @property
     def mention(self) -> str:
         if self.username:
             return escape_markdown(f"@{self.username}")

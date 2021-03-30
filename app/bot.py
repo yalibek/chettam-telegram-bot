@@ -59,6 +59,7 @@ from app.utils import (
     chop,
     get_all_data,
     player_query,
+    get_all_players_in_games,
 )
 from app.vars import (
     DEBUG,
@@ -128,6 +129,7 @@ def menu(update, context):
     keyboard = [
         [InlineKeyboardButton("Set user's nickname", callback_data="user_nickname")],
         [InlineKeyboardButton("Set user's timezone", callback_data="user_timezone")],
+        [InlineKeyboardButton("Who is who", callback_data="who_is_who")],
         [InlineKeyboardButton("Data", callback_data="data")],
     ]
     update.message.reply_markdown(
@@ -173,6 +175,7 @@ def user_nickname(update, context):
     else:
         reply += f"You don't have nickname configured"
     reply += "\nReply to this message with your new nickname (30 chars)"
+    query.answer()
     query.edit_message_text(text=reply)
     return SECONDARY_STATE
 
@@ -184,6 +187,18 @@ def set_user_nickname(update, context):
     player.csgo_nickname = sanitized_nickname
     player.save()
     update.message.reply_text(text=f'Your nickname was set to "{sanitized_nickname}"')
+    return ConversationHandler.END
+
+
+def who_is_who(update, context):
+    query = update.callback_query
+    players = get_all_players_in_games(update)
+    if players:
+        reply = "\n".join(f"{player} -> {player.uname_first}" for player in players)
+    else:
+        reply = "no players registered"
+    query.answer()
+    query.edit_message_text(text=reply)
     return ConversationHandler.END
 
 
@@ -454,6 +469,7 @@ def main():
                     CallbackQueryHandler(
                         callback=user_nickname, pattern="^user_nickname$"
                     ),
+                    CallbackQueryHandler(callback=who_is_who, pattern="^who_is_who$"),
                 ],
                 SECONDARY_STATE: [
                     MessageHandler(
