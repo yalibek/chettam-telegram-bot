@@ -153,11 +153,14 @@ def get_all_games(update, ts_only=False) -> list:
 
 def get_all_players_in_games(update) -> list:
     """Returns all Player objects for games in the current chat"""
-    games = get_all_games(update)
-    players = []
-    for game in games:
-        players.extend(game.players)
-    return sorted(set(players), key=lambda player: str(player))
+    all_data = (
+        session.query(Player, Association, Game)
+        .join(Player)
+        .join(Game)
+        .filter(Game.chat_id == update.effective_chat.id)
+    )
+    players = set(data[0] for data in all_data)
+    return sorted(players, key=lambda player: str(player))
 
 
 def get_time_header(game, timezone):

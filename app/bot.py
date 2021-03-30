@@ -174,7 +174,7 @@ def user_nickname(update, context):
         reply += f'Your nickname is "{player.csgo_nickname}"'
     else:
         reply += f"You don't have nickname configured"
-    reply += "\nReply to this message with your new nickname (30 chars)"
+    reply += "\nReply to this message with your new nickname (30 chars max)"
     query.answer()
     query.edit_message_text(text=reply)
     return SECONDARY_STATE
