@@ -160,7 +160,7 @@ def get_all_players_in_games(update) -> list:
         .filter(Game.chat_id == update.effective_chat.id)
     )
     players = set(data[0] for data in all_data)
-    return sorted(players, key=lambda player: str(player))
+    return sorted(players, key=lambda player: str(player).casefold())
 
 
 def get_time_header(game, timezone):
