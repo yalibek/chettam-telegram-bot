@@ -1,18 +1,6 @@
 #!/usr/bin/env python3.9
 # -*- coding: utf-8 -*-
 
-"""
-Kostyli i Velosipedy™ BV presents
-
-Chettamm telegram bot for csgo guys.
-It helps players to schedule their cs:go games and join them.
-Version: 2.0
-
-Main functionality is run under chettam() function.
-It uses inline keyboard buttons inside conversation mode.
-
-In development run bot.py with --debug flag
-"""
 import os
 import random
 import re
@@ -25,7 +13,7 @@ import sentry_sdk
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
-from emoji import UNICODE_EMOJI, demojize
+from emoji import UNICODE_EMOJI
 from tabulate import tabulate
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 from telegram.ext import (
@@ -203,7 +191,6 @@ def who_is_who(update, context):
 
 
 import matplotlib.pyplot as plt
-import pandas as pd
 
 
 def data(update, context):

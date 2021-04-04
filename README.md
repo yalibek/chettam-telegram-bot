@@ -8,14 +8,14 @@ Bot is used to book a time slot for a CS:GO game.
 1. Sign-up to [Heroku](https://www.heroku.com/) and request access to the [hosted app](https://dashboard.heroku.com/apps/chettam-telegram-bot).
 1. Dev bot:
     - Create your own dev bot using [@BotFather](https://t.me/BotFather) in telegram.
-    - Store your bot's token as a `TOKEN_DEBUG` env var.
+    - Store your bot's token as a `TOKEN` env var.
 1. Dev DB:
     - Get `HEROKU_POSTGRESQL_COPPER_URL` url from [Heroku app settings](https://dashboard.heroku.com/apps/chettam-telegram-bot/settings).
-    - Store it as env var.
+    - Store it as `DATABASE_URL` env var.
 1. Dev Sentry (optional):
     - Get `SENTRY_DSN_DEBUG` token from [Heroku app settings](https://dashboard.heroku.com/apps/chettam-telegram-bot/settings).
-    - Store it as env var.
-1. Set DEBUG env var to "True" for debug mode and run the code:
+    - Store it as `SENTRY_DSN` env var.
+1. Set `DEBUG` env var to "True" for debug mode and run the code:
     ```bash
     python3.7 bot.py
     ```
