@@ -416,15 +416,25 @@ def main():
     dp.add_error_handler(callback=error)
 
     # Handlers
-    dp.add_handler(CommandHandler(command="status", callback=status))
-    dp.add_handler(CommandHandler(command="all", callback=all_in_out))
+    dp.add_handler(CommandHandler(command="status", callback=status, run_async=True))
+    dp.add_handler(CommandHandler(command="all", callback=all_in_out, run_async=True))
     dp.add_handler(
-        CommandHandler(command=chop("in") + chop("out"), callback=slot_in_out)
+        CommandHandler(
+            command=chop("in") + chop("out"), callback=slot_in_out, run_async=True
+        )
     )
     dp.add_handler(
         ConversationHandler(
-            entry_points=[CommandHandler(command=chop("chettam"), callback=chettam)],
-            fallbacks=[CommandHandler(command=chop("chettam"), callback=chettam)],
+            entry_points=[
+                CommandHandler(
+                    command=chop("chettam"), callback=chettam, run_async=True
+                )
+            ],
+            fallbacks=[
+                CommandHandler(
+                    command=chop("chettam"), callback=chettam, run_async=True
+                )
+            ],
             states={
                 MAIN_STATE: [
                     CallbackQueryHandler(callback=join, pattern="^join_[0-9]+$"),
