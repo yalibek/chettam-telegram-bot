@@ -7,7 +7,7 @@ import pandas as pd
 import pytz
 import requests
 
-from app.models import Game, Player, session, Association
+from app.models import Game, Player, session, Association, Chat
 from app.vars import (
     EMOJI,
     DAYS_OFF,
@@ -83,13 +83,19 @@ def convert_to_dt(timeslot, timezone) -> dt:
 
 def create_game(chat, timeslot) -> Game:
     """Creates new game"""
-    game = Game(
-        timeslot=timeslot,
-        chat_id=chat.id,
-        chat_type=chat.type,
-    )
+    game = Game(timeslot=timeslot)
     game.create()
+    current_chat = get_chat(chat)
+    current_chat.add_game(game)
     return game
+
+
+def get_chat(chat):
+    current_chat = session.query(Chat).filter_by(id=chat.id).first()
+    if not current_chat:
+        current_chat = Chat(id=chat.id, chat_type=chat.type, title=chat.title)
+        current_chat.create()
+    return current_chat
 
 
 def game_timediff(game: Game, hours=0, minutes=0) -> bool:
@@ -205,16 +211,21 @@ def slot_status_all(games, timezone) -> str:
     return "\n\n".join(slot_status(game, timezone) for game in games)
 
 
-def is_dayoff() -> bool:
+def is_dayoff(chat) -> bool:
     """Checks if today is cs:go dayoff"""
     if DEBUG:
         # It's never a day off in dev mode
         return False
     else:
         # Day off starts at 4am UTC
-        now = dt.now(pytz.utc)
-        is_off = now.strftime("%A") in DAYS_OFF
-        is_daytime = now.hour >= 4
+        now = dt.now(chat.timezone_pytz)
+        is_off = now.strftime("%A") in chat.days_off
+        last_hour = chat.main_hours[-1]
+        if last_hour < 4:
+            border_hour = last_hour + 1
+        else:
+            border_hour = 4
+        is_daytime = now.hour >= border_hour
         return is_off and is_daytime
 
 

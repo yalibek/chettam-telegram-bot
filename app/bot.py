@@ -37,6 +37,7 @@ from app.bot_utils import (
     get_chettam_data,
     hours_keyboard,
     sync_games,
+    restricted_dayoff,
 )
 from app.utils import (
     logger,
@@ -48,6 +49,7 @@ from app.utils import (
     get_all_data,
     player_query,
     get_all_players_in_games,
+    get_chat,
 )
 from app.vars import (
     DEBUG,
@@ -65,6 +67,8 @@ from app.vars import (
     USERNAME_COLORS,
     COLORS,
     SECONDARY_STATE,
+    WEEKDAYS,
+    EXTENDED_HOURS,
 )
 
 
@@ -75,6 +79,7 @@ def error(update, context):
 
 # Command actions
 @restricted
+@restricted_dayoff
 @sync_games
 def status(update, context):
     """Get games status for current chat"""
@@ -83,6 +88,7 @@ def status(update, context):
 
 
 @restricted
+@restricted_dayoff
 @sync_games
 def slot_in_out(update, context):
     lines = [line for line in update.message.text.split("/") if line != ""]
@@ -101,6 +107,7 @@ def slot_in_out(update, context):
 
 
 @restricted
+@restricted_dayoff
 @sync_games
 def all_in_out(update, context):
     args = context.args
@@ -120,6 +127,15 @@ def menu(update, context):
         [InlineKeyboardButton("Who is who", callback_data="who_is_who")],
         [InlineKeyboardButton("Data", callback_data="data")],
     ]
+    admin_keyboard = [
+        [InlineKeyboardButton("Set days off", callback_data="set_days_off")],
+        [InlineKeyboardButton("Set gaming hours", callback_data="set_game_hours")],
+        [InlineKeyboardButton("Set chat timezone", callback_data="set_chat_timezone")],
+    ]
+    admins = context.bot.get_chat_administrators(chat_id=update.effective_chat.id)
+    admins_list = [admin.user.id for admin in admins]
+    if update.effective_user.id in admins_list:
+        keyboard.extend(admin_keyboard)
     update.message.reply_markdown(
         text="Menu",
         reply_markup=InlineKeyboardMarkup(keyboard),
@@ -131,8 +147,11 @@ def user_timezone(update, context):
     """Set current user's timezone"""
     query = update.callback_query
     player = get_player(update)
+    check = EMOJI["check"]
     keyboard = [
-        [InlineKeyboardButton(f"{tz}, {code}", callback_data=f"TZ_{tz}")]
+        [InlineKeyboardButton(f"{check} {tz}, {code}", callback_data=f"TZ_user_{tz}")]
+        if tz == player.timezone
+        else [InlineKeyboardButton(f"{tz}, {code}", callback_data=f"TZ_user_{tz}")]
         for tz, code in COMMON_TIMEZONES.items()
     ]
     query.answer()
@@ -145,7 +164,7 @@ def user_timezone(update, context):
 
 def set_user_timezone(update, context):
     query = update.callback_query
-    new_tz = re.search("TZ_(.*)", query.data).group(1)
+    new_tz = re.search("TZ_user_(.*)", query.data).group(1)
     player = get_player(update)
     player.timezone = new_tz
     player.save()
@@ -159,10 +178,10 @@ def user_nickname(update, context):
     player = get_player(update)
     reply = ""
     if player.csgo_nickname:
-        reply += f'Your nickname is "{player.csgo_nickname}"'
+        reply += f'Your nickname is "{player.csgo_nickname}".'
     else:
-        reply += f"You don't have nickname configured"
-    reply += "\nReply to this message with your new nickname (30 chars max)"
+        reply += f"You don't have nickname configured."
+    reply += "\nReply to this message with your new nickname (30 chars max)."
     query.answer()
     query.edit_message_text(text=reply)
     return SECONDARY_STATE
@@ -174,7 +193,7 @@ def set_user_nickname(update, context):
     player = get_player(update)
     player.csgo_nickname = sanitized_nickname
     player.save()
-    update.message.reply_text(text=f'Your nickname was set to "{sanitized_nickname}"')
+    update.message.reply_text(text=f'Your nickname was set to "{sanitized_nickname}".')
     return ConversationHandler.END
 
 
@@ -188,6 +207,126 @@ def who_is_who(update, context):
     query.answer()
     query.edit_message_text(text=reply)
     return ConversationHandler.END
+
+
+def set_days_off(update, context):
+    query = update.callback_query
+    chat = get_chat(update.effective_chat)
+    check = EMOJI["check"]
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                f"{check} {weekday}", callback_data=f"weekday_rm_{weekday}"
+            )
+        ]
+        if weekday in chat.days_off
+        else [InlineKeyboardButton(weekday, callback_data=f"weekday_add_{weekday}")]
+        for weekday in WEEKDAYS
+    ]
+    query.answer()
+    query.edit_message_text(
+        text=f"Pick days off",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+    return MAIN_STATE
+
+
+def weekday_rm(update, context):
+    query = update.callback_query
+    weekday = re.search("weekday_rm_(.*)", query.data).group(1)
+    chat = get_chat(update.effective_chat)
+    chat.rm_day_off(weekday)
+    query.answer()
+    query.edit_message_text(text=f"{weekday} removed")
+    return ConversationHandler.END
+
+
+def weekday_add(update, context):
+    query = update.callback_query
+    weekday = re.search("weekday_add_(.*)", query.data).group(1)
+    chat = get_chat(update.effective_chat)
+    chat.add_day_off(weekday)
+    query.answer()
+    query.edit_message_text(text=f"{weekday} added")
+    return ConversationHandler.END
+
+
+def set_game_hours(update, context):
+    query = update.callback_query
+    chat = get_chat(update.effective_chat)
+    check = EMOJI["check"]
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                f"{check} {hour:02d}:00",
+                callback_data=f"hour_rm_{hour}",
+            )
+        ]
+        if hour in chat.main_hours
+        else [
+            InlineKeyboardButton(
+                f"{hour:02d}:00",
+                callback_data=f"hour_add_{hour}",
+            )
+        ]
+        for hour in EXTENDED_HOURS
+    ]
+    query.answer()
+    query.edit_message_text(
+        text=f"Pick hours",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+    return MAIN_STATE
+
+
+def hour_rm(update, context):
+    query = update.callback_query
+    hour = int(re.search("hour_rm_(.*)", query.data).group(1))
+    chat = get_chat(update.effective_chat)
+    chat.rm_hour(hour)
+    query.answer()
+    query.edit_message_text(text=f"{hour:02d}:00 removed")
+    return ConversationHandler.END
+
+
+def hour_add(update, context):
+    query = update.callback_query
+    hour = int(re.search("hour_add_(.*)", query.data).group(1))
+    chat = get_chat(update.effective_chat)
+    chat.add_hour(hour)
+    query.answer()
+    query.edit_message_text(text=f"{hour:02d}:00 added")
+    return ConversationHandler.END
+
+
+def chat_timezone(update, context):
+    """Set current user's timezone"""
+    query = update.callback_query
+    chat = get_chat(update.effective_chat)
+    check = EMOJI["check"]
+    keyboard = [
+        [InlineKeyboardButton(f"{check} {tz}, {code}", callback_data=f"TZ_chat_{tz}")]
+        if tz == chat.timezone
+        else [InlineKeyboardButton(f"{tz}, {code}", callback_data=f"TZ_chat_{tz}")]
+        for tz, code in COMMON_TIMEZONES.items()
+    ]
+    query.answer()
+    query.edit_message_text(
+        text=f"Your chat's timezone is {chat.timezone}\nSet new timezone:",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+    return MAIN_STATE
+
+
+def set_chat_timezone(update, context):
+    query = update.callback_query
+    new_tz = re.search("TZ_chat_(.*)", query.data).group(1)
+    chat = get_chat(update.effective_chat)
+    chat.timezone = new_tz
+    chat.save()
+    query.answer()
+    query.edit_message_text(text=f"Your chat's TZ was set to {new_tz}")
+    return MAIN_STATE
 
 
 import matplotlib.pyplot as plt
@@ -238,6 +377,7 @@ def data_games_played(df):
 
 # Conversation actions
 @restricted
+@restricted_dayoff
 @sync_games
 def chettam(update, context):
     """Entry point for conversation"""
@@ -461,12 +601,34 @@ def main():
                         callback=user_timezone, pattern="^user_timezone$"
                     ),
                     CallbackQueryHandler(
-                        callback=set_user_timezone, pattern="^TZ_[a-zA-Z\/]+$"
+                        callback=set_user_timezone, pattern="^TZ_user_[a-zA-Z\/]+$"
                     ),
                     CallbackQueryHandler(
                         callback=user_nickname, pattern="^user_nickname$"
                     ),
                     CallbackQueryHandler(callback=who_is_who, pattern="^who_is_who$"),
+                    CallbackQueryHandler(
+                        callback=set_days_off, pattern="^set_days_off$"
+                    ),
+                    CallbackQueryHandler(
+                        callback=weekday_rm, pattern="^weekday_rm_[a-zA-Z]+$"
+                    ),
+                    CallbackQueryHandler(
+                        callback=weekday_add, pattern="^weekday_add_[a-zA-Z]+$"
+                    ),
+                    CallbackQueryHandler(
+                        callback=set_game_hours, pattern="^set_game_hours$"
+                    ),
+                    CallbackQueryHandler(callback=hour_rm, pattern="^hour_rm_[0-9]+$"),
+                    CallbackQueryHandler(
+                        callback=hour_add, pattern="^hour_add_[0-9]+$"
+                    ),
+                    CallbackQueryHandler(
+                        callback=chat_timezone, pattern="^set_chat_timezone$"
+                    ),
+                    CallbackQueryHandler(
+                        callback=set_chat_timezone, pattern="^TZ_chat_[a-zA-Z\/]+$"
+                    ),
                 ],
                 SECONDARY_STATE: [
                     MessageHandler(

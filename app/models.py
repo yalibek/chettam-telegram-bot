@@ -9,13 +9,15 @@ from sqlalchemy import (
     ForeignKey,
     DateTime,
     Boolean,
+    ARRAY,
 )
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import sessionmaker, relationship, backref
 from telegram.utils.helpers import escape_markdown
 
-from app.vars import DB_URL, EMOJI
+from app.vars import DB_URL, EMOJI, MAIN_HOURS
 
 # Connect to DB
 Base = declarative_base()
@@ -109,11 +111,10 @@ class Player(Base, Generic):
 class Game(Base, Generic):
     __tablename__ = "game"
     id = Column(Integer, primary_key=True)
-    chat_id = Column(BigInteger)
-    chat_type = Column(String)
     timeslot = Column(DateTime)
     expired = Column(Boolean, default=False)
     players = relationship("Player", secondary="association", back_populates="games")
+    chat_id = Column(BigInteger, ForeignKey("chat.id"))
 
     def add_player(self, player, joined_at):
         self.player_game.append(
@@ -190,6 +191,48 @@ class Game(Base, Generic):
     def players_call_active(self) -> str:
         """Only mention players who are not in queue"""
         return ", ".join(player.mention for player in self.players_sorted_active)
+
+
+class Chat(Base, Generic):
+    __tablename__ = "chat"
+    id = Column(BigInteger, primary_key=True)
+    chat_type = Column(String)
+    title = Column(String)
+    timezone = Column(String, default="Europe/Amsterdam")
+    days_off = Column(MutableList.as_mutable(ARRAY(String)), default=[])
+    main_hours = Column(MutableList.as_mutable(ARRAY(Integer)), default=MAIN_HOURS)
+    games = relationship("Game", backref="chat")
+
+    def add_game(self, game):
+        self.games.append(game)
+        self.save()
+
+    def add_day_off(self, weekday):
+        self.days_off.append(weekday)
+        self.save()
+
+    def rm_day_off(self, weekday):
+        self.days_off.remove(weekday)
+        self.save()
+
+    def add_hour(self, hour):
+        self.main_hours.append(hour)
+        self.save()
+        self.reorder_hours()
+
+    def rm_hour(self, hour):
+        self.main_hours.remove(hour)
+        self.save()
+
+    def reorder_hours(self):
+        morning_hours = sorted(i for i in self.main_hours if i < 4)
+        day_hours = sorted(i for i in self.main_hours if i > 4)
+        self.main_hours = day_hours + morning_hours
+        self.save()
+
+    @property
+    def timezone_pytz(self):
+        return pytz.timezone(self.timezone)
 
 
 # Create tables in DB

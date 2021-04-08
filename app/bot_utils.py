@@ -19,6 +19,7 @@ from app.utils import (
     create_game,
     get_assoc,
     get_time_header,
+    get_chat,
 )
 from app.vars import (
     DEBUG,
@@ -27,25 +28,32 @@ from app.vars import (
     STICKERS,
     MAIN_STATE,
     EMOJI,
-    MAIN_HOURS,
 )
+
+
+def restricted_dayoff(func):
+    """Restrict prod bot usage to allowed chats only"""
+
+    def wrapped(update, context, *args, **kwargs):
+        chat = get_chat(update.effective_chat)
+        if is_dayoff(chat):
+            return dayoff(update, context)
+        else:
+            return func(update, context, *args, **kwargs)
+
+    return wrapped
 
 
 def restricted(func):
     """Restrict prod bot usage to allowed chats only"""
 
     def wrapped(update, context, *args, **kwargs):
-        chat_id = update.effective_chat.id
-        if DEBUG or chat_id in ALLOWED_CHATS_INTERNAL:
-            if is_dayoff():
-                return dayoff(update, context)
-            else:
-                return func(update, context, *args, **kwargs)
-        elif chat_id in ALLOWED_CHATS_EXTERNAL:
+        chat = get_chat(update.effective_chat)
+        if DEBUG or chat.id in ALLOWED_CHATS_INTERNAL + ALLOWED_CHATS_EXTERNAL:
             return func(update, context, *args, **kwargs)
         else:
             update.message.reply_text(
-                f"Your chat id is {chat_id}.\nShare it with bot owner to be authorized."
+                f"Your chat id is {chat.id}.\nShare it with bot owner to be authorized."
             )
 
     return wrapped
@@ -158,10 +166,11 @@ def refresh_main_page(update, context, query):
 def hours_keyboard(update):
     """Returns keyboard with timeslots for new game"""
     player = get_player(update)
+    chat = get_chat(update.effective_chat)
     timezone = player.timezone_pytz
     main_hours_dt = [
         convert_to_dt(timeslot=f"{hour:02d}:00", timezone=timezone)
-        for hour in MAIN_HOURS
+        for hour in chat.main_hours
     ]
     ts_games = get_all_games(update, ts_only=True)
     ts_filtered = [
@@ -179,6 +188,7 @@ def hours_keyboard(update):
 def in_out(update, context, action, hard_args=None):
     """Ugliest function of them all"""
     args = hard_args if hard_args else context.args
+    chat = get_chat(update.effective_chat)
     if args:
         player = get_player(update)
         if args[0].lower() == "all":
@@ -190,16 +200,19 @@ def in_out(update, context, action, hard_args=None):
                     remove_player_and_clean_game(context, game, player)
         else:
             filtered_args = expand_hours(
-                argv
-                for argv in args
-                if re.search("^[0-9]+-[0-9]+$", argv) or re.search("^[0-9]+$", argv)
+                chat=chat,
+                hours_list=[
+                    argv
+                    for argv in args
+                    if re.search("^[0-9]+-[0-9]+$", argv) or re.search("^[0-9]+$", argv)
+                ],
             )
             for argv in filtered_args:
                 timeslot = convert_to_dt(
                     timeslot=f"{int(argv):02d}:00",
                     timezone=player.timezone_pytz,
                 )
-                game = get_game(update.effective_chat.id, timeslot=timeslot)
+                game = get_game(chat_id=chat.id, timeslot=timeslot)
 
                 if action == "in":
                     if not game and timeslot > dt.now(pytz.utc):
@@ -212,25 +225,25 @@ def in_out(update, context, action, hard_args=None):
                         remove_player_and_clean_game(context, game, player)
 
 
-def expand_hours(hours_list):
+def expand_hours(chat, hours_list):
     """18-21 -> [18, 19, 20, 21]"""
     result = []
     for hour in hours_list:
         if re.search("^[0-9]+-[0-9]+$", hour):
             hour_pair = hour.split("-")
-            hours_indexes = {hour: idx for idx, hour in enumerate(MAIN_HOURS)}
+            hours_indexes = {hour: idx for idx, hour in enumerate(chat.main_hours)}
             first_hour = int(hour_pair[0])
             first_hour_index = hours_indexes.get(first_hour)
             last_hour = int(hour_pair[1])
             last_hour_index = hours_indexes.get(last_hour)
             if (
-                first_hour in MAIN_HOURS
-                and last_hour in MAIN_HOURS
+                first_hour in chat.main_hours
+                and last_hour in chat.main_hours
                 and first_hour_index < last_hour_index
             ):
-                result.extend(MAIN_HOURS[first_hour_index : last_hour_index + 1])
+                result.extend(chat.main_hours[first_hour_index : last_hour_index + 1])
         else:
-            if int(hour) in MAIN_HOURS:
+            if int(hour) in chat.main_hours:
                 result.append(int(hour))
     return set(result)
 

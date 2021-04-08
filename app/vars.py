@@ -27,6 +27,7 @@ EMOJI = {
     "dizzy": emojize(":dizzy_face:", use_aliases=True),
     "clock": emojize(":alarm_clock:", use_aliases=True),
     "check": emojize(":white_check_mark:", use_aliases=True),
+    "cross": emojize(":cross:", use_aliases=True),
     "scream": emojize(":scream:", use_aliases=True),
     "suprise": emojize(":open_mouth:", use_aliases=True),
     "thumbsup": emojize(":thumbsup:", use_aliases=True),
@@ -59,6 +60,16 @@ all existing games:
 """
 
 DAYS_OFF = ["Wednesday", "Sunday"]
+WEEKDAYS = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+]
+
 
 # Commands
 COMMANDS = [
@@ -70,6 +81,7 @@ COMMANDS = [
 ]
 
 MAIN_HOURS = [18, 19, 20, 21, 22, 23, 0, 1]
+EXTENDED_HOURS = [14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3]
 
 # Timezones
 COMMON_TIMEZONES = {
