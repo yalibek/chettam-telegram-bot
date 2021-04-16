@@ -441,8 +441,12 @@ def call(update, context):
     query = update.callback_query
     game_id = re.search("[0-9]+", query.data).group(0)
     game = get_game(update.effective_chat.id, game_id=game_id)
+    player = get_player(update)
     query.answer()
-    query.edit_message_text(text=slot_status(game), parse_mode=ParseMode.MARKDOWN)
+    query.edit_message_text(
+        text=slot_status(game, timezone=player.timezone_pytz),
+        parse_mode=ParseMode.MARKDOWN,
+    )
     schedule_game_notification(
         context=context,
         update=update,
