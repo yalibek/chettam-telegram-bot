@@ -1,5 +1,6 @@
 import json
 import os
+from dataclasses import dataclass
 
 from emoji import emojize
 
@@ -18,20 +19,22 @@ STICKERS = {
     "hahaclassic": "CAACAgIAAxkBAAL1al7t3M55gfj6YTVuJuETd2ZttQY0AAL6AANWnb0KR976l3F0cQEaBA",
 }
 
+
 # Emoji
-EMOJI = {
-    "gun": emojize(":gun:", use_aliases=True),
-    "fire": emojize(":fire:", use_aliases=True),
-    "zzz": emojize(":zzz:", use_aliases=True),
-    "party": emojize(":party_popper:", use_aliases=True),
-    "dizzy": emojize(":dizzy_face:", use_aliases=True),
-    "clock": emojize(":alarm_clock:", use_aliases=True),
-    "check": emojize(":white_check_mark:", use_aliases=True),
-    "cross": emojize(":cross:", use_aliases=True),
-    "scream": emojize(":scream:", use_aliases=True),
-    "suprise": emojize(":open_mouth:", use_aliases=True),
-    "thumbsup": emojize(":thumbsup:", use_aliases=True),
-}
+@dataclass
+class Emoji:
+    gun = emojize(":gun:", use_aliases=True)
+    fire = emojize(":fire:", use_aliases=True)
+    zzz = emojize(":zzz:", use_aliases=True)
+    party = emojize(":party_popper:", use_aliases=True)
+    dizzy = emojize(":dizzy_face:", use_aliases=True)
+    clock = emojize(":alarm_clock:", use_aliases=True)
+    check = emojize(":white_check_mark:", use_aliases=True)
+    cross = emojize(":cross_mark:", use_aliases=True)
+    scream = emojize(":scream:", use_aliases=True)
+    suprise = emojize(":open_mouth:", use_aliases=True)
+    thumbsup = emojize(":thumbsup:", use_aliases=True)
+
 
 LEETCODE_LEVELS = {
     1: "easy",

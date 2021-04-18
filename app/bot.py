@@ -54,7 +54,7 @@ from app.utils import (
 from app.vars import (
     DEBUG,
     MAIN_STATE,
-    EMOJI,
+    Emoji,
     TOKEN,
     COMMANDS,
     HOUR_MINUTE_PATTERN,
@@ -147,9 +147,12 @@ def user_timezone(update, context):
     """Set current user's timezone"""
     query = update.callback_query
     player = get_player(update)
-    check = EMOJI["check"]
     keyboard = [
-        [InlineKeyboardButton(f"{check} {tz}, {code}", callback_data=f"TZ_user_{tz}")]
+        [
+            InlineKeyboardButton(
+                f"{Emoji.check} {tz}, {code}", callback_data=f"TZ_user_{tz}"
+            )
+        ]
         if tz == player.timezone
         else [InlineKeyboardButton(f"{tz}, {code}", callback_data=f"TZ_user_{tz}")]
         for tz, code in COMMON_TIMEZONES.items()
@@ -212,11 +215,10 @@ def who_is_who(update, context):
 def set_days_off(update, context):
     query = update.callback_query
     chat = get_chat(update.effective_chat)
-    check = EMOJI["check"]
     keyboard = [
         [
             InlineKeyboardButton(
-                f"{check} {weekday}", callback_data=f"weekday_rm_{weekday}"
+                f"{Emoji.check} {weekday}", callback_data=f"weekday_rm_{weekday}"
             )
         ]
         if weekday in chat.days_off
@@ -254,11 +256,10 @@ def weekday_add(update, context):
 def set_game_hours(update, context):
     query = update.callback_query
     chat = get_chat(update.effective_chat)
-    check = EMOJI["check"]
     keyboard = [
         [
             InlineKeyboardButton(
-                f"{check} {hour:02d}:00",
+                f"{Emoji.check} {hour:02d}:00",
                 callback_data=f"hour_rm_{hour}",
             )
         ]
@@ -303,9 +304,12 @@ def chat_timezone(update, context):
     """Set current user's timezone"""
     query = update.callback_query
     chat = get_chat(update.effective_chat)
-    check = EMOJI["check"]
     keyboard = [
-        [InlineKeyboardButton(f"{check} {tz}, {code}", callback_data=f"TZ_chat_{tz}")]
+        [
+            InlineKeyboardButton(
+                f"{Emoji.check} {tz}, {code}", callback_data=f"TZ_chat_{tz}"
+            )
+        ]
         if tz == chat.timezone
         else [InlineKeyboardButton(f"{tz}, {code}", callback_data=f"TZ_chat_{tz}")]
         for tz, code in COMMON_TIMEZONES.items()
@@ -390,18 +394,16 @@ def chettam(update, context):
 def pick_hour(update, context):
     """Choice of hours"""
     query = update.callback_query
-    check = EMOJI["check"]
-    clock = EMOJI["clock"]
     keyboard = hours_keyboard(update)
     keyboard.append(
         [
             InlineKeyboardButton("« Back", callback_data="back_to_main"),
-            InlineKeyboardButton(f"{check} Done", callback_data="status_conv"),
+            InlineKeyboardButton(f"{Emoji.check} Done", callback_data="status_conv"),
         ]
     )
     query.answer()
     query.edit_message_text(
-        text=f"{clock} Choose time:",
+        text=f"{Emoji.clock} Choose time:",
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
     return MAIN_STATE

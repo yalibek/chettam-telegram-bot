@@ -8,13 +8,7 @@ import pytz
 import requests
 
 from app.models import Game, Player, session, Association, Chat
-from app.vars import (
-    EMOJI,
-    DAYS_OFF,
-    DEBUG,
-    LEETCODE_LEVELS,
-    COMMON_TIMEZONES,
-)
+from app.vars import Emoji, DEBUG, LEETCODE_LEVELS, COMMON_TIMEZONES
 
 
 def row_list_chunks(lst, min_row_size=4, row_amount=2) -> list:
@@ -196,11 +190,10 @@ def slot_status(game, timezone) -> str:
     slots = game.slots
     players = game.players_list
     time_header = slot_time_header(game, timezone)
-    gun = EMOJI["gun"]
     if 5 <= slots < 10:
-        reply = f"Full party! {gun}"
+        reply = f"Full party! {Emoji.gun}"
     elif slots >= 10:
-        reply = f"5x5! {gun}{gun}"
+        reply = f"5x5! {Emoji.gun}{Emoji.gun}"
     else:
         reply = ""
     return f"*{time_header}*: {reply}\n{players}"
@@ -268,9 +261,9 @@ def get_leetcode_problem() -> str:
     accepted = random_problem["stat"]["total_acs"]
     acceptance_rate = round(accepted / submitted * 100, 1)
     if acceptance_rate < 40:
-        reaction = EMOJI["scream"]
+        reaction = Emoji.scream
     elif acceptance_rate < 70:
-        reaction = EMOJI["suprise"]
+        reaction = Emoji.suprise
     else:
-        reaction = EMOJI["thumbsup"]
+        reaction = Emoji.thumbsup
     return f"{reaction} Only *{acceptance_rate}%* can solve this *{difficulty}* problem!\n\n{url}"

@@ -27,7 +27,7 @@ from app.vars import (
     ALLOWED_CHATS_EXTERNAL,
     STICKERS,
     MAIN_STATE,
-    EMOJI,
+    Emoji,
 )
 
 
@@ -99,12 +99,6 @@ def get_chettam_data(update, context):
     """Reply message and keyboard for entry point"""
     games = get_all_games(update)
     player = get_player(update)
-    gun = EMOJI["gun"]
-    check = EMOJI["check"]
-    party = EMOJI["party"]
-    fire = EMOJI["fire"]
-    zzz = EMOJI["zzz"]
-
     keyboard = []
     if games:
         reply = slot_status_all(games, timezone=player.timezone_pytz)
@@ -112,10 +106,10 @@ def get_chettam_data(update, context):
             btn_row = []
 
             if player in game.players:
-                btn_text = f"{zzz} Leave"
+                btn_text = f"{Emoji.cross} Leave"
                 btn_callback = f"leave_{game.id}"
             else:
-                btn_text = f"{gun} Join"
+                btn_text = f"{Emoji.gun} Join"
                 btn_callback = f"join_{game.id}"
             btn_row.append(
                 InlineKeyboardButton(
@@ -132,7 +126,7 @@ def get_chettam_data(update, context):
             ):
                 btn_row.append(
                     InlineKeyboardButton(
-                        f"{party} Call", callback_data=f"call_{game.id}"
+                        f"{Emoji.party} Call", callback_data=f"call_{game.id}"
                     )
                 )
 
@@ -143,8 +137,8 @@ def get_chettam_data(update, context):
 
     keyboard.append(
         [
-            InlineKeyboardButton(f"{fire} New", callback_data="pick_hour"),
-            InlineKeyboardButton(f"{check} Done", callback_data="status_conv"),
+            InlineKeyboardButton(f"{Emoji.fire} New", callback_data="pick_hour"),
+            InlineKeyboardButton(f"{Emoji.check} Done", callback_data="status_conv"),
         ]
     )
     return reply, keyboard

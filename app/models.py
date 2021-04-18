@@ -17,7 +17,7 @@ from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import sessionmaker, relationship, backref
 from telegram.utils.helpers import escape_markdown
 
-from app.vars import DB_URL, EMOJI, MAIN_HOURS
+from app.vars import DB_URL, Emoji, MAIN_HOURS
 
 # Connect to DB
 Base = declarative_base()
@@ -65,7 +65,7 @@ class Association(Base, Generic):
     @property
     def is_new(self):
         if dt.utcnow() - self.joined_at < timedelta(minutes=2):
-            return EMOJI["fire"]
+            return Emoji.fire
         else:
             return ""
 
