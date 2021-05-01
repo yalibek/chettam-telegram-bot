@@ -93,7 +93,7 @@ def status(update, context):
 def slot_in_out(update, context):
     lines = [line for line in update.message.text.split("/") if line != ""]
     for line in lines:
-        command = line.split()[0]
+        command = line.split()[0].lower()
         args = line.split()[1:]
         if args:
             if command in chop("in"):
@@ -566,7 +566,9 @@ def main():
     dp.add_handler(CommandHandler(command="all", callback=all_in_out, run_async=True))
     dp.add_handler(
         CommandHandler(
-            command=chop("in") + chop("out"), callback=slot_in_out, run_async=True
+            command=chop("in", upper=True) + chop("out", upper=True),
+            callback=slot_in_out,
+            run_async=True,
         )
     )
     dp.add_handler(

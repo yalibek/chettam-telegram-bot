@@ -231,13 +231,16 @@ def logger() -> logging.Logger:
     return logging.getLogger(__name__)
 
 
-def chop(word):
+def chop(word, upper=False):
     """
     Chops the word by letters
     example:
         "chettam" =>> ["c", "ch", "che", "chet", "chett", "chetta", "chettam"]
     """
-    return [word[0 : idx + 1] for idx, i in enumerate(word)]
+    result = [word[0 : idx + 1] for idx, i in enumerate(word)]
+    if upper:
+        result.extend([item.upper() for item in result])
+    return result
 
 
 def get_leetcode_problem() -> str:
