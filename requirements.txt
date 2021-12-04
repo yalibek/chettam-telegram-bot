@@ -39,6 +39,6 @@ toml==0.10.2
 tornado==6.1
 tzdata==2021.5
 tzlocal==3.0b1
-urllib3==1.25.11
+urllib3==1.26.5
 wrapt==1.12.1
 zipp==3.3.1
