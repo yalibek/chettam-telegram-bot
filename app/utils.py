@@ -84,10 +84,25 @@ def create_game(chat, timeslot) -> Game:
     return game
 
 
+def sync_chat_data(current_chat: Chat, chat):
+    """Updates chat's data with Telegram chat's data if it has changed"""
+    current_chat_data = [current_chat.id, current_chat.chat_type, current_chat.title]
+    telegram_chat_data = [chat.id, chat.type, chat.title]
+    if current_chat_data != telegram_chat_data:
+        current_chat.id, current_chat.chat_type, current_chat.title = telegram_chat_data
+        current_chat.save()
+
+
 def get_chat(chat):
     current_chat = session.query(Chat).filter_by(id=chat.id).first()
-    if not current_chat:
-        current_chat = Chat(id=chat.id, chat_type=chat.type, title=chat.title)
+    if current_chat:
+        sync_chat_data(current_chat, chat)
+    else:
+        current_chat = Chat(
+            id=chat.id,
+            chat_type=chat.type,
+            title=chat.title,
+        )
         current_chat.create()
     return current_chat
 
