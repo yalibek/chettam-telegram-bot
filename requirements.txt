@@ -21,7 +21,7 @@ matplotlib==3.4.0
 mccabe==0.6.1
 numpy==1.22.0
 pandas==1.2.3
-Pillow==9.0.1
+Pillow==9.3.0
 psycopg2-binary==2.8.6
 pycparser==2.20
 pyparsing==2.4.7
